@@ -1,128 +1,168 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { TERMINAL_COMMANDS, OWNER } from '@/lib/portfolio-data';
 
-type LabTab = 'music' | 'particles' | 'ai' | 'terminal';
+type LabTab = 'music' | 'particles' | 'terminal';
 
-/* ── Music Visualizer ── */
+/* ============================================
+   MUSIC VISUALIZER — procedural audio bars
+   ============================================ */
 function MusicVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    canvas.width = 600; canvas.height = 300;
 
-    const bars = 64;
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * 2; canvas.height = rect.height * 2;
+      ctx.scale(2, 2);
+    };
+    resize();
+
+    const bars = 48;
     const barData = new Array(bars).fill(0);
+    let frame: number;
 
     const animate = () => {
-      ctx.clearRect(0, 0, 600, 300);
-      const barWidth = 600 / bars - 2;
+      const W = canvas.width / 2, H = canvas.height / 2;
+      ctx.clearRect(0, 0, W, H);
 
-      // Simulate audio data (demo mode)
+      // Background grid
+      ctx.strokeStyle = 'rgba(0,212,255,0.02)';
+      ctx.lineWidth = 0.5;
+      for (let y = 0; y < H; y += 30) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      const barWidth = W / bars - 1.5;
       for (let i = 0; i < bars; i++) {
         const target = Math.sin(Date.now() * 0.002 + i * 0.3) * 0.3 + Math.sin(Date.now() * 0.005 + i * 0.1) * 0.2 + 0.3;
         barData[i] = barData[i] * 0.85 + target * 0.15 + Math.random() * 0.05;
-      }
 
-      for (let i = 0; i < bars; i++) {
-        const h = barData[i] * 250;
-        const x = i * (barWidth + 2);
-        const y = 300 - h;
+        const h = barData[i] * (H - 20);
+        const x = i * (barWidth + 1.5);
+        const y = H - h;
         const hue = 190 + (i / bars) * 80;
-        const gradient = ctx.createLinearGradient(x, y, x, 300);
-        gradient.addColorStop(0, `hsla(${hue}, 100%, 60%, 0.9)`);
-        gradient.addColorStop(1, `hsla(${hue}, 100%, 40%, 0.2)`);
-        ctx.fillStyle = gradient;
+
+        const grad = ctx.createLinearGradient(x, y, x, H);
+        grad.addColorStop(0, `hsla(${hue}, 100%, 60%, 0.85)`);
+        grad.addColorStop(1, `hsla(${hue}, 100%, 40%, 0.1)`);
+        ctx.fillStyle = grad;
         ctx.fillRect(x, y, barWidth, h);
 
-        // Glow
-        ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.5)`;
-        ctx.shadowBlur = 8;
-        ctx.fillRect(x, y, barWidth, 2);
-        ctx.shadowBlur = 0;
+        // Top cap glow
+        ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.9)`;
+        ctx.fillRect(x, y, barWidth, 1.5);
       }
-      animRef.current = requestAnimationFrame(animate);
+
+      // Reflection
+      ctx.save();
+      ctx.globalAlpha = 0.06;
+      ctx.scale(1, -1);
+      ctx.translate(0, -H * 2);
+      for (let i = 0; i < bars; i++) {
+        const h = barData[i] * (H - 20);
+        const x = i * (barWidth + 1.5);
+        ctx.fillStyle = `hsla(${190 + (i / bars) * 80}, 100%, 50%, 0.3)`;
+        ctx.fillRect(x, H, barWidth, h * 0.3);
+      }
+      ctx.restore();
+
+      frame = requestAnimationFrame(animate);
     };
     animate();
-    return () => cancelAnimationFrame(animRef.current);
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   return (
-    <div style={{ textAlign: 'center' }}>
-      <canvas ref={canvasRef} style={{ width: '100%', maxWidth: '600px', height: 'auto', borderRadius: '8px' }} />
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '12px' }}>
-        ♫ DEMO MODE — Connect microphone for live input
-      </p>
+    <div>
+      <canvas ref={canvasRef} style={{ width: '100%', height: '280px', display: 'block', borderRadius: '2px' }} />
+      <div style={{
+        fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)',
+        marginTop: '10px', textAlign: 'center', letterSpacing: '1px',
+      }}>
+        ♫ PROCEDURAL AUDIO VISUALIZATION · DEMO MODE
+      </div>
     </div>
   );
 }
 
-/* ── Particle Experiment ── */
+/* ============================================
+   PARTICLE EXPERIMENT — interactive force field
+   ============================================ */
 function ParticleExperiment() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 300, y: 200 });
+  const [mode, setMode] = useState<'attract' | 'repel'>('attract');
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    canvas.width = 600; canvas.height = 400;
 
-    const particles: Array<{ x: number; y: number; vx: number; vy: number; size: number; color: string; life: number }> = [];
-    for (let i = 0; i < 300; i++) {
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * 2; canvas.height = rect.height * 2;
+      ctx.scale(2, 2);
+    };
+    resize();
+
+    const W = () => canvas.width / 2;
+    const H = () => canvas.height / 2;
+
+    const particles: Array<{ x: number; y: number; vx: number; vy: number; size: number; color: string }> = [];
+    for (let i = 0; i < 250; i++) {
       particles.push({
-        x: Math.random() * 600, y: Math.random() * 400,
-        vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
-        size: Math.random() * 3 + 1,
+        x: Math.random() * 600, y: Math.random() * 350,
+        vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5,
+        size: Math.random() * 2.5 + 0.5,
         color: ['#00D4FF', '#7B2FFF', '#39FF14', '#FFB800'][Math.floor(Math.random() * 4)],
-        life: 1,
       });
     }
 
     let frame: number;
     const animate = () => {
-      ctx.fillStyle = 'rgba(3, 3, 6, 0.15)';
-      ctx.fillRect(0, 0, 600, 400);
+      ctx.fillStyle = 'rgba(3, 3, 6, 0.12)';
+      ctx.fillRect(0, 0, W(), H());
 
       const mx = mouseRef.current.x, my = mouseRef.current.y;
+      const isRepel = mode === 'repel';
 
       for (const p of particles) {
-        // Attract to mouse
         const dx = mx - p.x, dy = my - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy) || 1;
         if (dist < 150) {
-          p.vx += dx / dist * 0.3;
-          p.vy += dy / dist * 0.3;
+          const force = isRepel ? -0.4 : 0.3;
+          p.vx += (dx / dist) * force;
+          p.vy += (dy / dist) * force;
         }
 
-        p.vx *= 0.98; p.vy *= 0.98;
+        p.vx *= 0.97; p.vy *= 0.97;
         p.x += p.vx; p.y += p.vy;
-
-        // Bounds wrap
-        if (p.x < 0) p.x = 600; if (p.x > 600) p.x = 0;
-        if (p.y < 0) p.y = 400; if (p.y > 400) p.y = 0;
+        if (p.x < 0) p.x = W(); if (p.x > W()) p.x = 0;
+        if (p.y < 0) p.y = H(); if (p.y > H()) p.y = 0;
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.fill();
 
-        // Connect nearby particles
+        // Lines between nearby
         for (const q of particles) {
           if (p === q) continue;
-          const d = Math.sqrt(Math.pow(p.x - q.x, 2) + Math.pow(p.y - q.y, 2));
-          if (d < 50) {
+          const d = Math.sqrt((p.x - q.x) ** 2 + (p.y - q.y) ** 2);
+          if (d < 40) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(0, 212, 255, ${(1 - d / 50) * 0.15})`;
+            ctx.strokeStyle = `rgba(0,212,255,${(1 - d / 40) * 0.12})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -135,124 +175,45 @@ function ParticleExperiment() {
     const handleMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       mouseRef.current = {
-        x: (e.clientX - rect.left) * (600 / rect.width),
-        y: (e.clientY - rect.top) * (400 / rect.height),
+        x: (e.clientX - rect.left) * (W() / rect.width),
+        y: (e.clientY - rect.top) * (H() / rect.height),
       };
     };
     canvas.addEventListener('mousemove', handleMove);
-
     return () => { cancelAnimationFrame(frame); canvas.removeEventListener('mousemove', handleMove); };
-  }, []);
+  }, [mode]);
 
   return (
-    <div style={{ textAlign: 'center' }}>
-      <canvas ref={canvasRef} style={{ width: '100%', maxWidth: '600px', height: 'auto', borderRadius: '8px', cursor: 'crosshair' }} />
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)', marginTop: '12px' }}>
-        Move cursor to attract particles
-      </p>
-    </div>
-  );
-}
-
-/* ── AI Twin Chat ── */
-function AITwin() {
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>([
-    { role: 'ai', text: `Hey! I'm ${OWNER.name}'s AI twin. Ask me anything about my experience, skills, or projects.` },
-  ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const chatRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim() || isTyping) return;
-    const userMsg = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setIsTyping(true);
-
-    // Smart fallback responses (keyword-based)
-    const lower = userMsg.toLowerCase();
-    let response = '';
-
-    if (lower.includes('skill') || lower.includes('tech') || lower.includes('stack')) {
-      response = `My core stack includes ${OWNER.techArsenal.slice(0, 6).join(', ')}, and more. I'm especially passionate about Three.js, WebGL, and building immersive 3D experiences on the web.`;
-    } else if (lower.includes('project') || lower.includes('work') || lower.includes('built')) {
-      response = `I've shipped 20+ projects ranging from this VOID OS portfolio (Three.js + GSAP + custom shaders) to real-time ML platforms and encrypted messaging apps. Each one pushes the boundary of what's possible in a browser.`;
-    } else if (lower.includes('experience') || lower.includes('job') || lower.includes('company')) {
-      response = `I started coding in 2022, worked as a Junior Developer at a startup, then moved to a Frontend Engineer role building SaaS products for 50K+ users. Now I'm freelancing and building open-source tools.`;
-    } else if (lower.includes('hire') || lower.includes('available') || lower.includes('freelance')) {
-      response = `Yes! I'm currently available for freelance work and full-time opportunities. I'm especially interested in roles involving creative dev, 3D web, or AI-integrated products. Let's talk!`;
-    } else if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
-      response = `Hey there! 👋 Great to meet you. Feel free to ask me about my skills, projects, experience, or anything else. I'm an open book!`;
-    } else if (lower.includes('who') && lower.includes('you')) {
-      response = `I'm ${OWNER.name} — ${OWNER.role}. ${OWNER.tagline} I specialize in building immersive, beautiful web experiences that make people go "wow".`;
-    } else {
-      response = `Great question! While I'm running in demo mode right now (no API key configured), I'm designed to answer as ${OWNER.name} using the Claude API. In production, I'd give you a detailed, personalized answer based on my full resume and experience.`;
-    }
-
-    // Simulate typing delay
-    await new Promise(r => setTimeout(r, 800 + Math.random() * 1200));
-    setMessages(prev => [...prev, { role: 'ai', text: response }]);
-    setIsTyping(false);
-  };
-
-  return (
-    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-      <div ref={chatRef} style={{
-        height: '350px', overflowY: 'auto', padding: '16px',
-        background: 'rgba(3,3,6,0.5)', borderRadius: '12px',
-        border: '1px solid var(--glass-border)', marginBottom: '12px',
-      }}>
-        {messages.map((msg, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: '12px' }}>
-            <div style={{
-              maxWidth: '80%', padding: '10px 14px', borderRadius: '12px',
-              background: msg.role === 'user' ? 'rgba(0, 212, 255, 0.15)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${msg.role === 'user' ? 'rgba(0, 212, 255, 0.2)' : 'var(--glass-border)'}`,
-              fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: 1.6,
-              color: 'var(--ghost-white)',
-            }}>
-              {msg.text}
-            </div>
-          </div>
+    <div>
+      <canvas ref={canvasRef} style={{ width: '100%', height: '320px', display: 'block', borderRadius: '2px', cursor: 'crosshair' }} />
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
+        {(['attract', 'repel'] as const).map(m => (
+          <button key={m} onClick={() => setMode(m)} style={{
+            fontFamily: 'var(--font-mono)', fontSize: '9px', padding: '6px 14px',
+            borderRadius: '2px', letterSpacing: '1px', cursor: 'pointer',
+            background: mode === m ? 'rgba(0,212,255,0.1)' : 'transparent',
+            border: `1px solid ${mode === m ? 'rgba(0,212,255,0.3)' : 'rgba(255,255,255,0.06)'}`,
+            color: mode === m ? 'var(--blue)' : 'var(--text-muted)',
+            transition: 'all 0.2s',
+          }}>
+            {m === 'attract' ? '⊕ ATTRACT' : '⊖ REPEL'}
+          </button>
         ))}
-        {isTyping && (
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-muted)', animation: 'pulse 1s infinite' }}>
-            AI Twin is thinking...
-          </div>
-        )}
-      </div>
-
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <input
-          value={input} onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
-          placeholder="Ask me anything..."
-          style={{
-            flex: 1, padding: '12px 16px', borderRadius: '8px',
-            background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)',
-            fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--ghost-white)',
-          }}
-        />
-        <button onClick={handleSend} style={{
-          padding: '12px 20px', borderRadius: '8px',
-          background: 'rgba(0, 212, 255, 0.15)', border: '1px solid rgba(0, 212, 255, 0.3)',
-          fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--plasma-blue)',
-          cursor: 'pointer', transition: 'all 0.2s',
-        }}>SEND</button>
       </div>
     </div>
   );
 }
 
-/* ── Secret Terminal ── */
+/* ============================================
+   SECRET TERMINAL
+   ============================================ */
 function SecretTerminal() {
   const [history, setHistory] = useState<Array<{ type: 'input' | 'output'; text: string }>>([
-    { type: 'output', text: 'VOID OS Secret Terminal v2045.1' },
+    { type: 'output', text: '╔═══════════════════════════════════╗' },
+    { type: 'output', text: '║   VOID OS · Secret Terminal       ║' },
+    { type: 'output', text: '║   Access Level: ROOT              ║' },
+    { type: 'output', text: '╚═══════════════════════════════════╝' },
+    { type: 'output', text: '' },
     { type: 'output', text: 'Type "help" for available commands.' },
   ]);
   const [input, setInput] = useState('');
@@ -262,16 +223,14 @@ function SecretTerminal() {
   useEffect(() => { inputRef.current?.focus(); }, []);
   useEffect(() => { if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight; }, [history]);
 
-  const handleCommand = () => {
+  const handleCommand = useCallback(() => {
     if (!input.trim()) return;
     const cmd = input.trim().toLowerCase();
     setHistory(prev => [...prev, { type: 'input', text: `$ ${input}` }]);
     setInput('');
 
-    if (cmd === 'clear') {
-      setHistory([]);
-      return;
-    }
+    if (cmd === 'clear') { setHistory([]); return; }
+    if (cmd === 'exit') { setHistory(prev => [...prev, { type: 'output', text: 'Goodbye. 👋' }]); return; }
 
     const response = TERMINAL_COMMANDS[cmd];
     if (response) {
@@ -281,27 +240,41 @@ function SecretTerminal() {
     } else {
       setHistory(prev => [...prev, { type: 'output', text: `command not found: ${cmd}. Type "help" for available commands.` }]);
     }
-  };
+  }, [input]);
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--glass-border)', background: 'rgba(3,3,6,0.9)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)' }}>
-        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FF5F56' }} />
-        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FFBD2E' }} />
-        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27C93F' }} />
-        <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)' }}>terminal.sh</span>
+    <div style={{
+      maxWidth: '600px', margin: '0 auto', borderRadius: '2px',
+      overflow: 'hidden', border: '1px solid rgba(0,212,255,0.1)',
+      background: 'rgba(3,3,6,0.95)',
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '5px',
+        padding: '8px 14px',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        background: 'rgba(255,255,255,0.02)',
+      }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FF3366' }} />
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFB800' }} />
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#39FF14' }} />
+        <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '1px' }}>
+          root@void-os ~
+        </span>
       </div>
-      <div ref={termRef} style={{ padding: '16px', height: '350px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '12px', lineHeight: 1.8 }}>
+      <div ref={termRef} style={{ padding: '14px', height: '300px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.8 }} onClick={() => inputRef.current?.focus()}>
         {history.map((line, i) => (
-          <div key={i} style={{ color: line.type === 'input' ? 'var(--acid-green)' : 'var(--text-dim)', whiteSpace: 'pre-wrap' }}>
-            {line.text}
+          <div key={i} style={{
+            color: line.type === 'input' ? 'var(--green)' : 'var(--text-dim)',
+            whiteSpace: 'pre-wrap',
+          }}>
+            {line.text || '\u00A0'}
           </div>
         ))}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ color: 'var(--acid-green)' }}>$</span>
-          <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleCommand(); }}
-            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--ghost-white)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}
+          <span style={{ color: 'var(--green)' }}>$</span>
+          <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleCommand(); }}
+            style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--white)', caretColor: 'var(--blue)' }}
           />
         </div>
       </div>
@@ -309,18 +282,24 @@ function SecretTerminal() {
   );
 }
 
-/* ── Lab Lock Screen ── */
+/* ============================================
+   LOCK SCREEN
+   ============================================ */
 function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   const [pass, setPass] = useState('');
   const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const validCodes = ['konami', 'lab', 'unlock', 'void', 'secret'];
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
   const handleSubmit = () => {
     if (validCodes.includes(pass.toLowerCase())) {
       onUnlock();
     } else {
-      setError(true);
-      setTimeout(() => setError(false), 1500);
+      setError(true); setShake(true);
+      setTimeout(() => { setError(false); setShake(false); }, 800);
       setPass('');
     }
   };
@@ -328,88 +307,142 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      minHeight: '100vh', gap: '24px',
+      minHeight: '100vh', gap: '20px',
     }}>
-      <div style={{ fontSize: '48px', marginBottom: '8px' }}>🔒</div>
-      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 700 }}>
-        LAB<span style={{ color: 'var(--acid-green)' }}>.beta</span>
+      {/* Lock icon with pulse */}
+      <div style={{
+        width: '64px', height: '64px', borderRadius: '50%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: '28px',
+        background: 'rgba(57,255,20,0.04)', border: '1px solid rgba(57,255,20,0.15)',
+        animation: 'glowPulse 3s infinite',
+      }}>
+        🔒
+      </div>
+
+      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 800 }}>
+        LAB<span style={{ color: 'var(--green)' }}>.beta</span>
       </h2>
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-dim)' }}>
-        CLASSIFIED — Enter passphrase to continue
+      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-dim)', letterSpacing: '1px' }}>
+        CLASSIFIED — Enter passphrase to access
       </p>
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <input
-          value={pass} onChange={(e) => setPass(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+
+      <div style={{
+        display: 'flex', gap: '8px',
+        animation: shake ? 'shake 0.3s ease' : 'none',
+      }}>
+        <input ref={inputRef} value={pass} onChange={e => setPass(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
           type="password" placeholder="PASSPHRASE"
           style={{
-            padding: '12px 20px', borderRadius: '8px', width: '250px',
-            background: 'rgba(255,255,255,0.04)',
-            border: `1px solid ${error ? 'var(--error-red)' : 'var(--glass-border)'}`,
-            fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--ghost-white)',
-            transition: 'border-color 0.3s',
+            padding: '12px 20px', borderRadius: '2px', width: '220px',
+            background: 'rgba(255,255,255,0.03)', fontFamily: 'var(--font-mono)', fontSize: '12px',
+            color: 'var(--white)', caretColor: 'var(--green)', letterSpacing: '3px',
+            border: `1px solid ${error ? 'var(--red)' : 'rgba(57,255,20,0.15)'}`,
+            transition: 'border-color 0.2s',
           }}
         />
         <button onClick={handleSubmit} style={{
-          padding: '12px 20px', borderRadius: '8px',
-          background: 'rgba(57, 255, 20, 0.1)', border: '1px solid rgba(57, 255, 20, 0.3)',
-          fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--acid-green)',
-          cursor: 'pointer',
-        }}>UNLOCK</button>
+          padding: '12px 18px', borderRadius: '2px',
+          background: 'rgba(57,255,20,0.06)', border: '1px solid rgba(57,255,20,0.2)',
+          fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--green)',
+          cursor: 'pointer', letterSpacing: '2px', transition: 'all 0.2s',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(57,255,20,0.1)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(57,255,20,0.06)'; }}
+        >UNLOCK</button>
       </div>
+
       {error && (
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--error-red)', animation: 'fadeIn 0.2s ease' }}>
-          ACCESS DENIED — Invalid passphrase
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--red)', letterSpacing: '1px', animation: 'fadeIn 0.2s ease' }}>
+          ✕ ACCESS DENIED
         </p>
       )}
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '20px' }}>
-        Hint: Try the Konami code easter egg to auto-unlock
+
+      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', marginTop: '12px', letterSpacing: '1px' }}>
+        HINT: TRY "void" OR "lab"
       </p>
+
+      <style>{`@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }`}</style>
     </div>
   );
 }
 
-/* ── Main Lab Section ── */
+/* ============================================
+   LAB SECTION — Main
+   ============================================ */
 export default function LabSection() {
-  const { setActiveSection, labUnlocked, setLabUnlocked } = useVoidStore();
+  const { navigateTo, labUnlocked, setLabUnlocked } = useVoidStore();
   const [activeTab, setActiveTab] = useState<LabTab>('music');
+  const backRef = useRef<HTMLButtonElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // GSAP entrance
+  useEffect(() => {
+    if (!labUnlocked) return;
+    const tl = gsap.timeline({ delay: 0.15 });
+    if (backRef.current) tl.fromTo(backRef.current, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }, 0);
+    if (headerRef.current) tl.fromTo(headerRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.1);
+    if (tabsRef.current) {
+      const buttons = tabsRef.current.children;
+      tl.fromTo(buttons, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.06, ease: 'back.out(1.5)' }, 0.35);
+    }
+    if (contentRef.current) tl.fromTo(contentRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.55);
+    return () => { tl.kill(); };
+  }, [labUnlocked]);
 
   const TABS: Array<{ id: LabTab; label: string; icon: string }> = [
-    { id: 'music', label: 'MUSIC.viz', icon: '🎵' },
-    { id: 'particles', label: 'PARTICLE.exp', icon: '✨' },
-    { id: 'ai', label: 'AI.twin', icon: '🤖' },
-    { id: 'terminal', label: 'TERMINAL.sh', icon: '💀' },
+    { id: 'music', label: 'AUDIO.viz', icon: '♫' },
+    { id: 'particles', label: 'FORCE.exp', icon: '◎' },
+    { id: 'terminal', label: 'ROOT.sh', icon: '▸' },
   ];
 
   if (!labUnlocked) {
     return (
-      <div className="section-container" style={{ background: 'var(--void-black)' }}>
-        <button className="back-button" onClick={() => setActiveSection('desktop')}>← VOID DESKTOP</button>
+      <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', zIndex: 50 }}>
+        <button className="back-button" onClick={() => navigateTo('desktop')}>← VOID DESKTOP</button>
         <LockScreen onUnlock={() => setLabUnlocked(true)} />
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%)' }} />
       </div>
     );
   }
 
   return (
-    <div className="section-container" style={{ background: 'var(--void-black)' }}>
-      <button className="back-button" onClick={() => setActiveSection('desktop')}>← VOID DESKTOP</button>
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', overflow: 'auto', zIndex: 50 }}>
+      <button ref={backRef} className="back-button" onClick={() => navigateTo('desktop')} style={{ opacity: 0 }}>← VOID DESKTOP</button>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '40px' }}>
-        <div className="section-header">
-          <span className="section-tag">// LAB.beta</span>
-          <h1>The <span className="glow-text-green">Experiments</span></h1>
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '80px 30px 60px' }}>
+        {/* Header */}
+        <div ref={headerRef} style={{ marginBottom: '36px', opacity: 0 }}>
+          <div className="section-label">06 // LAB.beta</div>
+          <h2 style={{
+            fontFamily: 'var(--font-display)', fontWeight: 800,
+            fontSize: 'clamp(28px, 4vw, 42px)', marginBottom: '8px',
+          }}>
+            The <span className="glow-text-green">Experiments</span>
+          </h2>
+          <p style={{
+            fontSize: '13px', color: 'var(--text-dim)', maxWidth: '420px', lineHeight: 1.8,
+          }}>
+            Playground for creative coding, generative art, and things that glow.
+          </p>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '40px', flexWrap: 'wrap' }}>
-          {TABS.map((tab) => (
+        <div ref={tabsRef} style={{
+          display: 'flex', gap: '6px', marginBottom: '28px', justifyContent: 'center',
+        }}>
+          {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: '10px 20px', borderRadius: '8px',
-                fontFamily: 'var(--font-mono)', fontSize: '12px',
-                background: activeTab === tab.id ? 'rgba(57, 255, 20, 0.1)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${activeTab === tab.id ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255,255,255,0.06)'}`,
-                color: activeTab === tab.id ? 'var(--acid-green)' : 'var(--text-dim)',
+                padding: '8px 18px', borderRadius: '2px',
+                fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '1px',
+                background: activeTab === tab.id ? 'rgba(57,255,20,0.06)' : 'transparent',
+                border: `1px solid ${activeTab === tab.id ? 'rgba(57,255,20,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                color: activeTab === tab.id ? 'var(--green)' : 'var(--text-muted)',
                 transition: 'all 0.2s', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: '6px',
               }}
@@ -419,14 +452,17 @@ export default function LabSection() {
           ))}
         </div>
 
-        {/* Active Experiment */}
-        <div style={{ animation: 'fadeIn 0.3s ease' }}>
+        {/* Active experiment */}
+        <div ref={contentRef} style={{ opacity: 0 }}>
           {activeTab === 'music' && <MusicVisualizer />}
           {activeTab === 'particles' && <ParticleExperiment />}
-          {activeTab === 'ai' && <AITwin />}
           {activeTab === 'terminal' && <SecretTerminal />}
         </div>
       </div>
+
+      {/* CRT + Vignette */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)' }} />
     </div>
   );
 }

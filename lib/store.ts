@@ -11,10 +11,13 @@ interface VoidStore {
   bootComplete: boolean;
   setBootComplete: (v: boolean) => void;
 
-  // Navigation
+  // Navigation + Transitions
   activeSection: Section;
   setActiveSection: (section: Section) => void;
   previousSection: Section | null;
+  isTransitioning: boolean;
+  transitionTarget: Section | null;
+  navigateTo: (section: Section) => void; // triggers transition → then swaps
 
   // Cursor
   cursorMode: CursorMode;
@@ -37,21 +40,40 @@ interface VoidStore {
   setShowScreensaver: (v: boolean) => void;
 }
 
-export const useVoidStore = create<VoidStore>((set) => ({
+export const useVoidStore = create<VoidStore>((set, get) => ({
   // Boot
   bootPhase: 'bios',
   setBootPhase: (phase) => set({ bootPhase: phase }),
   bootComplete: false,
   setBootComplete: (v) => set({ bootComplete: v }),
 
-  // Navigation
+  // Navigation + Transitions
   activeSection: 'boot',
   setActiveSection: (section) =>
     set((state) => ({
       activeSection: section,
       previousSection: state.activeSection,
+      isTransitioning: false,
+      transitionTarget: null,
     })),
   previousSection: null,
+  isTransitioning: false,
+  transitionTarget: null,
+  navigateTo: (section) => {
+    const { activeSection } = get();
+    if (section === activeSection) return;
+    // Start transition: flag transitioning, set target
+    set({ isTransitioning: true, transitionTarget: section });
+    // After glitch-out animation completes, actually swap the section
+    setTimeout(() => {
+      set((state) => ({
+        activeSection: section,
+        previousSection: state.activeSection,
+        isTransitioning: false,
+        transitionTarget: null,
+      }));
+    }, 600); // 600ms = glitch-out duration
+  },
 
   // Cursor
   cursorMode: 'default',

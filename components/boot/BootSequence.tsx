@@ -1,403 +1,353 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { OWNER } from '@/lib/portfolio-data';
 
 /* ============================================
-   VOID OS — Boot Sequence
-   BIOS → Diagnostics → Glitch → Particles → Tagline → Ready
+   BIOS SCREEN — GSAP timeline
    ============================================ */
+function BiosScreen({ onComplete }: { onComplete: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const progressTextRef = useRef<HTMLSpanElement>(null);
 
-const BIOS_LINES = [
-  { text: 'VOID BIOS v2045.1 — Quantum Core Edition', delay: 0, color: 'var(--ghost-white)' },
-  { text: 'Copyright (C) 2045 VOID Systems Inc.', delay: 100, color: 'var(--text-dim)' },
-  { text: '', delay: 200, color: '' },
-  { text: 'Quantum Core: 128 qubits @ 4.7 GHz............ OK', delay: 300, color: 'var(--acid-green)' },
-  { text: 'Holographic RAM: 1 PB.......................... OK', delay: 500, color: 'var(--acid-green)' },
-  { text: 'Neural Interface: v12.8........................ OK', delay: 700, color: 'var(--acid-green)' },
-  { text: 'Subspace Network: Entanglement Active.......... OK', delay: 900, color: 'var(--acid-green)' },
-  { text: '', delay: 1000, color: '' },
-  { text: '> LOADING CONSCIOUSNESS............. 97%', delay: 1100, color: 'var(--plasma-blue)' },
-  { text: '> MOUNTING CREATIVITY............... OK', delay: 1400, color: 'var(--acid-green)' },
-  { text: '> SKILLS DETECTED................... OK', delay: 1600, color: 'var(--acid-green)' },
-  { text: '> INITIALIZING EXPERIENCE........... OK', delay: 1800, color: 'var(--acid-green)' },
-  { text: '', delay: 2000, color: '' },
-  { text: '> WARNING: REALITY.EXE UNSTABLE', delay: 2100, color: 'var(--warning-amber)' },
-  { text: '> LAUNCHING VOID_OS.................', delay: 2400, color: 'var(--plasma-blue)' },
-];
+  const DIAG_LINES = [
+    { text: 'VOID BIOS v2045.1.0', status: '', color: '#00D4FF' },
+    { text: 'Quantum Core............', status: '[OK]', color: '#39FF14' },
+    { text: 'Neural Stack............', status: '[OK]', color: '#39FF14' },
+    { text: 'Memory Fabric...........', status: '64 TB', color: '#FFB800' },
+    { text: 'GPU Mesh................', status: '[OK]', color: '#39FF14' },
+    { text: 'Consciousness Layer.....', status: '[OK]', color: '#39FF14' },
+    { text: 'Identity Module.........', status: 'LOADING', color: '#00D4FF' },
+  ];
 
-const NAME_ASCII = `
-██╗   ██╗ ██████╗ ██╗██████╗      ██████╗ ███████╗
-██║   ██║██╔═══██╗██║██╔══██╗    ██╔═══██╗██╔════╝
-██║   ██║██║   ██║██║██║  ██║    ██║   ██║███████╗
-╚██╗ ██╔╝██║   ██║██║██║  ██║    ██║   ██║╚════██║
- ╚████╔╝ ╚██████╔╝██║██████╔╝    ╚██████╔╝███████║
-  ╚═══╝   ╚═════╝ ╚═╝╚═════╝      ╚═════╝ ╚══════╝`;
-
-export default function BootSequence() {
-  const { setBootPhase, setBootComplete, setActiveSection, bootPhase } = useVoidStore();
-  const [visibleLines, setVisibleLines] = useState<number>(0);
-  const [showName, setShowName] = useState(false);
-  const [showTagline, setShowTagline] = useState(false);
-  const [taglineText, setTaglineText] = useState('');
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [glitchActive, setGlitchActive] = useState(false);
-  const [showParticles, setShowParticles] = useState(false);
-  const [biosComplete, setBiosComplete] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animFrameRef = useRef<number>(0);
-
-  // BIOS line reveal
   useEffect(() => {
-    if (bootPhase !== 'bios') return;
-    const timers: NodeJS.Timeout[] = [];
+    const container = containerRef.current;
+    if (!container) return;
 
-    BIOS_LINES.forEach((line, i) => {
-      timers.push(
-        setTimeout(() => {
-          setVisibleLines(i + 1);
-        }, line.delay)
-      );
+    const tl = gsap.timeline({
+      onComplete: () => { setTimeout(onComplete, 200); },
     });
 
-    timers.push(
-      setTimeout(() => {
-        setBootPhase('diagnostics');
-        setBiosComplete(true);
-      }, 2800)
-    );
+    // Create line elements
+    DIAG_LINES.forEach((line, i) => {
+      const el = document.createElement('div');
+      el.style.cssText = 'display:flex;justify-content:space-between;font-size:11px;line-height:2.2;opacity:0;transform:translateY(5px)';
+      el.innerHTML = `<span style="color:rgba(232,232,240,0.5)">${line.text}</span><span style="color:${line.color};font-weight:600">${line.status}</span>`;
+      container.appendChild(el);
 
-    return () => timers.forEach(clearTimeout);
-  }, [bootPhase, setBootPhase]);
+      tl.to(el, {
+        opacity: 1, y: 0, duration: 0.15, ease: 'power2.out',
+      }, 0.3 + i * 0.22);
+    });
 
-  // Diagnostics → Glitch → Name
-  useEffect(() => {
-    if (bootPhase !== 'diagnostics') return;
-    const t1 = setTimeout(() => {
-      setGlitchActive(true);
-      setBootPhase('glitch');
-    }, 300);
+    // Progress bar animation
+    tl.to(progressRef.current, {
+      scaleX: 1, duration: 1.2, ease: 'power1.inOut',
+      transformOrigin: 'left center',
+    }, 0.3);
 
-    return () => clearTimeout(t1);
-  }, [bootPhase, setBootPhase]);
-
-  useEffect(() => {
-    if (bootPhase !== 'glitch') return;
-    const t1 = setTimeout(() => {
-      setGlitchActive(false);
-      setShowParticles(true);
-      setBootPhase('particles');
-    }, 800);
-
-    return () => clearTimeout(t1);
-  }, [bootPhase, setBootPhase]);
-
-  // Particles → Name reveal
-  useEffect(() => {
-    if (bootPhase !== 'particles') return;
-    const t1 = setTimeout(() => {
-      setShowName(true);
-      setBootPhase('tagline');
-    }, 1200);
-
-    return () => clearTimeout(t1);
-  }, [bootPhase, setBootPhase]);
-
-  // Tagline typewriter
-  useEffect(() => {
-    if (bootPhase !== 'tagline') return;
-    const fullText = OWNER.tagline;
-    let i = 0;
-
-    const t1 = setTimeout(() => {
-      setShowTagline(true);
-      const interval = setInterval(() => {
-        if (i < fullText.length) {
-          setTaglineText(fullText.slice(0, i + 1));
-          i++;
-        } else {
-          clearInterval(interval);
-          setTimeout(() => {
-            setShowPrompt(true);
-            setBootPhase('ready');
-          }, 500);
+    tl.to({ val: 0 }, {
+      val: 100, duration: 1.2,
+      onUpdate: function () {
+        if (progressTextRef.current) {
+          progressTextRef.current.textContent = `${Math.round(this.targets()[0].val)}%`;
         }
-      }, 40);
+      },
+    }, 0.3);
 
-      return () => clearInterval(interval);
-    }, 400);
+    return () => { tl.kill(); };
+  }, [onComplete]);
 
-    return () => clearTimeout(t1);
-  }, [bootPhase, setBootPhase]);
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 10,
+      display: 'flex', flexDirection: 'column', justifyContent: 'center',
+      padding: '0 15%', fontFamily: "'JetBrains Mono', monospace",
+    }}>
+      <div ref={containerRef} style={{ marginBottom: '30px' }} />
 
-  // Particle canvas animation
+      <div style={{ maxWidth: '300px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'rgba(232,232,240,0.3)', marginBottom: '4px', letterSpacing: '1px' }}>
+          <span>BOOT</span>
+          <span ref={progressTextRef}>0%</span>
+        </div>
+        <div style={{ height: '2px', background: 'rgba(255,255,255,0.04)', borderRadius: '1px', overflow: 'hidden' }}>
+          <div ref={progressRef} style={{
+            height: '100%', borderRadius: '1px',
+            background: 'linear-gradient(90deg, #00D4FF, #7B2FFF)',
+            transform: 'scaleX(0)', transformOrigin: 'left center',
+          }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================
+   GLITCH TRANSITION — GSAP tearbar animation
+   ============================================ */
+function GlitchTransition({ onComplete }: { onComplete: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (!showParticles || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const tl = gsap.timeline({ onComplete });
 
-    const particles: Array<{
-      x: number; y: number; vx: number; vy: number;
-      size: number; alpha: number; color: string;
-    }> = [];
-
-    const colors = ['#00D4FF', '#7B2FFF', '#39FF14', '#FFB800'];
-    for (let i = 0; i < 200; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
-        size: Math.random() * 2 + 0.5,
-        alpha: Math.random() * 0.8 + 0.2,
-        color: colors[Math.floor(Math.random() * colors.length)],
-      });
+    // Create 12 tear bars
+    const bars: HTMLDivElement[] = [];
+    for (let i = 0; i < 12; i++) {
+      const bar = document.createElement('div');
+      bar.style.cssText = `position:absolute;left:0;right:0;height:${2 + Math.random() * 8}px;top:${5 + Math.random() * 90}%;opacity:0;`;
+      bar.style.background = i % 3 === 0 ? 'rgba(0,212,255,0.2)' : i % 3 === 1 ? 'rgba(123,47,255,0.15)' : 'rgba(57,255,20,0.1)';
+      bar.style.transform = `translateX(${(Math.random() - 0.5) * 40}px)`;
+      container.appendChild(bar);
+      bars.push(bar);
     }
 
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+    // Phase 1: Bars flash in (0-150ms)
+    tl.to(bars, {
+      opacity: 1, duration: 0.08, stagger: { each: 0.01, from: 'random' },
+    }, 0);
 
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.alpha;
-        ctx.fill();
-      });
+    // Phase 2: Bars slide and fade (150-350ms)
+    tl.to(bars, {
+      x: () => `+=${(Math.random() - 0.5) * 60}`,
+      opacity: 0,
+      duration: 0.2,
+      stagger: { each: 0.015, from: 'random' },
+      ease: 'power2.in',
+    }, 0.12);
 
-      // Draw connections
-      ctx.globalAlpha = 0.05;
-      ctx.strokeStyle = '#00D4FF';
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 100) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
+    // Phase 3: White flash
+    const flash = document.createElement('div');
+    flash.style.cssText = 'position:absolute;inset:0;background:rgba(232,232,240,0.08);opacity:0;';
+    container.appendChild(flash);
+    tl.to(flash, { opacity: 1, duration: 0.05 }, 0.25);
+    tl.to(flash, { opacity: 0, duration: 0.1 }, 0.3);
+
+    return () => { tl.kill(); };
+  }, [onComplete]);
+
+  return <div ref={containerRef} style={{ position: 'absolute', inset: 0, zIndex: 100, overflow: 'hidden' }} />;
+}
+
+/* ============================================
+   NAME REVEAL — GSAP text decode + type
+   ============================================ */
+function NameReveal({ onReady }: { onReady: () => void }) {
+  const nameRef = useRef<HTMLHeadingElement>(null);
+  const roleRef = useRef<HTMLDivElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
+  const taglineRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const name = nameRef.current;
+    const role = roleRef.current;
+    const line = lineRef.current;
+    const tagline = taglineRef.current;
+    const cta = ctaRef.current;
+    if (!name || !role || !line || !tagline || !cta) return;
+
+    const nameText = OWNER.name.toUpperCase();
+    const roleText = OWNER.role;
+    const taglineText = 'The portfolio that feels alive.';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?';
+
+    const tl = gsap.timeline();
+
+    // Line reveal
+    tl.fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: 'power2.out' }, 0);
+
+    // Name: decode from scrambled chars
+    name.textContent = nameText.replace(/[^ ]/g, () => chars[Math.floor(Math.random() * chars.length)]);
+    tl.fromTo(name, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.2);
+    tl.to({ progress: 0 }, {
+      progress: 1, duration: 1.0, ease: 'power1.inOut',
+      onUpdate: function () {
+        const p = this.targets()[0].progress;
+        const resolved = Math.floor(p * nameText.length);
+        let result = '';
+        for (let i = 0; i < nameText.length; i++) {
+          if (nameText[i] === ' ') { result += ' '; continue; }
+          result += i < resolved ? nameText[i] : chars[Math.floor(Math.random() * chars.length)];
         }
-      }
-      ctx.globalAlpha = 1;
-      animFrameRef.current = requestAnimationFrame(animate);
-    };
+        name.textContent = result;
+      },
+      onComplete: () => { name.textContent = nameText; },
+    }, 0.3);
 
-    animate();
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, [showParticles]);
+    // Role: decode
+    role.textContent = roleText.replace(/[^ ]/g, () => chars[Math.floor(Math.random() * chars.length)]);
+    tl.fromTo(role, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.9);
+    tl.to({ progress: 0 }, {
+      progress: 1, duration: 0.8, ease: 'power1.inOut',
+      onUpdate: function () {
+        const p = this.targets()[0].progress;
+        const resolved = Math.floor(p * roleText.length);
+        let result = '';
+        for (let i = 0; i < roleText.length; i++) {
+          if (roleText[i] === ' ') { result += ' '; continue; }
+          result += i < resolved ? roleText[i] : chars[Math.floor(Math.random() * chars.length)];
+        }
+        role.textContent = result;
+      },
+      onComplete: () => { role.textContent = roleText; },
+    }, 1.0);
 
-  // Handle key press to enter
+    // Tagline: typewriter
+    tagline.textContent = '';
+    tl.to({ idx: 0 }, {
+      idx: taglineText.length, duration: 1.2, ease: 'none',
+      onUpdate: function () {
+        tagline.textContent = taglineText.slice(0, Math.floor(this.targets()[0].idx));
+      },
+    }, 1.8);
+
+    // CTA
+    tl.fromTo(cta, { opacity: 0 }, { opacity: 1, duration: 0.5 }, 3.2);
+    tl.call(onReady, [], 3.2);
+
+    // Cursor blink (infinite)
+    if (cursorRef.current) {
+      gsap.to(cursorRef.current, { opacity: 0, duration: 0.5, repeat: -1, yoyo: true, ease: 'steps(1)' });
+    }
+
+    return () => { tl.kill(); };
+  }, [onReady]);
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 10,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <div ref={lineRef} style={{
+        width: '60px', height: '1px', marginBottom: '24px',
+        background: 'linear-gradient(90deg, transparent, #00D4FF, transparent)',
+        transformOrigin: 'center',
+      }} />
+
+      <h1 ref={nameRef} style={{
+        fontFamily: "'Syne', sans-serif", fontWeight: 800,
+        fontSize: 'clamp(36px, 6vw, 72px)', letterSpacing: '6px',
+        background: 'linear-gradient(135deg, #E8E8F0 0%, #00D4FF 50%, #7B2FFF 100%)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text', marginBottom: '12px', lineHeight: 1.1,
+        textAlign: 'center', opacity: 0,
+      }} />
+
+      <div ref={roleRef} style={{
+        fontFamily: "'JetBrains Mono', monospace", fontSize: '12px',
+        color: '#00D4FF', letterSpacing: '4px', marginBottom: '28px', opacity: 0,
+      }} />
+
+      <div style={{
+        fontFamily: "'JetBrains Mono', monospace", fontSize: '13px',
+        color: 'rgba(232,232,240,0.4)', letterSpacing: '0.5px',
+        minHeight: '20px', display: 'flex', alignItems: 'center',
+      }}>
+        <span ref={taglineRef} />
+        <span ref={cursorRef} style={{
+          width: '7px', height: '15px', background: '#00D4FF',
+          marginLeft: '2px', display: 'inline-block',
+        }} />
+      </div>
+
+      <div ref={ctaRef} style={{
+        marginTop: '50px', fontFamily: "'JetBrains Mono', monospace",
+        fontSize: '10px', color: 'rgba(232,232,240,0.2)',
+        letterSpacing: '3px', opacity: 0,
+      }}>
+        PRESS ANY KEY TO ENTER VOID OS
+      </div>
+    </div>
+  );
+}
+
+/* ============================================
+   AMBIENT GRID (pure CSS)
+   ============================================ */
+function AmbientGrid() {
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', opacity: 0.4, pointerEvents: 'none' }}>
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px)',
+        backgroundSize: '100% 40px',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'linear-gradient(90deg, rgba(123,47,255,0.02) 1px, transparent 1px)',
+        backgroundSize: '40px 100%',
+      }} />
+    </div>
+  );
+}
+
+/* ============================================
+   MAIN BOOT SEQUENCE
+   ============================================ */
+export default function BootSequence() {
+  const { setBootComplete, setActiveSection, setBootPhase } = useVoidStore();
+  const [phase, setPhase] = useState<'bios' | 'glitch' | 'reveal'>('bios');
+  const [isReady, setIsReady] = useState(false);
+
+  const handleBiosComplete = useCallback(() => setPhase('glitch'), []);
+  const handleGlitchComplete = useCallback(() => {
+    setPhase('reveal');
+    setBootPhase('ready');
+  }, [setBootPhase]);
+  const handleReady = useCallback(() => setIsReady(true), []);
+
   const handleEnter = useCallback(() => {
-    if (bootPhase !== 'ready') return;
-    setBootComplete(true);
-    setActiveSection('desktop');
-  }, [bootPhase, setBootComplete, setActiveSection]);
+    if (!isReady) return;
+    // Exit animation
+    gsap.to('.boot-container', {
+      opacity: 0, scale: 1.05, duration: 0.4, ease: 'power2.in',
+      onComplete: () => {
+        setBootComplete(true);
+        setActiveSection('desktop');
+      },
+    });
+  }, [isReady, setBootComplete, setActiveSection]);
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent | MouseEvent) => {
-      e.preventDefault();
-      handleEnter();
-    };
-    if (bootPhase === 'ready') {
-      window.addEventListener('keydown', handler);
-      window.addEventListener('click', handler);
-    }
+    if (!isReady) return;
+    const handler = () => handleEnter();
+    window.addEventListener('keydown', handler);
+    window.addEventListener('click', handler);
     return () => {
       window.removeEventListener('keydown', handler);
       window.removeEventListener('click', handler);
     };
-  }, [bootPhase, handleEnter]);
+  }, [isReady, handleEnter]);
+
+  // Pulse CTA with GSAP
+  useEffect(() => {
+    if (!isReady) return;
+    const el = document.querySelector('.boot-cta');
+    if (el) gsap.to(el, { opacity: 0.5, duration: 1.5, repeat: -1, yoyo: true });
+  }, [isReady]);
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'var(--void-black)',
-      zIndex: 1000, display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+    <div className="boot-container" style={{
+      position: 'fixed', inset: 0, background: '#030306', zIndex: 1000, overflow: 'hidden',
     }}>
-      {/* Particle canvas */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'absolute', inset: 0,
-          opacity: showParticles ? 1 : 0,
-          transition: 'opacity 1s ease',
-        }}
-      />
+      <AmbientGrid />
 
-      {/* CRT scanline overlay */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 3px)',
-        zIndex: 2,
-      }} />
+      {/* Scanlines + Vignette */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 50, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)' }} />
+      <div style={{ position: 'absolute', inset: 0, zIndex: 49, pointerEvents: 'none', background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%)' }} />
 
-      {/* Glitch overlay */}
-      {glitchActive && (
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 10,
-          background: 'var(--void-black)',
-          animation: 'glitch-screen 0.8s steps(4) forwards',
-        }}>
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(transparent 50%, rgba(0,212,255,0.03) 50%)',
-            backgroundSize: '100% 4px',
-          }} />
-          {[...Array(8)].map((_, i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              top: `${Math.random() * 100}%`,
-              left: 0, right: 0,
-              height: `${Math.random() * 3 + 1}px`,
-              background: `rgba(${Math.random() > 0.5 ? '0,212,255' : '123,47,255'},${Math.random() * 0.5 + 0.1})`,
-              transform: `translateX(${(Math.random() - 0.5) * 20}px)`,
-            }} />
-          ))}
-        </div>
-      )}
-
-      {/* BIOS Content */}
-      {!biosComplete && (
-        <div style={{
-          position: 'relative', zIndex: 5,
-          fontFamily: 'var(--font-mono)', fontSize: '13px',
-          lineHeight: '1.8', padding: '40px',
-          maxWidth: '700px', width: '100%',
-          animation: 'fadeIn 0.3s ease',
-        }}>
-          {BIOS_LINES.slice(0, visibleLines).map((line, i) => (
-            <div key={i} style={{
-              color: line.color || 'var(--ghost-white)',
-              opacity: line.text ? 1 : 0,
-              minHeight: '24px',
-            }}>
-              {line.text}
-            </div>
-          ))}
-          <div style={{
-            display: 'inline-block', width: '8px', height: '16px',
-            background: 'var(--plasma-blue)', animation: 'blink 1s infinite',
-            marginTop: '4px',
-          }} />
-        </div>
-      )}
-
-      {/* Name + Tagline */}
-      {showName && (
-        <div style={{
-          position: 'relative', zIndex: 5,
-          textAlign: 'center',
-          animation: 'fadeIn 1s ease',
-        }}>
-          {/* ASCII Name */}
-          <pre style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'clamp(4px, 1.2vw, 10px)',
-            lineHeight: 1.2,
-            color: 'var(--plasma-blue)',
-            textShadow: '0 0 20px rgba(0, 212, 255, 0.5), 0 0 60px rgba(0, 212, 255, 0.2)',
-            whiteSpace: 'pre',
-            letterSpacing: '0.02em',
-            marginBottom: '20px',
-          }}>
-            {NAME_ASCII}
-          </pre>
-
-          {/* Name text fallback */}
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(48px, 10vw, 120px)',
-            fontWeight: 800,
-            letterSpacing: '-2px',
-            lineHeight: 1,
-            marginBottom: '8px',
-            background: 'linear-gradient(135deg, var(--ghost-white) 0%, var(--plasma-blue) 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            {OWNER.name}
-          </h1>
-
-          <p style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '14px',
-            color: 'var(--text-dim)',
-            letterSpacing: '4px',
-            textTransform: 'uppercase',
-            marginBottom: '32px',
-          }}>
-            {OWNER.role}
-          </p>
-
-          {/* Tagline typewriter */}
-          {showTagline && (
-            <p style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 'clamp(16px, 2vw, 22px)',
-              color: 'var(--ghost-white)',
-              opacity: 0.8,
-              marginBottom: '48px',
-              minHeight: '30px',
-            }}>
-              {taglineText}
-              <span style={{
-                display: 'inline-block', width: '2px', height: '1em',
-                background: 'var(--plasma-blue)', marginLeft: '2px',
-                animation: 'blink 1s infinite',
-                verticalAlign: 'text-bottom',
-              }} />
-            </p>
-          )}
-
-          {/* Press any key prompt */}
-          {showPrompt && (
-            <div style={{
-              animation: 'fadeIn 0.5s ease, pulse 2s infinite',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '12px',
-              color: 'var(--text-dim)',
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-            }}>
-              [ PRESS ANY KEY TO ENTER ]
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Bottom system info */}
-      <div style={{
-        position: 'absolute', bottom: '20px', left: '20px',
-        fontFamily: 'var(--font-mono)', fontSize: '11px',
-        color: 'var(--text-muted)', zIndex: 5,
-      }}>
-        VOID OS v2045.1 · Quantum Core · {new Date().getFullYear()}
-      </div>
-
-      <style jsx>{`
-        @keyframes glitch-screen {
-          0% { opacity: 1; transform: translate(0); }
-          20% { opacity: 0.8; transform: translate(-5px, 2px); }
-          40% { opacity: 0.6; transform: translate(5px, -3px); }
-          60% { opacity: 0.4; transform: translate(-3px, 5px); }
-          80% { opacity: 0.2; transform: translate(3px, -2px); }
-          100% { opacity: 0; transform: translate(0); }
-        }
-      `}</style>
+      {phase === 'bios' && <BiosScreen onComplete={handleBiosComplete} />}
+      {phase === 'glitch' && <GlitchTransition onComplete={handleGlitchComplete} />}
+      {phase === 'reveal' && <NameReveal onReady={handleReady} />}
     </div>
   );
 }

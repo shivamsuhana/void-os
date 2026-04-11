@@ -17,6 +17,8 @@ const EasterEggSystem = dynamic(() => import('@/components/global/EasterEggSyste
 const SoundManager = dynamic(() => import('@/components/global/SoundManager'), { ssr: false });
 const NoiseBg = dynamic(() => import('@/components/global/NoiseBg'), { ssr: false });
 const Screensaver = dynamic(() => import('@/components/global/Screensaver'), { ssr: false });
+const TransitionManager = dynamic(() => import('@/components/global/TransitionManager'), { ssr: false });
+const AITwinChat = dynamic(() => import('@/components/global/AITwinChat'), { ssr: false });
 
 function SectionRenderer() {
   const { activeSection } = useVoidStore();
@@ -36,7 +38,7 @@ export default function VoidOS() {
   const { bootComplete, activeSection } = useVoidStore();
 
   return (
-    <main style={{ background: 'var(--void-black)', minHeight: '100vh' }}>
+    <main style={{ background: 'var(--void)', minHeight: '100vh' }}>
       {/* Boot Sequence — shows until user presses a key */}
       {!bootComplete && <BootSequence />}
 
@@ -45,17 +47,21 @@ export default function VoidOS() {
 
       {/* Section Apps — render based on active section */}
       {bootComplete && activeSection !== 'desktop' && activeSection !== 'boot' && (
-        <SectionRenderer />
+        <div style={{ animation: 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          <SectionRenderer />
+        </div>
       )}
 
       {/* Global Systems — always active after boot */}
       {bootComplete && (
         <>
+          <TransitionManager />
           <MagneticCursor />
           <EasterEggSystem />
           <SoundManager />
           <NoiseBg />
           <Screensaver />
+          <AITwinChat />
         </>
       )}
     </main>

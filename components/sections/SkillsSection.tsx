@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { SKILLS, SKILL_CATEGORIES, Skill } from '@/lib/portfolio-data';
 
@@ -11,20 +12,39 @@ interface Node {
 }
 
 export default function SkillsSection() {
-  const { setActiveSection } = useVoidStore();
+  const { navigateTo } = useVoidStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const nodesRef = useRef<Node[]>([]);
   const animRef = useRef<number>(0);
-  const mouseRef = useRef({ x: 0, y: 0 });
+  const mouseRef = useRef({ x: -999, y: -999 });
   const [hoveredSkill, setHoveredSkill] = useState<Skill | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const backRef = useRef<HTMLButtonElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const graphRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Category color map
   const catColorMap: Record<string, string> = {};
-  SKILL_CATEGORIES.forEach((c) => { catColorMap[c.name] = c.color; });
+  SKILL_CATEGORIES.forEach(c => { catColorMap[c.name] = c.color; });
 
-  // Initialize force graph
+  // GSAP entrance
+  useEffect(() => {
+    const tl = gsap.timeline({ delay: 0.15 });
+    if (backRef.current) tl.fromTo(backRef.current, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }, 0);
+    if (labelRef.current) tl.fromTo(labelRef.current, { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }, 0.1);
+    if (titleRef.current) tl.fromTo(titleRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.2);
+    if (subtitleRef.current) tl.fromTo(subtitleRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.3);
+    if (graphRef.current) tl.fromTo(graphRef.current, { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.7, ease: 'power3.out' }, 0.4);
+    if (sidebarRef.current) {
+      const cards = sidebarRef.current.children;
+      tl.fromTo(cards, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.06, ease: 'power2.out' }, 0.5);
+    }
+    return () => { tl.kill(); };
+  }, []);
+
+  // Force Graph
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -36,7 +56,7 @@ export default function SkillsSection() {
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
 
@@ -44,49 +64,52 @@ export default function SkillsSection() {
     const H = canvas.getBoundingClientRect().height;
 
     // Create nodes
-    const nodes: Node[] = SKILLS.map((s, i) => ({
+    const nodes: Node[] = SKILLS.map((s) => ({
       ...s,
-      x: W / 2 + (Math.random() - 0.5) * W * 0.6,
-      y: H / 2 + (Math.random() - 0.5) * H * 0.6,
-      vx: 0, vy: 0,
-      glowing: false, glowIntensity: 0,
+      x: W / 2 + (Math.random() - 0.5) * W * 0.5,
+      y: H / 2 + (Math.random() - 0.5) * H * 0.5,
+      vx: 0, vy: 0, glowing: false, glowIntensity: 0,
     }));
     nodesRef.current = nodes;
-
     const nodeMap: Record<string, Node> = {};
-    nodes.forEach((n) => { nodeMap[n.id] = n; });
+    nodes.forEach(n => { nodeMap[n.id] = n; });
 
-    // Physics simulation
+    // Parse hex to rgba
+    const hexToRgba = (hex: string, alpha: number) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    };
+
     const simulate = () => {
-      const centerX = W / 2, centerY = H / 2;
-
+      const cx = W / 2, cy = H / 2;
       for (const node of nodes) {
         // Center gravity
-        node.vx += (centerX - node.x) * 0.0003;
-        node.vy += (centerY - node.y) * 0.0003;
+        node.vx += (cx - node.x) * 0.0004;
+        node.vy += (cy - node.y) * 0.0004;
 
-        // Repulsion from all other nodes
+        // Repulsion
         for (const other of nodes) {
           if (node === other) continue;
           const dx = node.x - other.x;
           const dy = node.y - other.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          if (dist < 120) {
-            const force = (120 - dist) / dist * 0.5;
-            node.vx += dx * force * 0.01;
-            node.vy += dy * force * 0.01;
+          if (dist < 100) {
+            const force = (100 - dist) / dist * 0.6;
+            node.vx += dx * force * 0.008;
+            node.vy += dy * force * 0.008;
           }
         }
 
-        // Attraction to connected nodes
+        // Attraction to connected
         for (const connId of node.connections) {
           const other = nodeMap[connId];
           if (!other) continue;
           const dx = other.x - node.x;
           const dy = other.y - node.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const targetDist = 100;
-          const force = (dist - targetDist) * 0.002;
+          const force = (dist - 80) * 0.002;
           node.vx += dx / dist * force;
           node.vy += dy / dist * force;
         }
@@ -95,134 +118,126 @@ export default function SkillsSection() {
         const mdx = node.x - mouseRef.current.x;
         const mdy = node.y - mouseRef.current.y;
         const mDist = Math.sqrt(mdx * mdx + mdy * mdy) || 1;
-        if (mDist < 80) {
-          node.vx += mdx / mDist * 1.5;
-          node.vy += mdy / mDist * 1.5;
+        if (mDist < 100) {
+          node.vx += mdx / mDist * 2;
+          node.vy += mdy / mDist * 2;
         }
 
-        // Damping
-        node.vx *= 0.92; node.vy *= 0.92;
+        node.vx *= 0.91; node.vy *= 0.91;
         node.x += node.vx; node.y += node.vy;
+        node.x = Math.max(40, Math.min(W - 40, node.x));
+        node.y = Math.max(40, Math.min(H - 40, node.y));
 
-        // Bounds
-        node.x = Math.max(30, Math.min(W - 30, node.x));
-        node.y = Math.max(30, Math.min(H - 30, node.y));
-
-        // Glow decay
-        if (node.glowing) node.glowIntensity = Math.max(0, node.glowIntensity - 0.01);
-        if (node.glowIntensity <= 0) node.glowing = false;
+        if (node.glowing) {
+          node.glowIntensity = Math.max(0, node.glowIntensity - 0.008);
+          if (node.glowIntensity <= 0) node.glowing = false;
+        }
       }
     };
 
-    // Render
     const render = () => {
       const rect = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width, rect.height);
 
-      // Draw edges
+      // Draw background grid
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.02)';
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x < rect.width; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, rect.height); ctx.stroke();
+      }
+      for (let y = 0; y < rect.height; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(rect.width, y); ctx.stroke();
+      }
+
+      // Edges
       for (const node of nodes) {
         for (const connId of node.connections) {
           const other = nodeMap[connId];
-          if (!other) continue;
+          if (!other || node.id > other.id) continue; // avoid duplicate lines
           const isGlowing = node.glowing && other.glowing;
+          const color = catColorMap[node.category] || '#00D4FF';
           ctx.beginPath();
           ctx.moveTo(node.x, node.y);
           ctx.lineTo(other.x, other.y);
           ctx.strokeStyle = isGlowing
-            ? `rgba(0, 212, 255, ${0.3 + node.glowIntensity * 0.5})`
-            : 'rgba(255, 255, 255, 0.06)';
+            ? hexToRgba(color, 0.3 + node.glowIntensity * 0.5)
+            : 'rgba(255,255,255,0.04)';
           ctx.lineWidth = isGlowing ? 1.5 : 0.5;
           ctx.stroke();
         }
       }
 
-      // Draw nodes
+      // Nodes
+      const time = Date.now();
       for (const node of nodes) {
         const color = catColorMap[node.category] || '#00D4FF';
-        const r = 4 + (node.proficiency / 100) * 14;
-        const pulseR = r + Math.sin(Date.now() * 0.003 + nodes.indexOf(node)) * 1.5;
+        const baseR = 3 + (node.proficiency / 100) * 12;
+        const pulseR = baseR + Math.sin(time * 0.003 + nodes.indexOf(node)) * 1;
 
-        // Glow
+        // Outer glow
         if (node.glowing && node.glowIntensity > 0) {
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, pulseR + 8, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0, 212, 255, ${node.glowIntensity * 0.2})`;
-          ctx.fill();
+          const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, pulseR + 16);
+          grad.addColorStop(0, hexToRgba(color, node.glowIntensity * 0.25));
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.beginPath(); ctx.arc(node.x, node.y, pulseR + 16, 0, Math.PI * 2);
+          ctx.fillStyle = grad; ctx.fill();
         }
 
-        // Node circle
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
-        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, pulseR);
-        gradient.addColorStop(0, color);
-        gradient.addColorStop(1, `${color}44`);
-        ctx.fillStyle = gradient;
-        ctx.fill();
+        // Node body
+        const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, pulseR);
+        grad.addColorStop(0, hexToRgba(color, 0.9));
+        grad.addColorStop(0.6, hexToRgba(color, 0.4));
+        grad.addColorStop(1, hexToRgba(color, 0.1));
+        ctx.beginPath(); ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
+        ctx.fillStyle = grad; ctx.fill();
 
-        // Border
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
-        ctx.strokeStyle = node.glowing ? 'rgba(0, 212, 255, 0.8)' : `${color}66`;
-        ctx.lineWidth = node.glowing ? 2 : 1;
+        // Ring
+        ctx.beginPath(); ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
+        ctx.strokeStyle = node.glowing ? hexToRgba(color, 0.8) : hexToRgba(color, 0.2);
+        ctx.lineWidth = node.glowing ? 2 : 0.8;
         ctx.stroke();
 
         // Label
-        ctx.font = '10px "JetBrains Mono", monospace';
-        ctx.fillStyle = 'rgba(232, 232, 240, 0.7)';
+        ctx.font = '9px "JetBrains Mono", "Space Mono", monospace';
+        ctx.fillStyle = 'rgba(232,232,240,0.5)';
         ctx.textAlign = 'center';
         ctx.fillText(node.name, node.x, node.y + pulseR + 14);
       }
     };
 
-    const loop = () => {
-      simulate();
-      render();
-      animRef.current = requestAnimationFrame(loop);
-    };
+    const loop = () => { simulate(); render(); animRef.current = requestAnimationFrame(loop); };
     loop();
 
-    // Mouse interaction
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-
-      // Find hovered node
       let found: Node | null = null;
       for (const node of nodes) {
-        const r = 4 + (node.proficiency / 100) * 14;
+        const r = 3 + (node.proficiency / 100) * 12;
         const dx = mouseRef.current.x - node.x;
         const dy = mouseRef.current.y - node.y;
-        if (Math.sqrt(dx * dx + dy * dy) < r + 5) {
-          found = node;
-          break;
-        }
+        if (Math.sqrt(dx * dx + dy * dy) < r + 8) { found = node; break; }
       }
-
       if (found) {
-        const skill = SKILLS.find((s) => s.id === found!.id) || null;
-        setHoveredSkill(skill);
+        setHoveredSkill(SKILLS.find(s => s.id === found!.id) || null);
         setTooltipPos({ x: e.clientX, y: e.clientY });
         canvas.style.cursor = 'pointer';
       } else {
         setHoveredSkill(null);
-        canvas.style.cursor = 'default';
+        canvas.style.cursor = 'crosshair';
       }
     };
 
-    // BFS ripple on click
     const handleClick = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-
       for (const node of nodes) {
-        const r = 4 + (node.proficiency / 100) * 14;
-        const dx = mx - node.x, dy = my - node.y;
-        if (Math.sqrt(dx * dx + dy * dy) < r + 5) {
+        const r = 3 + (node.proficiency / 100) * 12;
+        if (Math.sqrt(Math.pow(mx - node.x, 2) + Math.pow(my - node.y, 2)) < r + 8) {
           // BFS ripple
           const visited = new Set<string>();
           const queue: Array<{ id: string; depth: number }> = [{ id: node.id, depth: 0 }];
           visited.add(node.id);
-
           const processQueue = () => {
             if (queue.length === 0) return;
             const batch = queue.splice(0, queue.length);
@@ -230,15 +245,15 @@ export default function SkillsSection() {
               const n = nodeMap[item.id];
               if (!n) continue;
               n.glowing = true;
-              n.glowIntensity = 1 - item.depth * 0.2;
+              n.glowIntensity = Math.max(0.3, 1 - item.depth * 0.2);
               for (const connId of n.connections) {
-                if (!visited.has(connId) && item.depth < 4) {
+                if (!visited.has(connId) && item.depth < 5) {
                   visited.add(connId);
                   queue.push({ id: connId, depth: item.depth + 1 });
                 }
               }
             }
-            if (queue.length > 0) setTimeout(processQueue, 200);
+            if (queue.length > 0) setTimeout(processQueue, 150);
           };
           processQueue();
           break;
@@ -249,7 +264,6 @@ export default function SkillsSection() {
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('click', handleClick);
     window.addEventListener('resize', resize);
-
     return () => {
       cancelAnimationFrame(animRef.current);
       canvas.removeEventListener('mousemove', handleMouseMove);
@@ -258,78 +272,54 @@ export default function SkillsSection() {
     };
   }, []);
 
-  // Liquid metal background shader (canvas-based)
-  useEffect(() => {
-    const canvas = bgCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    canvas.width = 400; canvas.height = 400;
-    let frame: number;
-
-    // Simplex-like noise via sin combinations
-    const noise = (x: number, y: number, t: number) => {
-      return (Math.sin(x * 0.02 + t) + Math.sin(y * 0.03 + t * 0.7) + Math.sin((x + y) * 0.01 + t * 0.5)) / 3;
-    };
-
-    const draw = () => {
-      const t = Date.now() * 0.001;
-      const imgData = ctx.createImageData(400, 400);
-      for (let y = 0; y < 400; y++) {
-        for (let x = 0; x < 400; x++) {
-          const n = noise(x, y, t) * 0.5 + 0.5;
-          const i = (y * 400 + x) * 4;
-          imgData.data[i] = n * 8;      // R
-          imgData.data[i + 1] = n * 15;  // G
-          imgData.data[i + 2] = n * 25;  // B
-          imgData.data[i + 3] = 255;
-        }
-      }
-      ctx.putImageData(imgData, 0, 0);
-      frame = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
   return (
-    <div className="section-container" style={{ background: 'var(--void-black)', position: 'relative' }}>
-      <button className="back-button" onClick={() => setActiveSection('desktop')}>← VOID DESKTOP</button>
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', overflow: 'auto', zIndex: 50 }}>
+      <button ref={backRef} className="back-button" onClick={() => navigateTo('desktop')} style={{ opacity: 0 }}>← VOID DESKTOP</button>
 
-      {/* Liquid metal background */}
-      <canvas ref={bgCanvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.3, objectFit: 'cover' }} />
-
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto', paddingTop: '40px' }}>
-        <div className="section-header">
-          <span className="section-tag">// SKILLS.sys</span>
-          <h1>Neural <span className="glow-text-amber">Network</span></h1>
-          <p className="section-desc">Click a node to send a ripple through connected skills.</p>
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: '1100px', margin: '0 auto', paddingTop: '30px' }}>
+        <div ref={labelRef} className="section-label" style={{ opacity: 0 }}>
+          03 // SKILLS.sys
         </div>
+        <h2 ref={titleRef} style={{
+          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(28px, 4vw, 42px)',
+          marginBottom: '8px', opacity: 0,
+        }}>
+          Neural <span className="glow-text-amber">Network</span>
+        </h2>
+        <p ref={subtitleRef} style={{
+          fontSize: '13px', color: 'var(--text-dim)', marginBottom: '40px', maxWidth: '420px', lineHeight: 1.8, opacity: 0,
+        }}>
+          Skills rendered as a living neural network. Click a node to send ripples through connected skills.
+        </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 250px', gap: '24px', minHeight: '500px' }}>
-          {/* Force Graph Canvas */}
-          <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
-            <canvas ref={canvasRef} style={{ width: '100%', height: '500px', display: 'block' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '20px', minHeight: '500px' }}>
+          {/* Canvas */}
+          <div ref={graphRef} className="glass-card" style={{ overflow: 'hidden', padding: 0, opacity: 0 }}>
+            <canvas ref={canvasRef} style={{ width: '100%', height: '500px', display: 'block', cursor: 'crosshair' }} />
           </div>
 
-          {/* Category Sidebar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-dim)', letterSpacing: '2px', marginBottom: '8px' }}>
+          {/* Sidebar */}
+          <div ref={sidebarRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '2px', marginBottom: '4px' }}>
               CATEGORIES
             </div>
-            {SKILL_CATEGORIES.map((cat) => {
-              const catSkills = SKILLS.filter((s) => s.category === cat.name);
-              const avgProf = Math.round(catSkills.reduce((a, s) => a + s.proficiency, 0) / catSkills.length);
+            {SKILL_CATEGORIES.map(cat => {
+              const catSkills = SKILLS.filter(s => s.category === cat.name);
+              const avg = Math.round(catSkills.reduce((a, s) => a + s.proficiency, 0) / catSkills.length);
               return (
-                <div key={cat.name} className="glass-card" style={{ padding: '14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: cat.color }}>{cat.name}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)' }}>{avgProf}%</span>
+                <div key={cat.name} className="glass-card" style={{ padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: cat.color }}>{cat.name}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)' }}>{avg}%</span>
                   </div>
-                  <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.05)' }}>
-                    <div style={{ height: '100%', borderRadius: '2px', background: cat.color, width: `${avgProf}%`, transition: 'width 1s ease', boxShadow: `0 0 8px ${cat.color}44` }} />
+                  <div style={{ height: '2px', borderRadius: '1px', background: 'rgba(255,255,255,0.04)' }}>
+                    <div style={{
+                      height: '100%', borderRadius: '1px', background: cat.color,
+                      width: `${avg}%`, transition: 'width 1.5s ease',
+                      boxShadow: `0 0 6px ${cat.color}33`,
+                    }} />
                   </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--text-muted)', marginTop: '4px' }}>
                     {catSkills.length} skills
                   </div>
                 </div>
@@ -342,20 +332,24 @@ export default function SkillsSection() {
       {/* Tooltip */}
       {hoveredSkill && (
         <div style={{
-          position: 'fixed', left: tooltipPos.x + 16, top: tooltipPos.y - 10,
-          zIndex: 100, padding: '12px 16px', borderRadius: '8px',
-          background: 'rgba(10,10,18,0.95)', border: '1px solid var(--glass-border)',
+          position: 'fixed', left: tooltipPos.x + 14, top: tooltipPos.y - 8,
+          zIndex: 100, padding: '10px 14px', borderRadius: '2px',
+          background: 'rgba(3,3,6,0.95)', border: '1px solid var(--glass-border)',
           backdropFilter: 'blur(8px)', pointerEvents: 'none',
           animation: 'fadeIn 0.15s ease',
         }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, marginBottom: '4px' }}>{hoveredSkill.name}</div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: catColorMap[hoveredSkill.category], marginBottom: '8px' }}>{hoveredSkill.category}</div>
-          <div style={{ height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.05)', width: '120px' }}>
-            <div style={{ height: '100%', borderRadius: '2px', background: 'var(--plasma-blue)', width: `${hoveredSkill.proficiency}%` }} />
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '13px', fontWeight: 700, marginBottom: '3px' }}>{hoveredSkill.name}</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: catColorMap[hoveredSkill.category], marginBottom: '6px' }}>{hoveredSkill.category}</div>
+          <div style={{ height: '2px', borderRadius: '1px', background: 'rgba(255,255,255,0.04)', width: '100px' }}>
+            <div style={{ height: '100%', borderRadius: '1px', background: catColorMap[hoveredSkill.category], width: `${hoveredSkill.proficiency}%` }} />
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{hoveredSkill.proficiency}% proficiency</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', marginTop: '3px' }}>{hoveredSkill.proficiency}%</div>
         </div>
       )}
+
+      {/* CRT + Vignette */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)' }} />
     </div>
   );
 }

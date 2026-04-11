@@ -2,107 +2,75 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useVoidStore } from '@/lib/store';
+import { audioEngine } from '@/lib/audio-engine';
 
 /**
- * SoundManager — Web Audio API synthesized sounds
- * No external audio files needed. Everything is generated.
+ * SoundManager v2 — Section-aware spatial audio controller
+ * 
+ * - 3-layer ambient drone (starts on sound enable)
+ * - Whoosh on section transitions
+ * - Spatial click/hover sounds (panned by cursor position)
+ * - Boot sound on first load
  */
 export default function SoundManager() {
-  const { soundEnabled, toggleSound } = useVoidStore();
-  const ctxRef = useRef<AudioContext | null>(null);
-  const droneRef = useRef<{ osc: OscillatorNode; gain: GainNode } | null>(null);
+  const { soundEnabled, toggleSound, isTransitioning, activeSection } = useVoidStore();
+  const prevSectionRef = useRef(activeSection);
+  const initializedRef = useRef(false);
 
-  const getCtx = useCallback(() => {
-    if (!ctxRef.current) {
-      ctxRef.current = new AudioContext();
-    }
-    return ctxRef.current;
-  }, []);
-
-  // Play a short UI blip
-  const playClick = useCallback(() => {
-    if (!soundEnabled) return;
-    try {
-      const ctx = getCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.06, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.1);
-    } catch {}
-  }, [soundEnabled, getCtx]);
-
-  // Ambient drone
+  // Start/stop ambient drone
   useEffect(() => {
-    if (!soundEnabled) {
-      if (droneRef.current) {
-        droneRef.current.gain.gain.linearRampToValueAtTime(0, (ctxRef.current?.currentTime || 0) + 0.5);
-        setTimeout(() => {
-          try { droneRef.current?.osc.stop(); } catch {}
-          droneRef.current = null;
-        }, 600);
-      }
-      return;
+    if (soundEnabled) {
+      audioEngine.startDrone();
+    } else {
+      audioEngine.stopDrone();
     }
+    return () => { audioEngine.stopDrone(); };
+  }, [soundEnabled]);
 
-    try {
-      const ctx = getCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
+  // Section transition whoosh
+  useEffect(() => {
+    if (isTransitioning && soundEnabled) {
+      audioEngine.play('whoosh', 0);
+    }
+  }, [isTransitioning, soundEnabled]);
 
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(55, ctx.currentTime); // Low A
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(200, ctx.currentTime);
-      filter.Q.setValueAtTime(2, ctx.currentTime);
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.015, ctx.currentTime + 2);
-
-      // Subtle modulation
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
-      lfo.frequency.setValueAtTime(0.1, ctx.currentTime);
-      lfoGain.gain.setValueAtTime(15, ctx.currentTime);
-      lfo.connect(lfoGain);
-      lfoGain.connect(filter.frequency);
-      lfo.start();
-
-      osc.start();
-      droneRef.current = { osc, gain };
-    } catch {}
-
-    return () => {
-      if (droneRef.current) {
-        try { droneRef.current.osc.stop(); } catch {}
-        droneRef.current = null;
+  // Section change sound
+  useEffect(() => {
+    if (activeSection !== prevSectionRef.current && soundEnabled) {
+      if (prevSectionRef.current === 'boot') {
+        audioEngine.play('boot', 0);
       }
-    };
-  }, [soundEnabled, getCtx]);
+    }
+    prevSectionRef.current = activeSection;
+  }, [activeSection, soundEnabled]);
 
-  // Attach click sounds to all buttons
+  // Attach spatial click sounds to all buttons
   useEffect(() => {
     if (!soundEnabled) return;
-    const handler = (e: MouseEvent) => {
+
+    const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
-        playClick();
+        const panX = (e.clientX / window.innerWidth) * 2 - 1; // -1 to 1
+        audioEngine.play('click', panX);
       }
     };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, [soundEnabled, playClick]);
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
+        const panX = (e.clientX / window.innerWidth) * 2 - 1;
+        audioEngine.play('hover', panX);
+      }
+    };
+
+    document.addEventListener('click', handleClick);
+    document.addEventListener('mouseover', handleMouseOver);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('mouseover', handleMouseOver);
+    };
+  }, [soundEnabled]);
 
   return (
     <button
@@ -125,7 +93,7 @@ export default function SoundManager() {
         fontSize: '16px',
         transition: 'all 0.2s ease',
         cursor: 'pointer',
-        color: soundEnabled ? 'var(--plasma-blue)' : 'var(--text-muted)',
+        color: soundEnabled ? 'var(--blue)' : 'var(--text-muted)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
