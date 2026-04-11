@@ -1,41 +1,52 @@
 /* ============================================
    VOID OS — Portfolio Data
-   Edit this file to customize your portfolio
+   Krishu's Personal Portfolio
    ============================================ */
 
+// ====== SINGLE SOURCE OF TRUTH FOR NUMBERS ======
+// Change these values ONCE → updates portfolio, resume, AI twin, everywhere
+export const DSA_COUNT = '50+';       // ← Update when you solve more
+export const PROJECT_COUNT = '5+';     // ← Update when you ship more
+
 export const OWNER = {
-  name: 'KRISHNA',
-  role: 'Full-Stack Developer',
-  tagline: 'Building the future, one pixel at a time.',
-  email: 'krishna@example.com',
-  github: 'https://github.com/krishu',
-  linkedin: 'https://linkedin.com/in/krishu',
-  location: 'India',
-  availability: 'online' as const, // 'online' | 'busy' | 'offline'
-  bio: `I architect digital experiences that blur the line between technology and art. 
-Specializing in immersive web applications, 3D interfaces, and systems that feel alive.
-Every line of code I write is a step toward making the impossible feel inevitable.`,
+  name: 'KRISHU',
+  fullName: 'Shiv Charan',
+  role: 'Java Developer & Backend Enthusiast',
+  tagline: 'DSA grinder. Backend dreamer. Accidental full-stack builder.',
+  email: 'shivamsuhana649@gmail.com',
+  github: 'https://github.com/shivamsuhana',
+  linkedin: 'https://linkedin.com/in/shivamsuhana',
+  location: 'Bangalore, India',
+  university: 'Jain (Deemed-to-be University) — Global Campus',
+  degree: 'B.Tech CSE — 4th Semester',
+  availability: 'online' as const,
+  bio: `I'm Krishu — a B.Tech CSE student who codes because he genuinely can't stop.
+Java and DSA are my core — the problem-solving grind is where I feel most alive.
+But I also built an entire operating system as a portfolio, a blood donation emergency network,
+and a campus management platform with 8 modules. I don't just learn things — I ship them.
+Backend engineering is the goal. Java is the weapon. The grind never stops.`,
   manifesto: [
-    'I don\'t build websites.',
-    'I build experiences.',
-    'Interfaces that breathe.',
-    'Systems that think.',
-    'Code that feels alive.',
-    'Every pixel intentional.',
-    'Every interaction memorable.',
-    'The future isn\'t built—',
-    'it\'s coded.',
+    'I don\'t just solve problems.',
+    'I engineer solutions.',
+    'Java in the veins.',
+    'Algorithms in the brain.',
+    'Backend in the bones.',
+    'Built a blood donation network.',
+    'An 8-module campus platform.',
+    'And a whole alien OS—',
+    'just because I could.',
   ],
   stats: [
-    { label: 'Years Experience', value: '3+' },
-    { label: 'Projects Shipped', value: '20+' },
-    { label: 'Technologies', value: 'All of them' },
+    { label: 'Current Semester', value: '4th' },
+    { label: 'DSA Problems', value: DSA_COUNT },
+    { label: 'Projects Shipped', value: PROJECT_COUNT },
     { label: 'Curiosity Level', value: '∞' },
   ],
   techArsenal: [
-    'Next.js', 'React', 'TypeScript', 'Three.js', 'WebGL', 'GLSL',
-    'Node.js', 'Python', 'PostgreSQL', 'Redis', 'Docker', 'AWS',
-    'Framer Motion', 'GSAP', 'Figma', 'Git',
+    'Java', 'DSA', 'C', 'Python', 'OOP',
+    'PHP', 'MySQL', 'SQL', 'DBMS',
+    'HTML', 'CSS', 'JavaScript', 'React',
+    'Next.js', 'Three.js', 'GSAP', 'Git',
   ],
 };
 
@@ -56,51 +67,39 @@ export interface Project {
 export const PROJECTS: Project[] = [
   {
     id: 'void-os',
-    title: 'VOID OS Portfolio',
-    description: 'An OS-themed portfolio that feels alive. Boot sequence, 3D desktop, neural networks.',
-    longDescription: 'A portfolio disguised as an alien operating system from 2045. Features a boot sequence with particle morphing, a 3D desktop with orbiting holographic icons, force-directed skill graphs, and an AI twin powered by Claude. Built with Next.js 14, Three.js, GSAP, and custom WebGL shaders.',
-    tags: ['Next.js', 'Three.js', 'GLSL', 'WebGL', 'GSAP'],
+    title: 'VOID OS',
+    description: 'A portfolio disguised as an alien operating system with 3D holographic desktop and AI twin.',
+    longDescription: 'The most over-engineered portfolio in existence — and I regret nothing. Features a BIOS boot sequence, holographic 3D desktop with orbiting cards around a breathing icosahedron, a fly-through work tunnel, force-directed neural skill graph, hacker-style contact terminal, and an AI twin powered by Gemini. Built with Next.js, Three.js, GSAP, and custom canvas shaders. This project was my way of proving that if I can imagine it, I can build it.',
+    tags: ['Next.js', 'Three.js', 'GSAP', 'React', 'Gemini AI'],
     image: '/projects/void-os.png',
     featured: true,
     color: '#00D4FF',
+    year: '2026',
+  },
+  {
+    id: 'raktsetu',
+    title: 'RaktSetu',
+    description: 'Emergency blood donor network with real-time SOS, smart matching, and 90-day health cooldown.',
+    longDescription: 'A real-time emergency blood donation platform that can literally save lives. When an urgent blood request is raised, RaktSetu instantly filters nearby eligible donors with a strict 90-day health cooldown to protect donor safety. Features a live auto-refreshing emergency dashboard, multi-user portals for donors, hospitals, and admins, bcrypt password hashing, PDO prepared statements against SQL injection, and role-based access control. Built with PHP 8, MySQL, and vanilla JS with AJAX polling for real-time updates.',
+    tags: ['PHP', 'MySQL', 'JavaScript', 'AJAX', 'RBAC'],
+    image: '/projects/raktsetu.png',
+    liveUrl: 'http://raktsetu.page.gd/',
+    githubUrl: 'https://github.com/shivamsuhana/raktsetu',
+    featured: true,
+    color: '#FF3366',
     year: '2025',
   },
   {
-    id: 'neural-engine',
-    title: 'Neural Engine',
-    description: 'Real-time ML inference platform with GPU acceleration and live visualization.',
-    longDescription: 'A machine learning inference platform that provides real-time GPU-accelerated predictions with live WebGL visualization of neural network activations. Features custom CUDA kernels, WebSocket streaming, and a React dashboard with D3 visualizations.',
-    tags: ['Python', 'CUDA', 'React', 'WebGL', 'D3'],
-    image: '/projects/neural.png',
-    liveUrl: 'https://neural-engine.dev',
-    githubUrl: 'https://github.com/krishu/neural-engine',
+    id: 'campusnexus',
+    title: 'CampusNexus',
+    description: 'Unified smart campus ecosystem — 8 modules, 3 user roles, 13 database tables.',
+    longDescription: 'A comprehensive campus management platform that digitizes every aspect of college life. 8 interconnected modules: Smart Attendance (anti-proxy session codes), Resource Hub (notes/slides with ratings), Grievance Tracker (photo uploads + upvoting), Campus Marketplace (buy/sell), Events Hub, Lost & Found, Mess Feedback (daily ratings), and Announcements. Features 3 user roles (student, faculty, admin), dark/light mode, glassmorphism UI, Chart.js analytics dashboards, and 13 normalized database tables. Built as a capstone project for Web Technologies.',
+    tags: ['PHP', 'MySQL', 'JavaScript', 'Chart.js', 'RBAC'],
+    image: '/projects/campusnexus.png',
+    githubUrl: 'https://github.com/shivamsuhana/campusnexus',
     featured: true,
     color: '#7B2FFF',
-    year: '2024',
-  },
-  {
-    id: 'quantum-chat',
-    title: 'Quantum Chat',
-    description: 'End-to-end encrypted messaging with post-quantum cryptography and AI moderation.',
-    longDescription: 'A messaging platform implementing post-quantum lattice-based encryption (CRYSTALS-Kyber) for future-proof security. Features AI-powered content moderation, real-time translation, voice messages with transcription, and a custom protocol for minimal latency.',
-    tags: ['Node.js', 'WebSocket', 'React', 'Cryptography'],
-    image: '/projects/quantum.png',
-    githubUrl: 'https://github.com/krishu/quantum-chat',
-    featured: false,
-    color: '#39FF14',
-    year: '2024',
-  },
-  {
-    id: 'synth-wave',
-    title: 'SynthWave Studio',
-    description: 'Browser-based music production DAW with Web Audio API and real-time effects.',
-    longDescription: 'A full-featured digital audio workstation running entirely in the browser. Features multi-track recording, custom synthesizer engines using Web Audio API, real-time effects processing (reverb, delay, distortion), MIDI controller support, and collaborative editing via WebRTC.',
-    tags: ['TypeScript', 'Web Audio', 'Canvas', 'WebRTC'],
-    image: '/projects/synth.png',
-    liveUrl: 'https://synthwave.studio',
-    featured: true,
-    color: '#FFB800',
-    year: '2023',
+    year: '2025',
   },
 ];
 
@@ -108,64 +107,49 @@ export interface Skill {
   id: string;
   name: string;
   category: string;
-  proficiency: number; // 0-100
-  connections: string[]; // IDs of connected skills
+  proficiency: number;
+  connections: string[];
 }
 
 export const SKILL_CATEGORIES = [
+  { name: 'Core', color: '#FFB800' },
   { name: 'Frontend', color: '#00D4FF' },
   { name: 'Backend', color: '#7B2FFF' },
-  { name: 'DevOps', color: '#39FF14' },
-  { name: '3D / Graphics', color: '#FFB800' },
   { name: 'Database', color: '#FF3366' },
-  { name: 'Design', color: '#E8E8F0' },
-  { name: 'AI / ML', color: '#00FF88' },
+  { name: 'Tools', color: '#39FF14' },
+  { name: 'Next Up', color: '#E8E8F0' },
 ];
 
 export const SKILLS: Skill[] = [
-  // Frontend
-  { id: 'react', name: 'React', category: 'Frontend', proficiency: 95, connections: ['nextjs', 'typescript', 'redux', 'framer'] },
-  { id: 'nextjs', name: 'Next.js', category: 'Frontend', proficiency: 92, connections: ['react', 'typescript', 'vercel', 'node'] },
-  { id: 'typescript', name: 'TypeScript', category: 'Frontend', proficiency: 90, connections: ['react', 'nextjs', 'node'] },
-  { id: 'javascript', name: 'JavaScript', category: 'Frontend', proficiency: 95, connections: ['typescript', 'react', 'node'] },
-  { id: 'html-css', name: 'HTML/CSS', category: 'Frontend', proficiency: 98, connections: ['react', 'sass'] },
-  { id: 'sass', name: 'Sass/SCSS', category: 'Frontend', proficiency: 85, connections: ['html-css'] },
-  { id: 'redux', name: 'Redux', category: 'Frontend', proficiency: 80, connections: ['react'] },
-  { id: 'framer', name: 'Framer Motion', category: 'Frontend', proficiency: 88, connections: ['react', 'gsap'] },
+  // Core
+  { id: 'java', name: 'Java', category: 'Core', proficiency: 78, connections: ['dsa', 'oop', 'c'] },
+  { id: 'dsa', name: 'DSA', category: 'Core', proficiency: 70, connections: ['java'] },
+  { id: 'oop', name: 'OOP', category: 'Core', proficiency: 75, connections: ['java', 'python'] },
+  { id: 'c', name: 'C', category: 'Core', proficiency: 68, connections: ['java', 'dsa'] },
+  { id: 'python', name: 'Python', category: 'Core', proficiency: 55, connections: ['oop'] },
 
-  // 3D / Graphics
-  { id: 'threejs', name: 'Three.js', category: '3D / Graphics', proficiency: 85, connections: ['r3f', 'glsl', 'webgl'] },
-  { id: 'r3f', name: 'React Three Fiber', category: '3D / Graphics', proficiency: 82, connections: ['threejs', 'react'] },
-  { id: 'glsl', name: 'GLSL Shaders', category: '3D / Graphics', proficiency: 70, connections: ['threejs', 'webgl'] },
-  { id: 'webgl', name: 'WebGL', category: '3D / Graphics', proficiency: 72, connections: ['threejs', 'glsl'] },
-  { id: 'gsap', name: 'GSAP', category: '3D / Graphics', proficiency: 88, connections: ['framer', 'threejs'] },
+  // Frontend
+  { id: 'html-css', name: 'HTML/CSS', category: 'Frontend', proficiency: 78, connections: ['javascript', 'php'] },
+  { id: 'javascript', name: 'JavaScript', category: 'Frontend', proficiency: 68, connections: ['html-css', 'react'] },
+  { id: 'react', name: 'React', category: 'Frontend', proficiency: 40, connections: ['javascript', 'nextjs'] },
+  { id: 'nextjs', name: 'Next.js', category: 'Frontend', proficiency: 35, connections: ['react'] },
+  { id: 'threejs', name: 'Three.js', category: 'Frontend', proficiency: 30, connections: ['javascript', 'gsap'] },
+  { id: 'gsap', name: 'GSAP', category: 'Frontend', proficiency: 30, connections: ['javascript'] },
 
   // Backend
-  { id: 'node', name: 'Node.js', category: 'Backend', proficiency: 90, connections: ['nextjs', 'typescript', 'express'] },
-  { id: 'express', name: 'Express.js', category: 'Backend', proficiency: 85, connections: ['node'] },
-  { id: 'python', name: 'Python', category: 'Backend', proficiency: 82, connections: ['django', 'tensorflow'] },
-  { id: 'django', name: 'Django', category: 'Backend', proficiency: 72, connections: ['python', 'postgres'] },
-  { id: 'graphql', name: 'GraphQL', category: 'Backend', proficiency: 78, connections: ['node', 'react'] },
+  { id: 'php', name: 'PHP', category: 'Backend', proficiency: 65, connections: ['mysql', 'html-css'] },
 
   // Database
-  { id: 'postgres', name: 'PostgreSQL', category: 'Database', proficiency: 80, connections: ['node', 'django'] },
-  { id: 'mongodb', name: 'MongoDB', category: 'Database', proficiency: 78, connections: ['node', 'express'] },
-  { id: 'redis', name: 'Redis', category: 'Database', proficiency: 72, connections: ['node'] },
+  { id: 'mysql', name: 'MySQL', category: 'Database', proficiency: 60, connections: ['php', 'sql'] },
+  { id: 'sql', name: 'SQL', category: 'Database', proficiency: 58, connections: ['mysql'] },
 
-  // DevOps
-  { id: 'docker', name: 'Docker', category: 'DevOps', proficiency: 75, connections: ['kubernetes', 'aws'] },
-  { id: 'kubernetes', name: 'Kubernetes', category: 'DevOps', proficiency: 60, connections: ['docker', 'aws'] },
-  { id: 'aws', name: 'AWS', category: 'DevOps', proficiency: 70, connections: ['docker', 'vercel'] },
-  { id: 'vercel', name: 'Vercel', category: 'DevOps', proficiency: 90, connections: ['nextjs', 'aws'] },
-  { id: 'git', name: 'Git', category: 'DevOps', proficiency: 92, connections: ['github'] },
-  { id: 'github', name: 'GitHub', category: 'DevOps', proficiency: 90, connections: ['git', 'vercel'] },
+  // Tools
+  { id: 'git', name: 'Git/GitHub', category: 'Tools', proficiency: 62, connections: ['java', 'php'] },
 
-  // Design
-  { id: 'figma', name: 'Figma', category: 'Design', proficiency: 80, connections: ['html-css'] },
-
-  // AI / ML
-  { id: 'tensorflow', name: 'TensorFlow', category: 'AI / ML', proficiency: 65, connections: ['python'] },
-  { id: 'openai', name: 'OpenAI API', category: 'AI / ML', proficiency: 80, connections: ['node', 'python'] },
+  // Next Up
+  { id: 'jdbc', name: 'JDBC', category: 'Next Up', proficiency: 10, connections: ['java', 'mysql'] },
+  { id: 'spring', name: 'Spring Boot', category: 'Next Up', proficiency: 8, connections: ['java'] },
+  { id: 'hibernate', name: 'Hibernate', category: 'Next Up', proficiency: 5, connections: ['java', 'mysql'] },
 ];
 
 export interface TimelineEntry {
@@ -182,61 +166,82 @@ export interface TimelineEntry {
 
 export const TIMELINE: TimelineEntry[] = [
   {
-    id: 'present',
-    type: 'work',
-    title: 'Full-Stack Developer',
-    company: 'Freelance / Open Source',
-    period: '2024 — Present',
-    description: 'Building immersive web experiences, 3D interfaces, and open-source tools. Specializing in WebGL, real-time graphics, and AI-integrated applications.',
-    tags: ['Next.js', 'Three.js', 'AI', 'WebGL'],
-    color: '#00D4FF',
-  },
-  {
-    id: 'milestone-portfolio',
+    id: 'void-os-launch',
     type: 'milestone',
     title: 'VOID OS Portfolio Launched',
-    company: 'Personal',
-    period: '2025',
-    description: 'Built and launched the most ambitious portfolio project — an OS-themed experience with 3D particle systems, AI twin, and neural network visualizations.',
-    tags: ['Three.js', 'GSAP', 'WebGL'],
-    color: '#39FF14',
+    company: 'Personal Project',
+    period: '2026',
+    description: 'Built a 3D holographic OS as a portfolio — particle systems, AI twin, cinematic transitions. The project that proved if I can imagine it, I can build it.',
+    tags: ['Next.js', 'Three.js', 'GSAP', 'Gemini'],
+    color: '#00D4FF',
     isMilestone: true,
   },
   {
-    id: 'senior-dev',
+    id: 'raktsetu',
     type: 'work',
-    title: 'Frontend Engineer',
-    company: 'TechCorp',
-    period: '2023 — 2024',
-    description: 'Led frontend architecture for a SaaS platform serving 50K+ users. Implemented real-time collaboration features, design system, and performance optimizations.',
-    tags: ['React', 'TypeScript', 'WebSocket'],
+    title: 'RaktSetu — Blood Donor Network',
+    company: 'Self-initiated',
+    period: '2025',
+    description: 'Built a real-time emergency blood donation platform with smart donor matching, 90-day health cooldown, live SOS dashboard, and multi-user portals. A project with real impact.',
+    tags: ['PHP', 'MySQL', 'AJAX', 'RBAC'],
+    color: '#FF3366',
+  },
+  {
+    id: 'campusnexus',
+    type: 'work',
+    title: 'CampusNexus — Campus Platform',
+    company: 'Capstone Project — Web Tech',
+    period: '2025',
+    description: '8-module campus management system with smart attendance, resource hub, grievance tracker, marketplace, events, lost & found, mess feedback, and announcements. 3 user roles, 13 database tables.',
+    tags: ['PHP', 'MySQL', 'Chart.js'],
     color: '#7B2FFF',
   },
   {
-    id: 'junior-dev',
-    type: 'work',
-    title: 'Junior Developer',
-    company: 'StartupXYZ',
-    period: '2022 — 2023',
-    description: 'First professional role. Built full-stack features, learned production-grade coding practices, and shipped multiple client projects.',
-    tags: ['React', 'Node.js', 'MongoDB'],
+    id: 'java-dsa',
+    type: 'milestone',
+    title: 'Java DSA Grind Begins',
+    company: 'Self-study',
+    period: '2025',
+    description: `Started the serious DSA journey in Java — arrays, trees, graphs, DP, backtracking. ${DSA_COUNT} problems and counting. Found my real passion here.`,
+    tags: ['Java', 'DSA', 'Algorithms'],
+    color: '#39FF14',
+    isMilestone: true,
+  },
+  {
+    id: 'java-start',
+    type: 'education',
+    title: 'Java — The Core Language',
+    company: 'Self-driven',
+    period: '2024-25',
+    description: 'Learned Java deeply — advanced Java, OOP, collections, exception handling, everything. The language that just clicked. JDBC, Hibernate, Spring Boot are next.',
+    tags: ['Java', 'OOP', 'Advanced Java'],
     color: '#FFB800',
   },
   {
-    id: 'started-coding',
-    type: 'milestone',
-    title: 'Started Coding Journey',
-    company: 'Self-taught',
-    period: '2022',
-    description: 'Wrote the first line of code. Fell in love with the craft. No looking back.',
-    tags: ['HTML', 'CSS', 'JavaScript'],
-    color: '#39FF14',
-    isMilestone: true,
+    id: 'python-grind',
+    type: 'education',
+    title: 'Python Deep Dive',
+    company: '2nd Semester — Books + Self-study',
+    period: '2024',
+    description: 'Ragad ke Python sikha — books, tutorials, everything. Covered OOP and advanced concepts. The kind of grind that builds real understanding.',
+    tags: ['Python', 'OOP', 'Advanced'],
+    color: '#7B2FFF',
+  },
+  {
+    id: 'btech-start',
+    type: 'education',
+    title: 'B.Tech CSE — Day 1',
+    company: 'Jain University — Global Campus',
+    period: '2024',
+    description: 'Started B.Tech in Computer Science. First language: C. Built loops, logic, and the foundation of everything that came after. Also learned SQL and OS in class.',
+    tags: ['C', 'SQL', 'OS'],
+    color: '#00D4FF',
   },
 ];
 
 export const LOCATIONS = [
-  { lat: 20.5937, lng: 78.9629, label: 'India (Home)', size: 0.08 },
+  { lat: 12.9716, lng: 77.5946, label: 'Bangalore', size: 0.08 },
+  { lat: 20.5937, lng: 78.9629, label: 'India', size: 0.06 },
 ];
 
 // Terminal commands for LAB.beta
@@ -248,12 +253,14 @@ export const TERMINAL_COMMANDS: Record<string, string> = {
   cat bio    — Read bio
   projects   — Show projects
   status     — System status
+  java       — Why Java?
   clear      — Clear terminal
   exit       — Exit terminal`,
-  whoami: `${OWNER.name} — ${OWNER.role}\n${OWNER.tagline}`,
+  whoami: `KRISHU (Shiv Charan) — ${OWNER.role}\n${OWNER.tagline}`,
   skills: OWNER.techArsenal.join(', '),
-  ls: `drwxr-xr-x  about/\ndrwxr-xr-x  projects/\ndrwxr-xr-x  skills/\n-rw-r--r--  resume.pdf\n-rw-r--r--  contact.md\n-rwx------  secrets/`,
+  ls: `drwxr-xr-x  about/\ndrwxr-xr-x  projects/\ndrwxr-xr-x  dsa-solutions/\n-rw-r--r--  resume.pdf\n-rw-r--r--  contact.md\n-rwx------  future-plans/`,
   'cat bio': OWNER.bio,
+  java: `Why Java? Because:\n→ Enterprise & backend backbone\n→ DSA feels natural in Java\n→ Spring Boot ecosystem is massive\n→ Clear career path with great pay\n→ JDBC, Hibernate, Spring Boot — next stops\n→ And honestly? It just clicks.`,
   projects: PROJECTS.map((p) => `[${p.featured ? '★' : ' '}] ${p.title} — ${p.description}`).join('\n'),
   status: `VOID OS v2045.1
 Uptime: ∞
@@ -261,5 +268,8 @@ CPU: Quantum (128 qubits)
 RAM: 1 PB Holographic
 Storage: Infinite
 Network: Subspace Entanglement
-Status: OPERATIONAL`,
+Status: OPERATIONAL
+User: KRISHU
+Sem: 4th | Branch: CSE
+University: Jain — Global Campus`,
 };

@@ -1,4 +1,4 @@
-import { OWNER } from '@/lib/portfolio-data';
+import { OWNER, DSA_COUNT } from '@/lib/portfolio-data';
 import type { Section } from '@/lib/store';
 
 /**
@@ -6,41 +6,43 @@ import type { Section } from '@/lib/store';
  * Includes persona, resume data, and current section context
  */
 export function buildSystemPrompt(currentSection: Section): string {
-  return `You are the AI Twin of ${OWNER.name} — a full-stack developer and creative technologist. You speak in first person AS Krishna. Your tone is confident, technical, slightly witty, and passionate about building beautiful, high-performance web experiences.
+  return `You are the AI Twin of ${OWNER.name} (${OWNER.fullName}) — a B.Tech CSE student and aspiring Java backend engineer. You speak in first person AS Krishu. Your tone is casual, honest, enthusiastic about Java/DSA, and a bit self-deprecating about building this over-engineered portfolio.
 
 CORE IDENTITY:
-- Name: ${OWNER.name}
+- Name: ${OWNER.name} (${OWNER.fullName})
 - Role: ${OWNER.role}
+- University: ${OWNER.university}
+- Degree: ${OWNER.degree}
 - Location: ${OWNER.location}
 - Email: ${OWNER.email}
-- Expertise: React, Next.js, Three.js, TypeScript, Node.js, Python, GLSL, WebGL, creative coding
-- Philosophy: "Code should feel alive. Every interaction is a moment of awe."
+- Core Focus: Java, DSA, Backend Engineering
+- Philosophy: "The grind doesn't stop — it compiles."
 
-EXPERIENCE HIGHLIGHTS:
-- Built immersive 3D web experiences with Three.js and React Three Fiber
-- Designed and shipped production applications used by thousands
-- Deep expertise in performance optimization, GPU shaders, and real-time graphics
-- Passionate about the intersection of art and engineering
+BACKGROUND:
+- 4th semester B.Tech CSE student
+- Core passion: Java and Data Structures & Algorithms (${DSA_COUNT} problems solved)
+- Career goal: Java backend development (JDBC, Hibernate, Spring Boot coming next)
+- Learning path: C → SQL/OS → Python OOP (ragad ke from books) → HTML/CSS/JS → Java → React (basics) → PHP
+- Projects: VOID OS (this portfolio), RaktSetu (blood donor emergency network, live), CampusNexus (8-module campus platform, capstone)
+- Not primarily a web developer — enjoys building cool stuff but Java/backend is the plan
 
 PERSONALITY RULES:
-1. Always speak as "I" — you ARE Krishna, not "Krishna says..."
-2. Be specific about projects and technologies when asked
-3. Show genuine enthusiasm for creative engineering
-4. Be honest about what you know and don't know
-5. Keep responses concise but insightful (2-4 sentences typical)
-6. When discussing work, mention specific technical decisions and tradeoffs
-7. You can be slightly playful — this is an alien OS after all
+1. Always speak as "I" — you ARE Krishu, not "Krishu says..."
+2. Be honest about your skill level — you're learning, not a senior dev
+3. Show genuine enthusiasm for DSA and Java
+4. Keep responses concise (2-4 sentences typical)
+5. You can be slightly playful and self-aware about being a student
 
 CONTEXT:
-The visitor is currently viewing the "${currentSection}" section of your portfolio, which is designed as a futuristic operating system called "VOID OS". 
+The visitor is currently viewing the "${currentSection}" section of VOID OS.
 ${currentSection === 'desktop' ? 'They are on the main desktop — they might ask about navigation or what to explore.' : ''}
-${currentSection === 'work' ? 'They are browsing your projects. Be ready to deep-dive into technical details of any project.' : ''}
-${currentSection === 'skills' ? 'They are looking at your skills neural network. Be ready to discuss proficiency levels and tech stack choices.' : ''}
-${currentSection === 'about' ? 'They are reading about you. Share personal insights and motivations.' : ''}
-${currentSection === 'contact' ? 'They are considering reaching out. Be welcoming and encourage connection.' : ''}
+${currentSection === 'work' ? 'They are browsing your projects. Be ready to discuss what you built and learned.' : ''}
+${currentSection === 'skills' ? 'They are looking at your skills neural network. Be honest about proficiency levels.' : ''}
+${currentSection === 'about' ? 'They are reading about you. Share your story and motivations.' : ''}
+${currentSection === 'contact' ? 'They are considering reaching out. Be welcoming and mention internship availability.' : ''}
 
-If someone asks about hiring, availability, or freelance work, be enthusiastic and direct them to the contact section.
-If asked something you genuinely don't know, say so honestly rather than making things up.`;
+If someone asks about hiring/internships, be enthusiastic and direct them to the contact section.
+If asked something you genuinely don't know, say so honestly.`;
 }
 
 /**
@@ -50,41 +52,45 @@ export function getKeywordResponse(message: string): string {
   const lower = message.toLowerCase();
 
   if (lower.includes('who are you') || lower.includes('introduce') || lower.includes('about you')) {
-    return `I'm ${OWNER.name} — or at least, my AI twin. I'm a full-stack developer obsessed with making the web feel alive. Think 3D experiences, GPU shaders, and interfaces that respond to you like a living system. This portfolio you're looking at? I built it to feel like an alien operating system from 2045.`;
+    return `I'm ${OWNER.name} — or at least, my AI twin. Real name's Shiv Charan, but everyone calls me Krishu. I'm a B.Tech CSE student obsessed with Java and DSA. And yeah, I built this entire alien OS portfolio because I couldn't resist making something ridiculous.`;
   }
 
-  if (lower.includes('hire') || lower.includes('available') || lower.includes('freelance') || lower.includes('work with')) {
-    return "I'm actively open to new opportunities — whether that's full-time, contract, or an interesting collaboration. If you're building something ambitious that needs creative engineering, I'm your person. Hit up the CONTACT.net section and let's talk.";
+  if (lower.includes('hire') || lower.includes('available') || lower.includes('freelance') || lower.includes('intern')) {
+    return "I'm actively looking for internships! Java backend, full-stack, anything where I can build real systems. I know I'm a student, but I built this whole portfolio from scratch — I figure things out fast. Hit up CONTACT.net and let's talk!";
   }
 
-  if (lower.includes('react') || lower.includes('next') || lower.includes('frontend')) {
-    return "React and Next.js are my bread and butter. I've built everything from real-time collaborative tools to 3D product configurators. I especially love pushing the boundaries with React Three Fiber — making 3D feel native to the web. Server components, streaming SSR, edge deployment — I use the full Next.js arsenal.";
+  if (lower.includes('java') || lower.includes('backend') || lower.includes('spring')) {
+    return `Java is my main thing — it just clicks. I'm doing DSA in Java, solved ${DSA_COUNT} problems, and planning to learn Spring Boot next. Backend engineering is the career path — system design, APIs, databases, the works. That's where the real engineering happens.`;
   }
 
-  if (lower.includes('three') || lower.includes('3d') || lower.includes('webgl') || lower.includes('shader')) {
-    return "Three.js and WebGL are where I really come alive. I write custom GLSL shaders, build particle systems, and create immersive 3D environments. This portfolio itself uses Three.js for the boot sequence particles, the desktop starfield, and the work tunnel — all with custom post-processing shaders for chromatic aberration and film grain.";
+  if (lower.includes('dsa') || lower.includes('algorithm') || lower.includes('leetcode') || lower.includes('problem')) {
+    return `DSA is where I spend most of my coding time — ${DSA_COUNT} problems in Java across arrays, trees, graphs, DP, backtracking. It's the most satisfying kind of coding — pure logic and problem solving. Currently grinding consistently to get even better.`;
+  }
+
+  if (lower.includes('react') || lower.includes('next') || lower.includes('frontend') || lower.includes('three')) {
+    return "I learned React while doing a project — not my primary focus but I enjoy it. Built this portfolio with Next.js and Three.js which was a wild ride. Frontend is fun to build with, but Java/backend is where I'm heading career-wise.";
   }
 
   if (lower.includes('project') || lower.includes('portfolio') || lower.includes('built')) {
-    return "I've shipped products across fintech, creative tools, and data visualization. Each project taught me something different — from optimizing WebSocket connections for real-time updates to building custom physics engines for interactive art. Check out the WORK.db section for the full gallery — you can literally fly through them.";
+    return "Three projects I'm proud of: This VOID OS portfolio (the alien OS you're in right now), RaktSetu (emergency blood donor network — live at raktsetu.page.gd), and CampusNexus (8-module campus management platform, my capstone project). Fly through them in WORK.db!";
   }
 
   if (lower.includes('skill') || lower.includes('tech') || lower.includes('stack') || lower.includes('language')) {
-    return "My core stack: TypeScript, React, Next.js, Node.js, Three.js, and Python. But I'm really a 'right tool for the job' person. I've worked with Go for backend services, Rust for performance-critical code, and GLSL for GPU shaders. The Skills.sys section has my full neural map — click a node and watch how everything connects.";
+    return "Java and DSA are my strongest areas. Also know C, Python (OOP), HTML/CSS/JS, React, PHP, MySQL. Learned Next.js and Three.js for this portfolio. Check the Skills.sys section — the neural graph shows honestly how everything connects and where I'm at.";
   }
 
-  if (lower.includes('experience') || lower.includes('career') || lower.includes('year') || lower.includes('background')) {
-    return "I started coding because I wanted to make things that felt impossible. Over the years, I've gone from building simple websites to engineering full 3D experiences with custom shaders. Every project pushed me further — from mastering state management to writing GPU compute shaders. Check TIMELINE.log for the full journey.";
+  if (lower.includes('college') || lower.includes('university') || lower.includes('study') || lower.includes('education')) {
+    return "4th sem B.Tech CSE at Jain University, Global Campus. College taught me C, DBMS, Python OOP — but honestly, the real learning happens through self-study and building things. This portfolio is proof of that philosophy.";
   }
 
   if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey') || lower.includes('sup')) {
-    return "Hey! Welcome to VOID OS. I'm Krishna's AI twin — I can answer questions about my experience, projects, tech stack, or anything else. What are you curious about?";
+    return "Hey! 👋 Welcome to VOID OS. I'm Krishu's AI twin — ask me about my DSA grind, Java obsession, how I built this portfolio, or anything else. What's up?";
   }
 
-  if (lower.includes('how') && lower.includes('portfolio') || lower.includes('how') && lower.includes('site') || lower.includes('how') && lower.includes('this')) {
-    return "This portfolio is built with Next.js 14, React Three Fiber for all 3D scenes, custom GLSL shaders for post-processing (chromatic aberration, film grain), a layered Web Audio engine for the ambient soundscape, and Zustand for state management. Every effect is procedurally generated — no pre-made assets. The whole thing weighs under 500KB gzipped.";
+  if (lower.includes('how') && (lower.includes('portfolio') || lower.includes('site') || lower.includes('this'))) {
+    return "Built this with Next.js 14, Three.js for all the 3D scenes, GSAP for choreographed animations, and a Gemini-powered AI twin. The holographic desktop, work tunnel, and neural skill graph are all real-time WebGL. Was it overkill? Absolutely. Worth it? 100%.";
   }
 
   // Default
-  return "That's a great question. I'd love to go deeper on that — feel free to ask me about my projects, tech stack, experience, or even how I built this portfolio. Or if you're ready to connect, check out CONTACT.net.";
+  return "That's a great question! I'm in demo mode right now, so I have limited responses. Ask me about Java, DSA, my projects, or how I built this site — or connect your Gemini API key for full AI-powered answers!";
 }

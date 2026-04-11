@@ -235,11 +235,12 @@ export default function AboutSection() {
   const handleDownloadCV = useCallback(() => {
     setCvProgress(0);
     gsap.to({ val: 0 }, {
-      val: 100, duration: 2, ease: 'power1.inOut',
+      val: 100, duration: 1.5, ease: 'power1.inOut',
       onUpdate: function () {
         setCvProgress(Math.round(this.targets()[0].val));
       },
       onComplete: () => {
+        window.open('/resume', '_blank');
         setTimeout(() => setCvProgress(null), 1500);
       },
     });

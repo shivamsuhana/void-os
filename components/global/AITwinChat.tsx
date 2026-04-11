@@ -13,7 +13,7 @@ export default function AITwinChat() {
   const { activeSection } = useVoidStore();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'system', content: "VOID AI TWIN v2045 — Ask me anything about Krishna's work, skills, or experience." },
+    { role: 'system', content: "VOID AI TWIN v2045 — Ask me anything about Krishu's skills, projects, or DSA journey." },
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -54,8 +54,10 @@ export default function AITwinChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMsg,
-          context: activeSection,
-          history: messages.filter(m => m.role !== 'system').slice(-6),
+          history: messages
+            .filter(m => m.role !== 'system')
+            .slice(-8)
+            .map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.content })),
         }),
       });
 
@@ -247,7 +249,7 @@ export default function AITwinChat() {
             color: 'var(--text-muted)', letterSpacing: '1px',
             borderTop: '1px solid rgba(255,255,255,0.02)',
           }}>
-            CONTEXT: {activeSection.toUpperCase()} · KEYWORD MODE
+            CONTEXT: {activeSection.toUpperCase()} · GEMINI AI
           </div>
         </div>
       )}

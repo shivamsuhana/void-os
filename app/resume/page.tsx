@@ -1,0 +1,256 @@
+'use client';
+
+import { useCallback } from 'react';
+import { OWNER, PROJECTS, SKILLS, TIMELINE, SKILL_CATEGORIES, DSA_COUNT } from '@/lib/portfolio-data';
+
+/**
+ * ATS-Optimized Resume — Auto-generated from portfolio-data.ts
+ * 
+ * ATS Rules followed:
+ * ✅ Single column layout (no multi-column)
+ * ✅ No tables, graphics, images, or charts
+ * ✅ Standard section headings (Education, Skills, Projects, etc.)
+ * ✅ Clean semantic HTML with proper heading hierarchy
+ * ✅ Standard font (system sans-serif)
+ * ✅ Bullet points for achievements
+ * ✅ Keywords naturally integrated
+ * ✅ Quantifiable metrics where possible
+ * ✅ Print-optimized for clean PDF output
+ */
+export default function ResumePage() {
+  const handleDownload = useCallback(() => {
+    window.print();
+  }, []);
+
+  // Group skills by category, exclude items with very low proficiency
+  const skillsByCategory = SKILL_CATEGORIES.map(cat => ({
+    ...cat,
+    skills: SKILLS.filter(s => s.category === cat.name && s.proficiency > 15)
+      .sort((a, b) => b.proficiency - a.proficiency),
+  })).filter(cat => cat.skills.length > 0);
+
+  return (
+    <>
+      {/* Controls — hidden in print */}
+      <div className="no-print" style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: '#0a0a14', borderBottom: '1px solid rgba(0,212,255,0.15)',
+        padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '16px',
+      }}>
+        <button onClick={handleDownload} style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: '12px',
+          padding: '8px 20px', background: 'rgba(0,212,255,0.1)',
+          border: '1px solid rgba(0,212,255,0.3)', color: '#00D4FF',
+          borderRadius: '2px', cursor: 'pointer', letterSpacing: '1px',
+        }}>
+          ⬇ Download as PDF
+        </button>
+        <a href="/" style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: '11px',
+          color: 'rgba(232,232,240,0.4)', letterSpacing: '1px',
+        }}>← Back to VOID OS</a>
+        <span style={{
+          marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '9px', color: 'rgba(232,232,240,0.2)',
+        }}>
+          Print → Save as PDF &bull; Auto-synced with portfolio data
+        </span>
+      </div>
+
+      {/* ========== RESUME CONTENT ========== */}
+      <div style={{
+        maxWidth: '800px', margin: '72px auto 40px', padding: '40px 48px',
+        background: '#ffffff', color: '#1a1a1a',
+        fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+        fontSize: '11pt', lineHeight: 1.5,
+      }}>
+
+        {/* ===== HEADER ===== */}
+        <header style={{ marginBottom: '6px', textAlign: 'center' }}>
+          <h1 style={{
+            fontSize: '22pt', fontWeight: 700, margin: '0 0 2px',
+            color: '#0a0a1a', letterSpacing: '1px',
+          }}>
+            {(OWNER.fullName || OWNER.name).toUpperCase()}
+          </h1>
+          <p style={{ fontSize: '11pt', color: '#333', margin: '0 0 8px', fontWeight: 500 }}>
+            {OWNER.role}
+          </p>
+          <p style={{
+            fontSize: '9pt', color: '#555', margin: 0,
+            display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '6px',
+          }}>
+            <span>{OWNER.email}</span>
+            <span>|</span>
+            <span>{OWNER.location}</span>
+            <span>|</span>
+            <span>{OWNER.github?.replace('https://', '')}</span>
+            <span>|</span>
+            <span>{OWNER.linkedin?.replace('https://', '')}</span>
+          </p>
+        </header>
+
+        <hr style={{ border: 'none', borderTop: '1.5px solid #1a1a1a', margin: '12px 0' }} />
+
+        {/* ===== OBJECTIVE / PROFILE ===== */}
+        <section style={{ marginBottom: '14px' }}>
+          <h2 style={sectionTitle}>OBJECTIVE</h2>
+          <p style={{ margin: '4px 0 0', fontSize: '10pt', color: '#333' }}>
+            Passionate B.Tech CSE student seeking opportunities in Java Backend Development. 
+            Strong foundation in Data Structures & Algorithms with {DSA_COUNT} problems solved. 
+            Experienced in building full-stack web applications with PHP/MySQL and modern JavaScript frameworks. 
+            Eager to contribute to backend engineering, system design, and data-driven solutions.
+          </p>
+        </section>
+
+        <hr style={divider} />
+
+        {/* ===== EDUCATION ===== */}
+        <section style={{ marginBottom: '14px' }}>
+          <h2 style={sectionTitle}>EDUCATION</h2>
+          <div style={{ marginTop: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <strong style={{ fontSize: '11pt' }}>Bachelor of Technology — Computer Science & Engineering</strong>
+              <span style={{ fontSize: '9pt', color: '#555' }}>2024 — 2028 (Expected)</span>
+            </div>
+            <p style={{ margin: '1px 0', fontSize: '10pt', color: '#444' }}>
+              Jain (Deemed-to-be University) — Global Campus, Bangalore
+            </p>
+            <p style={{ margin: '2px 0 0', fontSize: '9.5pt', color: '#555' }}>
+              Currently in 4th Semester. Relevant Coursework: Data Structures & Algorithms, 
+              Object-Oriented Programming, Database Management Systems, Operating Systems, Web Technologies.
+            </p>
+          </div>
+        </section>
+
+        <hr style={divider} />
+
+        {/* ===== TECHNICAL SKILLS ===== */}
+        <section style={{ marginBottom: '14px' }}>
+          <h2 style={sectionTitle}>TECHNICAL SKILLS</h2>
+          <div style={{ marginTop: '6px' }}>
+            {skillsByCategory.map(cat => (
+              <p key={cat.name} style={{ margin: '3px 0', fontSize: '10pt' }}>
+                <strong>{cat.name === 'Core' ? 'Languages' : cat.name === 'Next Up' ? 'Currently Learning' : cat.name}:</strong>{' '}
+                <span style={{ color: '#333' }}>{cat.skills.map(s => s.name).join(', ')}</span>
+              </p>
+            ))}
+          </div>
+        </section>
+
+        <hr style={divider} />
+
+        {/* ===== PROJECTS ===== */}
+        <section style={{ marginBottom: '14px' }}>
+          <h2 style={sectionTitle}>PROJECTS</h2>
+
+          {PROJECTS.map(project => (
+            <div key={project.id} style={{ marginTop: '10px', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <strong style={{ fontSize: '11pt' }}>
+                  {project.title}
+                  {project.liveUrl && (
+                    <span style={{ fontWeight: 400, fontSize: '9pt', color: '#0066cc' }}>
+                      {' '}— {project.liveUrl.replace('https://', '').replace('http://', '')}
+                    </span>
+                  )}
+                </strong>
+                <span style={{ fontSize: '9pt', color: '#555' }}>{project.year}</span>
+              </div>
+              <p style={{ margin: '1px 0', fontSize: '9pt', color: '#666', fontStyle: 'italic' }}>
+                Tech: {project.tags.join(', ')}
+              </p>
+              <ul style={{ margin: '3px 0 0', paddingLeft: '18px', fontSize: '10pt', color: '#333' }}>
+                {getProjectBullets(project.id).map((bullet, i) => (
+                  <li key={i} style={{ marginBottom: '2px' }}>{bullet}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+
+        <hr style={divider} />
+
+        {/* ===== ACHIEVEMENTS & ACTIVITIES ===== */}
+        <section style={{ marginBottom: '14px' }}>
+          <h2 style={sectionTitle}>KEY HIGHLIGHTS</h2>
+          <ul style={{ margin: '6px 0 0', paddingLeft: '18px', fontSize: '10pt', color: '#333' }}>
+            <li style={{ marginBottom: '3px' }}>Solved <strong>{DSA_COUNT} DSA problems</strong> in Java across arrays, trees, graphs, dynamic programming, and backtracking.</li>
+            <li style={{ marginBottom: '3px' }}>Built and deployed <strong>RaktSetu</strong> — a live emergency blood donation platform serving real users.</li>
+            <li style={{ marginBottom: '3px' }}>Developed <strong>CampusNexus</strong> — an 8-module campus management system with 13 database tables as capstone project.</li>
+            <li style={{ marginBottom: '3px' }}>Self-taught <strong>Next.js, Three.js, GSAP</strong> to build an immersive 3D portfolio with holographic UI and AI integration.</li>
+            <li style={{ marginBottom: '3px' }}>Proficient in <strong>secure backend practices</strong>: bcrypt hashing, PDO prepared statements, role-based access control (RBAC).</li>
+          </ul>
+        </section>
+
+        {/* ===== FOOTER ===== */}
+        <footer style={{
+          marginTop: '20px', paddingTop: '8px', borderTop: '1px solid #ddd',
+          fontSize: '8pt', color: '#999', textAlign: 'center',
+        }}>
+          Auto-generated from portfolio · github.com/shivamsuhana
+        </footer>
+      </div>
+
+      {/* Print styles */}
+      <style jsx>{`
+        @media print {
+          .no-print { display: none !important; }
+          body { background: white !important; margin: 0; }
+          div { margin-top: 0 !important; box-shadow: none !important; }
+        }
+        @page {
+          margin: 0.5in;
+          size: A4;
+        }
+      `}</style>
+    </>
+  );
+}
+
+/* Section title style — consistent across resume */
+const sectionTitle: React.CSSProperties = {
+  fontSize: '11pt', fontWeight: 700, margin: '0',
+  letterSpacing: '2px', color: '#0a0a1a',
+  textTransform: 'uppercase' as const,
+  borderBottom: '1.5px solid #333', paddingBottom: '2px',
+  display: 'inline-block',
+};
+
+const divider: React.CSSProperties = {
+  border: 'none', borderTop: '0.5px solid #e0e0e0', margin: '8px 0',
+};
+
+/**
+ * Project-specific bullet points for resume
+ * These are action-oriented, quantifiable, and ATS-keyword-rich
+ */
+function getProjectBullets(projectId: string): string[] {
+  switch (projectId) {
+    case 'void-os':
+      return [
+        'Engineered a full-stack portfolio as an interactive 3D operating system using Next.js 14, Three.js, and GSAP.',
+        'Implemented real-time WebGL rendering with custom canvas post-processing (film grain, scanlines, chromatic aberration).',
+        'Integrated Gemini AI API for an intelligent chatbot with multi-turn conversation history.',
+        'Built holographic 3D desktop interface with drag-rotate controls, orbital animations, and particle systems.',
+      ];
+    case 'raktsetu':
+      return [
+        'Developed a real-time emergency blood donor matching platform with PHP 8 and MySQL.',
+        'Implemented smart donor eligibility engine with 90-day health cooldown tracking to ensure donor safety.',
+        'Built live auto-refreshing emergency dashboard using asynchronous AJAX polling for instant updates.',
+        'Designed multi-user portal system with 3 roles (Donor, Hospital, Admin) and role-based access control (RBAC).',
+        'Secured application with bcrypt password hashing and PDO prepared statements against SQL injection.',
+      ];
+    case 'campusnexus':
+      return [
+        'Architected an 8-module campus management platform handling attendance, resources, grievances, marketplace, events, lost & found, mess feedback, and announcements.',
+        'Designed normalized MySQL database schema with 13 tables supporting 3 user roles (Student, Faculty, Admin).',
+        'Implemented anti-proxy smart attendance system with session-code generation and real-time verification.',
+        'Built interactive analytics dashboards using Chart.js for admin-level insights and data visualization.',
+        'Applied responsive design with dark/light mode toggle, glassmorphism UI, and micro-animations.',
+      ];
+    default:
+      return [PROJECTS.find(p => p.id === projectId)?.description || ''];
+  }
+}
