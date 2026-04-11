@@ -1,10 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
+/**
+ * MagneticCursor v2 — Enhanced with:
+ * - Click particle burst effect
+ * - Smoother morphing between states
+ * - Ring expands on click
+ * - More responsive trail
+ */
 export default function MagneticCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+  const burstRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<HTMLDivElement[]>([]);
   const pos = useRef({ x: -100, y: -100 });
   const target = useRef({ x: -100, y: -100 });
@@ -12,10 +20,72 @@ export default function MagneticCursor() {
   const [hidden, setHidden] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
 
+  // Click burst particles
+  const spawnBurst = useCallback((x: number, y: number) => {
+    const canvas = burstRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const particles: Array<{ x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }> = [];
+    const colors = ['#00D4FF', '#7B2FFF', '#39FF14', '#FFB800'];
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.5;
+      const speed = 1.5 + Math.random() * 3;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: 1.5 + Math.random() * 2,
+      });
+    }
+
+    let frame: number;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.96;
+        p.vy *= 0.96;
+        p.life -= 0.035;
+        if (p.life <= 0) continue;
+        alive = true;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life * 0.6;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      if (alive) frame = requestAnimationFrame(animate);
+      else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+    frame = requestAnimationFrame(animate);
+  }, []);
+
   useEffect(() => {
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
       setIsTouch(true);
       return;
+    }
+
+    // Burst canvas
+    const burstCanvas = burstRef.current;
+    if (burstCanvas) {
+      burstCanvas.width = window.innerWidth;
+      burstCanvas.height = window.innerHeight;
+      const handleResize = () => {
+        burstCanvas.width = window.innerWidth;
+        burstCanvas.height = window.innerHeight;
+      };
+      window.addEventListener('resize', handleResize);
     }
 
     // Create particle trail elements
@@ -51,12 +121,30 @@ export default function MagneticCursor() {
       }
     };
 
+    // Click burst + ring pulse
+    const onClick = (e: MouseEvent) => {
+      spawnBurst(e.clientX, e.clientY);
+      // Ring pulse animation
+      if (ringRef.current) {
+        const ring = ringRef.current;
+        ring.style.transition = 'none';
+        ring.style.width = '60px';
+        ring.style.height = '60px';
+        ring.style.borderColor = 'rgba(0,212,255,0.5)';
+        requestAnimationFrame(() => {
+          ring.style.transition = 'width 0.4s cubic-bezier(0.16,1,0.3,1), height 0.4s cubic-bezier(0.16,1,0.3,1), border 0.4s ease';
+          ring.style.width = `${mode === 'pointer' ? 44 : 28}px`;
+          ring.style.height = `${mode === 'pointer' ? 44 : 28}px`;
+          ring.style.borderColor = `rgba(0,212,255,${mode === 'pointer' ? 0.7 : 0.3})`;
+        });
+      }
+    };
+
     const onLeave = () => setHidden(true);
     const onEnter = () => setHidden(false);
 
     let raf: number;
     const animate = () => {
-      // Smooth lerp
       pos.current.x += (target.current.x - pos.current.x) * 0.18;
       pos.current.y += (target.current.y - pos.current.y) * 0.18;
 
@@ -67,7 +155,6 @@ export default function MagneticCursor() {
         ringRef.current.style.transform = `translate(${pos.current.x}px, ${pos.current.y}px) translate(-50%, -50%)`;
       }
 
-      // Trail follows with increasing delay
       for (let i = 0; i < trails.length; i++) {
         const prev = i === 0 ? pos.current : trailPositions[i - 1];
         trailPositions[i].x += (prev.x - trailPositions[i].x) * (0.15 - i * 0.015);
@@ -80,6 +167,7 @@ export default function MagneticCursor() {
     animate();
 
     document.addEventListener('mousemove', onMove);
+    document.addEventListener('click', onClick);
     document.addEventListener('mouseleave', onLeave);
     document.addEventListener('mouseenter', onEnter);
     document.body.style.cursor = 'none';
@@ -87,12 +175,13 @@ export default function MagneticCursor() {
     return () => {
       cancelAnimationFrame(raf);
       document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('click', onClick);
       document.removeEventListener('mouseleave', onLeave);
       document.removeEventListener('mouseenter', onEnter);
       document.body.style.cursor = 'auto';
       container.remove();
     };
-  }, []);
+  }, [spawnBurst, mode]);
 
   if (isTouch) return null;
 
@@ -103,6 +192,12 @@ export default function MagneticCursor() {
 
   return (
     <>
+      {/* Burst canvas */}
+      <canvas ref={burstRef} style={{
+        position: 'fixed', inset: 0, zIndex: 99997,
+        pointerEvents: 'none',
+      }} />
+
       {/* Inner dot */}
       <div ref={dotRef} className="magnetic-cursor" style={{
         position: 'fixed', top: 0, left: 0, zIndex: 99999,
