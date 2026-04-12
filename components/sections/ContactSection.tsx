@@ -402,17 +402,21 @@ export default function ContactSection() {
           setTimeout(() => addLine(l, 'rgba(232,232,240,0.5)'), i * 400 + 300);
         });
 
-        // Actually send
+        // Actually send — build mailto with all form data pre-filled
+        const subjectLine = form.subject || `Message from ${form.name}`;
+        const bodyText = `From: ${form.name}\nEmail: ${form.email}\nSubject: ${subjectLine}\n\n${form.message}`;
+        const mailtoUrl = `mailto:${OWNER.email}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(bodyText)}`;
+
         setTimeout(async () => {
           try {
             const res = await fetch('/api/contact', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: form.name, email: form.email, message: `${form.subject ? `[${form.subject}] ` : ''}${form.message || input.trim()}` }),
+              body: JSON.stringify({ name: form.name, email: form.email, message: `[${subjectLine}] ${form.message}` }),
             });
             const data = await res.json();
-            if (data.fallback && data.mailto) window.open(data.mailto, '_blank');
+            if (data.fallback && data.mailto) window.open(mailtoUrl, '_blank');
           } catch {
-            window.open(`mailto:${OWNER.email}?subject=VOID OS: ${encodeURIComponent(form.name)}&body=${encodeURIComponent(`From: ${form.name} (${form.email})\n\n${form.message || input.trim()}`)}`, '_blank');
+            window.open(mailtoUrl, '_blank');
           }
         }, 1500);
 
@@ -542,57 +546,64 @@ export default function ContactSection() {
             )}
           </div>
 
-          {/* Input area */}
+          {/* Input area with label */}
           {!['booting', 'sending', 'sent'].includes(step) && (
             <div style={{
-              padding: '12px 18px', borderTop: '1px solid rgba(0,212,255,0.1)',
-              background: 'rgba(0,212,255,0.02)',
-              display: 'flex', alignItems: 'center', gap: 10,
-              animation: 'glow 3s ease infinite',
+              borderTop: '1px solid rgba(0,212,255,0.12)',
+              background: 'rgba(0,212,255,0.025)',
               flexShrink: 0,
             }}>
-              <span style={{ color: C.green, fontSize: '10px', letterSpacing: '1px', flexShrink: 0 }}>{promptLabel}</span>
-              <span style={{ color: C.blue, fontSize: '13px' }}>❯</span>
-              {step === 'message' ? (
-                <textarea
-                  ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-                  placeholder="Type your message..."
-                  rows={2}
-                  style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, caretColor: C.blue, resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }}
-                />
-              ) : (
-                <input
-                  ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-                  placeholder={step === 'confirm' ? 'Y or N...' : `Enter your ${promptLabel.toLowerCase()}...`}
-                  style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, caretColor: C.blue, background: 'transparent', border: 'none', outline: 'none' }}
-                />
-              )}
-              <button onClick={handleSubmit} style={{
-                fontFamily: 'var(--font-mono)', fontSize: '9px', color: C.blue, cursor: 'pointer', padding: '6px 14px',
-                border: `1px solid ${C.blue}30`, background: `${C.blue}08`, transition: 'all 0.2s', letterSpacing: '1px',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}55`; }}
-                onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}08`; e.currentTarget.style.borderColor = `${C.blue}30`; }}
-              >ENTER</button>
+              {/* Current question label */}
+              <div style={{ padding: '8px 18px 0', fontSize: '9px', letterSpacing: '2px', color: C.amber, textShadow: `0 0 8px ${C.amber}30` }}>
+                {step === 'name' && '> ENTER YOUR NAME'}
+                {step === 'email' && '> ENTER YOUR EMAIL'}
+                {step === 'subject' && '> SUBJECT OF TRANSMISSION'}
+                {step === 'message' && '> TYPE YOUR MESSAGE (Shift+Enter for new line)'}
+                {step === 'confirm' && '> CONFIRM TRANSMISSION? [Y / N]'}
+              </div>
+              <div style={{ padding: '8px 18px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ color: C.blue, fontSize: '13px', flexShrink: 0 }}>❯</span>
+                {step === 'message' ? (
+                  <textarea
+                    ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
+                    placeholder="Type your message..."
+                    rows={3}
+                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, caretColor: C.blue, resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }}
+                  />
+                ) : (
+                  <input
+                    ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
+                    placeholder={step === 'confirm' ? 'Type Y or N...' : `Type here...`}
+                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, caretColor: C.blue, background: 'transparent', border: 'none', outline: 'none' }}
+                  />
+                )}
+                <button onClick={handleSubmit} style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '9px', color: C.blue, cursor: 'pointer', padding: '6px 14px',
+                  border: `1px solid ${C.blue}44`, background: `${C.blue}10`, transition: 'all 0.2s', letterSpacing: '1px',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}22`; e.currentTarget.style.borderColor = `${C.blue}66`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}10`; e.currentTarget.style.borderColor = `${C.blue}44`; }}
+                >ENTER ↵</button>
+              </div>
             </div>
           )}
         </div>
 
         {/* RIGHT — Live data preview */}
-        <div id="contact-right" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: 'clamp(14px,2vw,24px)', gap: 14, background: 'rgba(0,212,255,0.008)' }}>
+        <div id="contact-right" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: 'clamp(14px,2vw,24px)', gap: 14, background: 'rgba(0,212,255,0.015)' }}>
 
           {/* Radar */}
-          <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.015)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 8 }}>SIGNAL DETECTION</div>
+          <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(0,212,255,0.03)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.6)', marginBottom: 8 }}>SIGNAL DETECTION</div>
             <RadarCanvas />
-            <div style={{ fontSize: '7px', letterSpacing: '1.5px', color: C.green, marginTop: 8 }}>VISITOR DETECTED · SECTOR 7G</div>
+            <div style={{ fontSize: '8px', letterSpacing: '1.5px', color: C.green, marginTop: 8, textShadow: `0 0 8px ${C.green}50` }}>● VISITOR DETECTED · SECTOR 7G</div>
           </div>
 
           {/* Live form data preview */}
-          <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.015)' }}>
-            <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: C.purple, marginBottom: 12, textShadow: `0 0 8px ${C.purple}40` }}>TRANSMISSION DATA</div>
+          <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(0,212,255,0.03)' }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: C.purple, marginBottom: 12, textShadow: `0 0 10px ${C.purple}55` }}>TRANSMISSION DATA</div>
             {[
               { label: 'SENDER', value: form.name, step: 'name' },
               { label: 'EMAIL', value: form.email, step: 'email' },
@@ -614,8 +625,8 @@ export default function ContactSection() {
           </div>
 
           {/* Status info */}
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.015)' }}>
-            <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>CONNECTION STATUS</div>
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(0,212,255,0.03)' }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.55)', marginBottom: 10 }}>CONNECTION STATUS</div>
             {[
               { label: 'STATUS', value: 'AVAILABLE', color: C.green },
               { label: 'RESPONSE', value: '< 24 HRS', color: C.amber },
@@ -623,15 +634,15 @@ export default function ContactSection() {
               { label: 'PROTOCOL', value: 'VOID/3', color: C.purple },
             ].map(s => (
               <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{s.label}</span>
-                <span style={{ fontSize: '9px', color: s.color, textShadow: `0 0 6px ${s.color}40` }}>{s.value}</span>
+                <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.55)' }}>{s.label}</span>
+                <span style={{ fontSize: '10px', color: s.color, textShadow: `0 0 8px ${s.color}50`, fontWeight: 600 }}>{s.value}</span>
               </div>
             ))}
           </div>
 
           {/* Social links */}
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.015)' }}>
-            <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>SIGNAL CHANNELS</div>
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(0,212,255,0.03)' }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.55)', marginBottom: 10 }}>SIGNAL CHANNELS</div>
             {[
               { label: 'EMAIL', value: OWNER.email, href: `mailto:${OWNER.email}`, color: C.green },
               { label: 'GITHUB', value: '@shivamsuhana', href: OWNER.github, color: C.white },

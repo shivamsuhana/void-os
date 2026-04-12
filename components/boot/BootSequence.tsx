@@ -105,21 +105,27 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
       el.innerHTML = `<span style="color:rgba(232,232,240,0.65)">${line.text}<span style="color:rgba(232,232,240,0.15)">${dots}</span></span><span style="color:${line.color};font-weight:600;${glow}">${line.status}</span>`;
       container.appendChild(el);
 
-      tl.to(el, { opacity: 1, y: 0, duration: 0.1, ease: 'power2.out' }, 0.2 + i * 0.15);
+      tl.to(el, { opacity: 1, y: 0, duration: 0.12, ease: 'power2.out' }, 0.4 + i * 0.28);
+
+      // Random glitch flicker on some lines
+      if (Math.random() > 0.5) {
+        tl.to(el, { opacity: 0.3, x: 3, duration: 0.04 }, 0.4 + i * 0.28 + 0.12);
+        tl.to(el, { opacity: 1, x: 0, duration: 0.06 }, 0.4 + i * 0.28 + 0.16);
+      }
 
       if (line.status === '[OK]') {
         const span = el.querySelector('span:last-child') as HTMLElement;
-        if (span) tl.fromTo(span, { textShadow: `0 0 25px ${line.color}` }, { textShadow: `0 0 8px ${line.color}55`, duration: 0.25 }, 0.2 + i * 0.15 + 0.06);
+        if (span) tl.fromTo(span, { textShadow: `0 0 25px ${line.color}` }, { textShadow: `0 0 8px ${line.color}55`, duration: 0.3 }, 0.4 + i * 0.28 + 0.1);
       }
     });
 
     // Progress bar
-    tl.to(progressRef.current, { scaleX: 1, duration: 0.8, ease: 'power1.inOut', transformOrigin: 'left center' }, 0.2);
-    if (glowRef.current) tl.to(glowRef.current, { scaleX: 1, duration: 0.8, ease: 'power1.inOut', transformOrigin: 'left center' }, 0.2);
+    tl.to(progressRef.current, { scaleX: 1, duration: 2.0, ease: 'power1.inOut', transformOrigin: 'left center' }, 0.4);
+    if (glowRef.current) tl.to(glowRef.current, { scaleX: 1, duration: 2.0, ease: 'power1.inOut', transformOrigin: 'left center' }, 0.4);
     tl.to({ val: 0 }, {
-      val: 100, duration: 0.8,
+      val: 100, duration: 2.0,
       onUpdate: function () { if (progressTextRef.current) progressTextRef.current.textContent = `${Math.round(this.targets()[0].val)}%`; },
-    }, 0.2);
+    }, 0.4);
 
     // Footer
     if (footerRef.current) {
@@ -137,11 +143,7 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
     }}>
       <div style={{
         width: 'min(420px, 85vw)',
-        padding: '24px 28px',
-        border: '1px solid rgba(0,212,255,0.1)',
-        background: 'rgba(3,3,6,0.6)',
-        backdropFilter: 'blur(12px)',
-        boxShadow: '0 0 60px rgba(0,212,255,0.05), inset 0 0 30px rgba(0,0,0,0.3)',
+        padding: '28px 32px',
       }}>
         {/* Header */}
         <div ref={headerRef} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, opacity: 0 }}>
@@ -281,8 +283,8 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         name.textContent = nameText;
         if (shimmerRef.current) {
           gsap.to(shimmerRef.current, {
-            left: '120%', duration: 1.2, ease: 'power2.inOut', delay: 0.3,
-            repeat: -1, repeatDelay: 3,
+            left: '120%', duration: 3, ease: 'power2.inOut', delay: 0.5,
+            repeat: -1, repeatDelay: 5,
           });
         }
       },
