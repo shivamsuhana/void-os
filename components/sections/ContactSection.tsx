@@ -317,7 +317,7 @@ export default function ContactSection() {
   // Focus management
   useEffect(() => {
     if (step === 'message') textareaRef.current?.focus();
-    else if (!['booting', 'sending', 'sent', 'confirm'].includes(step)) inputRef.current?.focus();
+    else if (!['booting', 'sending', 'sent'].includes(step)) inputRef.current?.focus();
   }, [step]);
 
   const handleSubmit = useCallback(() => {
