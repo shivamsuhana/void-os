@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useMemo, useCallback, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -18,9 +18,92 @@ export interface SectionData {
 
 const noRaycast = () => {};
 
-/* ============================================
+/* ─── PARTICLE BURST on hover ─── */
+function HoverParticles({ color, active }: { color: string; active: boolean }) {
+  const ref = useRef<THREE.Points>(null);
+  const count = 40;
+
+  const { positions, velocities } = useMemo(() => {
+    const p = new Float32Array(count * 3);
+    const v = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI;
+      const speed = 0.01 + Math.random() * 0.02;
+      v[i * 3] = Math.sin(phi) * Math.cos(theta) * speed;
+      v[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * speed;
+      v[i * 3 + 2] = Math.cos(phi) * speed;
+    }
+    return { positions: p, velocities: v };
+  }, []);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const pos = ref.current.geometry.attributes.position as THREE.BufferAttribute;
+    const mat = ref.current.material as THREE.PointsMaterial;
+
+    if (active) {
+      mat.opacity = Math.min(mat.opacity + 0.05, 0.8);
+      for (let i = 0; i < count; i++) {
+        pos.array[i * 3] += velocities[i * 3];
+        pos.array[i * 3 + 1] += velocities[i * 3 + 1];
+        pos.array[i * 3 + 2] += velocities[i * 3 + 2];
+        // Reset if too far
+        const d = Math.sqrt(pos.array[i * 3] ** 2 + pos.array[i * 3 + 1] ** 2 + pos.array[i * 3 + 2] ** 2);
+        if (d > 0.8) {
+          pos.array[i * 3] = 0;
+          pos.array[i * 3 + 1] = 0;
+          pos.array[i * 3 + 2] = 0;
+        }
+      }
+    } else {
+      mat.opacity = Math.max(mat.opacity - 0.03, 0);
+      for (let i = 0; i < count; i++) {
+        pos.array[i * 3] *= 0.95;
+        pos.array[i * 3 + 1] *= 0.95;
+        pos.array[i * 3 + 2] *= 0.95;
+      }
+    }
+    pos.needsUpdate = true;
+  });
+
+  return (
+    <points ref={ref} raycast={noRaycast}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.015} color={color} transparent opacity={0}
+        blending={THREE.AdditiveBlending} depthWrite={false}
+      />
+    </points>
+  );
+}
+
+/* ─── SCANNING LINE effect ─── */
+function ScanLine({ color, active }: { color: string; active: boolean }) {
+  const ref = useRef<THREE.Mesh>(null);
+
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const t = clock.getElapsedTime();
+    ref.current.position.y = active ? Math.sin(t * 2) * 0.45 : 0;
+    const mat = ref.current.material as THREE.MeshBasicMaterial;
+    mat.opacity = active ? 0.15 + Math.sin(t * 4) * 0.08 : 0;
+  });
+
+  return (
+    <mesh ref={ref} position={[0, 0, 0.01]} raycast={noRaycast}>
+      <planeGeometry args={[1.7, 0.005]} />
+      <meshBasicMaterial color={color} transparent opacity={0} />
+    </mesh>
+  );
+}
+
+/* ═══════════════════════════════════════════
    SECTION CARD — Premium holographic panels
-   ============================================ */
+   with particle burst, scan line, corner brackets
+   ═══════════════════════════════════════════ */
 export default function SectionCard({ section, index, total, onSelect, hovered, onHover }: {
   section: SectionData;
   index: number;
@@ -30,19 +113,33 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
   onHover: (id: Section | null) => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const scanRef = useRef(0);
+  const cardRef = useRef<THREE.Mesh>(null);
+  const glowIntensity = useRef(0);
   const angle = (index / total) * Math.PI * 2;
   const radius = 3.0;
 
   useFrame(({ clock }) => {
-    if (!groupRef.current) return;
+    if (!groupRef.current || !cardRef.current) return;
     const t = clock.getElapsedTime();
 
-    // Floating bob — each card on its own phase
-    groupRef.current.position.y = Math.sin(t * 0.4 + index * 1.2) * 0.1;
+    // Floating bob
+    groupRef.current.position.y = Math.sin(t * 0.4 + index * 1.2) * 0.12;
 
-    // Scan line effect
-    scanRef.current = (scanRef.current + 0.008) % 1;
+    // Subtle tilt toward camera on hover
+    const targetRotX = hovered ? Math.sin(t * 1.5) * 0.03 : 0;
+    cardRef.current.rotation.x += (targetRotX - cardRef.current.rotation.x) * 0.08;
+
+    // Scale pulse on hover
+    const targetScale = hovered ? 1.12 + Math.sin(t * 3) * 0.02 : 1;
+    cardRef.current.scale.x += (targetScale - cardRef.current.scale.x) * 0.08;
+    cardRef.current.scale.y += (targetScale - cardRef.current.scale.y) * 0.08;
+    cardRef.current.scale.z += (targetScale - cardRef.current.scale.z) * 0.08;
+
+    // Emissive glow animation
+    glowIntensity.current += ((hovered ? 0.2 : 0.02) - glowIntensity.current) * 0.08;
+    const mat = cardRef.current.material as THREE.MeshStandardMaterial;
+    mat.emissiveIntensity = glowIntensity.current;
+    mat.opacity = hovered ? 0.88 : 0.55 + Math.sin(t * 0.5 + index) * 0.05;
   });
 
   const rgb = `${parseInt(section.color.slice(1, 3), 16)},${parseInt(section.color.slice(3, 5), 16)},${parseInt(section.color.slice(5, 7), 16)}`;
@@ -53,8 +150,15 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
       position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}
       rotation={[0, -angle + Math.PI / 2, 0]}
     >
-      {/* ── CLICKABLE CARD BODY ── */}
+      {/* ── PARTICLE BURST ── */}
+      <HoverParticles color={section.color} active={hovered} />
+
+      {/* ── SCAN LINE ── */}
+      <ScanLine color={section.color} active={hovered} />
+
+      {/* ── MAIN CARD ── */}
       <mesh
+        ref={cardRef}
         onClick={() => onSelect(section.id)}
         onPointerEnter={() => onHover(section.id)}
         onPointerLeave={() => onHover(null)}
@@ -63,82 +167,96 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
         <meshStandardMaterial
           color={hovered ? section.color : '#0a0a1a'}
           emissive={section.color}
-          emissiveIntensity={hovered ? 0.18 : 0.02}
+          emissiveIntensity={0.02}
           transparent
-          opacity={hovered ? 0.88 : 0.65}
+          opacity={0.6}
           side={THREE.DoubleSide}
-          roughness={0.3}
-          metalness={0.7}
+          roughness={0.2}
+          metalness={0.8}
         />
       </mesh>
 
-      {/* ── TOP ACCENT LINE — thicker when hovered ── */}
+      {/* ── TOP ACCENT BAR ── */}
       <mesh position={[0, 0.5, 0.005]} raycast={noRaycast}>
-        <planeGeometry args={[1.7, hovered ? 0.03 : 0.018]} />
+        <planeGeometry args={[1.7, hovered ? 0.035 : 0.018]} />
         <meshBasicMaterial color={section.color} transparent opacity={hovered ? 1 : 0.5} />
       </mesh>
 
       {/* ── BOTTOM ACCENT ── */}
       <mesh position={[0, -0.5, 0.005]} raycast={noRaycast}>
-        <planeGeometry args={[1.7, 0.008]} />
-        <meshBasicMaterial color={section.color} transparent opacity={hovered ? 0.5 : 0.1} />
+        <planeGeometry args={[1.7, hovered ? 0.02 : 0.008]} />
+        <meshBasicMaterial color={section.color} transparent opacity={hovered ? 0.6 : 0.1} />
       </mesh>
+
+      {/* ── SIDE ACCENTS (new) ── */}
+      {hovered && (
+        <>
+          <mesh position={[-0.855, 0, 0.005]} raycast={noRaycast}>
+            <planeGeometry args={[0.006, 0.6]} />
+            <meshBasicMaterial color={section.color} transparent opacity={0.4} />
+          </mesh>
+          <mesh position={[0.855, 0, 0.005]} raycast={noRaycast}>
+            <planeGeometry args={[0.006, 0.6]} />
+            <meshBasicMaterial color={section.color} transparent opacity={0.4} />
+          </mesh>
+        </>
+      )}
 
       {/* ── WIREFRAME BORDER ── */}
       <mesh position={[0, 0, -0.01]} raycast={noRaycast}>
-        <planeGeometry args={[1.75, 1.05]} />
+        <planeGeometry args={[1.78, 1.08]} />
         <meshBasicMaterial
-          color={section.color}
-          transparent
-          opacity={hovered ? 0.45 : 0.12}
-          wireframe
-          side={THREE.DoubleSide}
+          color={section.color} transparent
+          opacity={hovered ? 0.5 : 0.1} wireframe side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* ── HOVER GLOW ── */}
+      {/* ── GLOW BACKDROP ── */}
       {hovered && (
-        <mesh position={[0, 0, -0.06]} raycast={noRaycast}>
-          <planeGeometry args={[2.2, 1.4]} />
-          <meshBasicMaterial color={section.color} transparent opacity={0.06} side={THREE.DoubleSide} />
+        <mesh position={[0, 0, -0.08]} raycast={noRaycast}>
+          <planeGeometry args={[2.4, 1.5]} />
+          <meshBasicMaterial
+            color={section.color} transparent opacity={0.05}
+            side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false}
+          />
         </mesh>
       )}
 
-      {/* ── CORNER BRACKETS (tech look) ── */}
-      {hovered && (
-        <Html center position={[0, 0, 0.005]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
-          <div style={{
-            width: 160, height: 90, position: 'relative',
-          }}>
-            {/* TL corner */}
-            <div style={{ position: 'absolute', top: -4, left: -4, width: 8, height: 8, borderLeft: `1px solid ${section.color}`, borderTop: `1px solid ${section.color}`, opacity: 0.6 }} />
-            {/* TR corner */}
-            <div style={{ position: 'absolute', top: -4, right: -4, width: 8, height: 8, borderRight: `1px solid ${section.color}`, borderTop: `1px solid ${section.color}`, opacity: 0.6 }} />
-            {/* BL corner */}
-            <div style={{ position: 'absolute', bottom: -4, left: -4, width: 8, height: 8, borderLeft: `1px solid ${section.color}`, borderBottom: `1px solid ${section.color}`, opacity: 0.6 }} />
-            {/* BR corner */}
-            <div style={{ position: 'absolute', bottom: -4, right: -4, width: 8, height: 8, borderRight: `1px solid ${section.color}`, borderBottom: `1px solid ${section.color}`, opacity: 0.6 }} />
-          </div>
-        </Html>
-      )}
+      {/* ── CORNER BRACKETS (HUD tech look) ── */}
+      <Html center position={[0, 0, 0.008]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+        <div style={{ width: 168, height: 96, position: 'relative', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }}>
+          {[
+            { top: -3, left: -3, bl: true, bt: true },
+            { top: -3, right: -3, br: true, bt: true },
+            { bottom: -3, left: -3, bl: true, bb: true },
+            { bottom: -3, right: -3, br: true, bb: true },
+          ].map((pos, i) => (
+            <div key={i} style={{
+              position: 'absolute', width: 10, height: 10,
+              ...Object.fromEntries(Object.entries(pos).filter(([k]) => ['top', 'bottom', 'left', 'right'].includes(k))),
+              borderLeft: pos.bl ? `1px solid ${section.color}88` : 'none',
+              borderRight: pos.br ? `1px solid ${section.color}88` : 'none',
+              borderTop: pos.bt ? `1px solid ${section.color}88` : 'none',
+              borderBottom: pos.bb ? `1px solid ${section.color}88` : 'none',
+            }} />
+          ))}
+        </div>
+      </Html>
 
       {/* ── HTML LABEL ── */}
-      <Html
-        center
-        distanceFactor={6}
-        style={{ pointerEvents: 'none', userSelect: 'none' }}
-      >
+      <Html center distanceFactor={6} style={{ pointerEvents: 'none', userSelect: 'none' }}>
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: '5px', minWidth: '130px', textAlign: 'center',
+          gap: '4px', minWidth: '140px', textAlign: 'center',
         }}>
           {/* Icon */}
           <div style={{
-            fontSize: '28px', lineHeight: 1,
-            color: hovered ? section.color : 'rgba(232,232,240,0.6)',
+            fontSize: '30px', lineHeight: 1,
+            color: hovered ? section.color : 'rgba(232,232,240,0.55)',
             transition: 'all 0.3s',
-            textShadow: hovered ? `0 0 20px ${section.color}` : `0 0 6px ${section.color}40`,
-            filter: hovered ? `drop-shadow(0 0 12px ${section.color})` : 'none',
+            textShadow: hovered ? `0 0 24px ${section.color}, 0 0 48px ${section.color}40` : `0 0 6px ${section.color}30`,
+            filter: hovered ? `drop-shadow(0 0 14px ${section.color})` : 'none',
+            transform: hovered ? 'scale(1.1)' : 'scale(1)',
           }}>
             {section.icon}
           </div>
@@ -146,11 +264,11 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
           {/* Label */}
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '11px', fontWeight: 700,
+            fontSize: hovered ? '12px' : '11px', fontWeight: 700,
             letterSpacing: '3px',
-            color: hovered ? '#fff' : 'rgba(232,232,240,0.6)',
+            color: hovered ? '#fff' : 'rgba(232,232,240,0.55)',
             transition: 'all 0.3s',
-            textShadow: hovered ? `0 0 10px ${section.color}80` : 'none',
+            textShadow: hovered ? `0 0 12px ${section.color}80` : 'none',
           }}>
             {section.label}
           </div>
@@ -159,38 +277,41 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: '8px', letterSpacing: '1px',
-            color: hovered ? section.color : 'rgba(232,232,240,0.3)',
+            color: hovered ? section.color : 'rgba(232,232,240,0.25)',
             transition: 'color 0.3s',
           }}>
             {section.ext}
           </div>
 
           {/* Description — only on hover */}
-          {hovered && (
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '7px', letterSpacing: '0.5px',
-              color: `rgba(${rgb},0.6)`,
-              marginTop: '2px', maxWidth: '120px',
-            }}>
-              {section.desc}
-            </div>
-          )}
-
-          {/* Shortcut */}
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '8px', letterSpacing: '1px',
-            color: hovered ? 'rgba(232,232,240,0.4)' : 'rgba(232,232,240,0.15)',
-            marginTop: '1px',
+            fontSize: '7px', letterSpacing: '0.5px',
+            color: `rgba(${rgb},${hovered ? 0.6 : 0})`,
             transition: 'color 0.3s',
+            marginTop: hovered ? '2px' : '0',
+            maxWidth: '120px',
+            height: hovered ? 'auto' : '0', overflow: 'hidden',
+          }}>
+            {section.desc.toUpperCase()}
+          </div>
+
+          {/* Shortcut badge */}
+          <div style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '7px', letterSpacing: '1.5px',
+            color: hovered ? 'rgba(232,232,240,0.4)' : 'rgba(232,232,240,0.12)',
+            transition: 'color 0.3s',
+            padding: '1px 6px',
+            border: `1px solid ${hovered ? `rgba(${rgb},0.2)` : 'rgba(255,255,255,0.03)'}`,
+            marginTop: '2px',
           }}>
             [{section.shortcut}]
           </div>
         </div>
       </Html>
 
-      {/* ── CONNECTION LINE to center ── */}
+      {/* ── CONNECTION LINE ── */}
       <line>
         <bufferGeometry>
           <bufferAttribute
@@ -198,7 +319,10 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
             args={[new Float32Array([0, 0, 0, -Math.cos(angle) * (radius - 1), 0, -Math.sin(angle) * (radius - 1)]), 3]}
           />
         </bufferGeometry>
-        <lineBasicMaterial color={section.color} transparent opacity={hovered ? 0.5 : 0.06} />
+        <lineBasicMaterial
+          color={section.color} transparent
+          opacity={hovered ? 0.6 : 0.05}
+        />
       </line>
     </group>
   );
