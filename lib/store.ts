@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type Section = 'boot' | 'desktop' | 'about' | 'work' | 'skills' | 'timeline' | 'contact' | 'lab';
 export type CursorMode = 'default' | 'pointer' | 'text' | 'image' | 'hidden';
@@ -40,7 +41,9 @@ interface VoidStore {
   setShowScreensaver: (v: boolean) => void;
 }
 
-export const useVoidStore = create<VoidStore>((set, get) => ({
+export const useVoidStore = create<VoidStore>()(
+  persist(
+    (set, get) => ({
   // Boot
   bootPhase: 'bios',
   setBootPhase: (phase) => set({ bootPhase: phase }),
@@ -99,4 +102,10 @@ export const useVoidStore = create<VoidStore>((set, get) => ({
   // UI
   showScreensaver: false,
   setShowScreensaver: (v) => set({ showScreensaver: v }),
-}));
+    }),
+    {
+      name: 'void-os-storage', // name of the item in the storage (must be unique)
+      storage: createJSONStorage(() => sessionStorage), // Use sessionStorage so state survives refresh but resets in new tabs
+    }
+  )
+);
