@@ -269,6 +269,16 @@ function HologramScene({ onSelect, hoveredId, onHover }: {
   onHover: (id: Section | null) => void;
 }) {
   const orbitalRef = useRef<THREE.Group>(null);
+  const { camera, size } = useThree();
+
+  // Responsive zooming for mobile
+  useEffect(() => {
+    const isMobile = size.width < 768;
+    const pCam = camera as THREE.PerspectiveCamera;
+    pCam.fov = isMobile ? 68 : 42;
+    pCam.position.z = isMobile ? 8.5 : 6.5; 
+    pCam.updateProjectionMatrix();
+  }, [size.width, camera]);
 
   return (
     <>
