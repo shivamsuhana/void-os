@@ -90,28 +90,37 @@ function TimelineCard({ entry, index, active, side }: { entry: TimelineEntry; in
   const rgb = `${parseInt(entry.color.slice(1, 3), 16)},${parseInt(entry.color.slice(3, 5), 16)},${parseInt(entry.color.slice(5, 7), 16)}`;
   const [hov, setHov] = useState(false);
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    cardRef.current.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(${rgb},0.1), rgba(${rgb},0.03) 60%, rgba(255,255,255,0.05))`;
+  };
+
   return (
     <div
       ref={cardRef}
       onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
+      onMouseLeave={(e) => { setHov(false); e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+      onMouseMove={handleMouseMove}
       style={{
         maxWidth: 380, width: '100%',
         padding: '20px 22px',
-        background: hov ? `rgba(${rgb},0.06)` : 'rgba(255,255,255,0.05)',
-        border: `1px solid ${active ? entry.color + '33' : 'rgba(255,255,255,0.08)'}`,
+        background: 'rgba(255,255,255,0.05)',
+        border: `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
         borderLeft: side === 'left' ? `3px solid ${active ? entry.color : entry.color + '44'}` : undefined,
         borderRight: side === 'right' ? `3px solid ${active ? entry.color : entry.color + '44'}` : undefined,
         borderRadius: '2px',
-        opacity: active ? 1 : 0.3,
-        transform: active ? 'translateY(0)' : 'translateY(10px)',
-        transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
+        opacity: active ? 1 : 0.4,
+        transform: active ? (hov ? 'translateY(-4px) scale(1.02)' : 'translateY(0)') : 'translateY(10px)',
+        transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
         position: 'relative', overflow: 'hidden', cursor: 'default',
-        boxShadow: hov ? `0 4px 30px rgba(${rgb},0.08)` : 'none',
+        boxShadow: hov ? `0 8px 40px rgba(${rgb},0.15), 0 0 20px rgba(${rgb},0.05)` : 'none',
       }}
     >
       {/* Top glow */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${entry.color}33, transparent)`, opacity: active ? 1 : 0 }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: hov ? 2 : 1, background: `linear-gradient(90deg, transparent, ${entry.color}${hov ? '88' : '33'}, transparent)`, opacity: active ? 1 : 0, transition: 'all 0.3s' }} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: entry.color, letterSpacing: '2px', textShadow: active ? `0 0 8px ${entry.color}40` : 'none' }}>{entry.period}</span>
@@ -124,21 +133,24 @@ function TimelineCard({ entry, index, active, side }: { entry: TimelineEntry; in
         )}
       </div>
 
-      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 700, marginBottom: 4, color: '#E8E8F0', textShadow: active ? `0 0 12px ${entry.color}15` : 'none' }}>{entry.title}</h3>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: entry.color, marginBottom: 10, letterSpacing: '1px', opacity: 0.5 }}>{entry.company}</div>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'rgba(232,232,240,0.45)', lineHeight: 1.8, marginBottom: 12 }}>{entry.description}</p>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: hov ? '17px' : '16px', fontWeight: 700, marginBottom: 4, color: hov ? '#fff' : '#E8E8F0', textShadow: hov ? `0 0 16px ${entry.color}30` : 'none', transition: 'all 0.3s' }}>{entry.title}</h3>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: entry.color, marginBottom: 10, letterSpacing: '1px', opacity: hov ? 0.8 : 0.5, transition: 'opacity 0.3s' }}>{entry.company}</div>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: `rgba(232,232,240,${hov ? 0.7 : 0.55})`, lineHeight: 1.8, marginBottom: 12, transition: 'color 0.3s' }}>{entry.description}</p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
         {entry.tags.map(tag => (
           <span key={tag} style={{
             fontFamily: 'var(--font-mono)', fontSize: '8px', padding: '2px 8px',
-            border: `1px solid ${entry.color}18`, color: `rgba(${rgb},0.5)`, letterSpacing: '0.5px',
+            border: `1px solid ${hov ? entry.color + '40' : entry.color + '18'}`,
+            color: hov ? entry.color : `rgba(${rgb},0.5)`, letterSpacing: '0.5px',
+            transition: 'all 0.3s',
           }}>{tag}</span>
         ))}
       </div>
     </div>
   );
 }
+
 
 /* ═══════════════════════════════════════════
    TIMELINE SECTION

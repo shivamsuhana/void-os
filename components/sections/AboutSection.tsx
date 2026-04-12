@@ -369,15 +369,53 @@ function Globe() {
    ═══════════════════════════════════════════ */
 function ProfBar({ label, value, color, delay, go }: { label: string; value: number; color: string; delay: number; go: boolean }) {
   const [w, setW] = useState(0);
+  const [hov, setHov] = useState(false);
+  const [displayVal, setDisplayVal] = useState(0);
+  
   useEffect(() => { if (go) setTimeout(() => setW(value), delay); }, [go, value, delay]);
+  
+  // Animate the percentage counter
+  useEffect(() => {
+    if (w === 0) return;
+    let start = 0;
+    const step = () => {
+      start += Math.ceil(value / 30);
+      if (start >= value) { setDisplayVal(value); return; }
+      setDisplayVal(start);
+      requestAnimationFrame(step);
+    };
+    setTimeout(step, delay);
+  }, [w, value, delay]);
+
   return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.65)' }}>{label}</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color, textShadow: `0 0 6px ${color}66` }}>{value}%</span>
+    <div 
+      style={{ marginBottom: 14, cursor: 'default' }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, transition: 'all 0.2s' }}>
+        <span style={{ 
+          fontFamily: 'var(--font-mono)', fontSize: hov ? '10px' : '9px', letterSpacing: '1.5px', 
+          color: hov ? color : 'rgba(232,232,240,.65)',
+          textShadow: hov ? `0 0 10px ${color}50` : 'none',
+          transition: 'all 0.3s',
+        }}>{label}</span>
+        <span style={{ 
+          fontFamily: 'var(--font-mono)', fontSize: hov ? '11px' : '9px', fontWeight: hov ? 700 : 400,
+          color, textShadow: `0 0 ${hov ? 12 : 6}px ${color}66`,
+          transition: 'all 0.3s',
+        }}>{displayVal}%</span>
       </div>
-      <div style={{ height: 2, background: 'rgba(255,255,255,.06)', borderRadius: 1 }}>
-        <div style={{ height: '100%', width: `${w}%`, background: `linear-gradient(90deg, ${color}88, ${color})`, boxShadow: `0 0 8px ${color}66`, borderRadius: 1, transition: 'width 1.2s cubic-bezier(.16,1,.3,1)' }} />
+      <div style={{ 
+        height: hov ? 6 : 2, background: 'rgba(255,255,255,.06)', borderRadius: 3,
+        transition: 'height 0.3s cubic-bezier(.16,1,.3,1)',
+      }}>
+        <div style={{ 
+          height: '100%', width: `${w}%`, borderRadius: 3,
+          background: `linear-gradient(90deg, ${color}66, ${color})`, 
+          boxShadow: hov ? `0 0 16px ${color}88, 0 0 30px ${color}33` : `0 0 8px ${color}44`,
+          transition: 'width 1.2s cubic-bezier(.16,1,.3,1), box-shadow 0.3s',
+        }} />
       </div>
     </div>
   );
