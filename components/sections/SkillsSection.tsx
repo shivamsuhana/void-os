@@ -9,6 +9,7 @@ interface Node {
   id: string; name: string; category: string; proficiency: number;
   x: number; y: number; vx: number; vy: number;
   connections: string[]; glowing: boolean; glowIntensity: number;
+  locked: boolean;
 }
 
 export default function SkillsSection() {
@@ -20,6 +21,7 @@ export default function SkillsSection() {
   const [hoveredSkill, setHoveredSkill] = useState<Skill | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState<Node | null>(null);
   const activeCategoryRef = useRef<string | null>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -31,7 +33,6 @@ export default function SkillsSection() {
   const catColorMap: Record<string, string> = {};
   SKILL_CATEGORIES.forEach(c => { catColorMap[c.name] = c.color; });
 
-  // GSAP entrance
   useEffect(() => {
     const tl = gsap.timeline({ delay: 0.15 });
     if (backRef.current) tl.fromTo(backRef.current, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }, 0);
@@ -46,10 +47,8 @@ export default function SkillsSection() {
     return () => { tl.kill(); };
   }, []);
 
-  // Keep ref in sync with state
   useEffect(() => { activeCategoryRef.current = activeCategory; }, [activeCategory]);
 
-  // Force Graph
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -68,18 +67,16 @@ export default function SkillsSection() {
     const W = canvas.getBoundingClientRect().width;
     const H = canvas.getBoundingClientRect().height;
 
-    // Create nodes
     const nodes: Node[] = SKILLS.map((s) => ({
       ...s,
       x: W / 2 + (Math.random() - 0.5) * W * 0.5,
       y: H / 2 + (Math.random() - 0.5) * H * 0.5,
-      vx: 0, vy: 0, glowing: false, glowIntensity: 0,
+      vx: 0, vy: 0, glowing: false, glowIntensity: 0, locked: false,
     }));
     nodesRef.current = nodes;
     const nodeMap: Record<string, Node> = {};
     nodes.forEach(n => { nodeMap[n.id] = n; });
 
-    // Parse hex to rgba
     const hexToRgba = (hex: string, alpha: number) => {
       const r = parseInt(hex.slice(1, 3), 16);
       const g = parseInt(hex.slice(3, 5), 16);
@@ -90,20 +87,22 @@ export default function SkillsSection() {
     const simulate = () => {
       const cx = W / 2, cy = H / 2;
       for (const node of nodes) {
-        // Center gravity
-        node.vx += (cx - node.x) * 0.0004;
-        node.vy += (cy - node.y) * 0.0004;
+        if (node.locked) continue;
 
-        // Repulsion
+        // Center gravity — gentle
+        node.vx += (cx - node.x) * 0.0003;
+        node.vy += (cy - node.y) * 0.0003;
+
+        // Repulsion — reduced strength
         for (const other of nodes) {
           if (node === other) continue;
           const dx = node.x - other.x;
           const dy = node.y - other.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          if (dist < 100) {
-            const force = (100 - dist) / dist * 0.6;
-            node.vx += dx * force * 0.008;
-            node.vy += dy * force * 0.008;
+          if (dist < 90) {
+            const force = (90 - dist) / dist * 0.3;
+            node.vx += dx * force * 0.005;
+            node.vy += dy * force * 0.005;
           }
         }
 
@@ -114,27 +113,28 @@ export default function SkillsSection() {
           const dx = other.x - node.x;
           const dy = other.y - node.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const force = (dist - 80) * 0.002;
+          const force = (dist - 80) * 0.0015;
           node.vx += dx / dist * force;
           node.vy += dy / dist * force;
         }
 
-        // Mouse repulsion
+        // Mouse — gentle push out instead of violent repulsion
         const mdx = node.x - mouseRef.current.x;
         const mdy = node.y - mouseRef.current.y;
         const mDist = Math.sqrt(mdx * mdx + mdy * mdy) || 1;
-        if (mDist < 100) {
-          node.vx += mdx / mDist * 2;
-          node.vy += mdy / mDist * 2;
+        if (mDist < 60) {
+          node.vx += mdx / mDist * 0.3;
+          node.vy += mdy / mDist * 0.3;
         }
 
-        node.vx *= 0.91; node.vy *= 0.91;
+        // High damping — nodes settle quickly
+        node.vx *= 0.88; node.vy *= 0.88;
         node.x += node.vx; node.y += node.vy;
-        node.x = Math.max(40, Math.min(W - 40, node.x));
-        node.y = Math.max(40, Math.min(H - 40, node.y));
+        node.x = Math.max(50, Math.min(W - 50, node.x));
+        node.y = Math.max(50, Math.min(H - 50, node.y));
 
         if (node.glowing) {
-          node.glowIntensity = Math.max(0, node.glowIntensity - 0.008);
+          node.glowIntensity = Math.max(0, node.glowIntensity - 0.006);
           if (node.glowIntensity <= 0) node.glowing = false;
         }
       }
@@ -144,144 +144,180 @@ export default function SkillsSection() {
       const rect = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width, rect.height);
 
-      // Draw background grid
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.04)';
+      // Background hex grid instead of square grid
+      const hexR = 30;
+      const hexH = hexR * Math.sqrt(3);
+      ctx.strokeStyle = 'rgba(0,212,255,0.025)';
       ctx.lineWidth = 0.5;
-      for (let x = 0; x < rect.width; x += 40) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, rect.height); ctx.stroke();
-      }
-      for (let y = 0; y < rect.height; y += 40) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(rect.width, y); ctx.stroke();
+      for (let gy = -1; gy < rect.height / hexH + 1; gy++) {
+        for (let gx = -1; gx < rect.width / (hexR * 1.5) + 1; gx++) {
+          const hcx = gx * hexR * 1.5;
+          const hcy = gy * hexH + (gx % 2 ? hexH / 2 : 0);
+          ctx.beginPath();
+          for (let a = 0; a < 6; a++) {
+            const ang = Math.PI / 3 * a + Math.PI / 6;
+            const px = hcx + hexR * 0.45 * Math.cos(ang);
+            const py = hcy + hexR * 0.45 * Math.sin(ang);
+            a === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          }
+          ctx.closePath(); ctx.stroke();
+        }
       }
 
-      // Edges — NEURON STYLE with bezier curves + glow
+      const time = Date.now();
+
+      // Edges — 3-layer rendering for 3D look
       for (const node of nodes) {
         for (const connId of node.connections) {
           const other = nodeMap[connId];
           if (!other || node.id > other.id) continue;
           const isGlowing = node.glowing && other.glowing;
           const color = catColorMap[node.category] || '#00D4FF';
-
-          // Check if dimmed by filter
           const isDimmed = activeCategoryRef.current && node.category !== activeCategoryRef.current && other.category !== activeCategoryRef.current;
-          const baseAlpha = isDimmed ? 0.02 : 0.08;
 
-          // Bezier curve midpoint — offset perpendicular for organic look
-          const mx = (node.x + other.x) / 2;
-          const my = (node.y + other.y) / 2;
-          const dx = other.x - node.x;
-          const dy = other.y - node.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const perpX = -dy / dist * (dist * 0.08);
-          const perpY = dx / dist * (dist * 0.08);
-          const cpx = mx + perpX;
-          const cpy = my + perpY;
+          const mx = (node.x + other.x) / 2, my = (node.y + other.y) / 2;
+          const dx = other.x - node.x, dy = other.y - node.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const perpX = -dy / dist * (dist * 0.1);
+          const perpY = dx / dist * (dist * 0.1);
+          const cpx = mx + perpX, cpy = my + perpY;
 
-          // Outer glow (drawn first, wider)
-          if (isGlowing || !isDimmed) {
-            ctx.beginPath();
-            ctx.moveTo(node.x, node.y);
-            ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
-            ctx.strokeStyle = isGlowing
-              ? hexToRgba(color, 0.15 + node.glowIntensity * 0.2)
-              : hexToRgba(color, isDimmed ? 0.01 : 0.03);
-            ctx.lineWidth = isGlowing ? 6 : 3;
-            ctx.stroke();
+          if (isDimmed) {
+            // Dim connections
+            ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
+            ctx.strokeStyle = 'rgba(255,255,255,0.015)'; ctx.lineWidth = 0.5; ctx.stroke();
+            continue;
           }
 
-          // Inner line
-          ctx.beginPath();
-          ctx.moveTo(node.x, node.y);
-          ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
-          ctx.strokeStyle = isGlowing
-            ? hexToRgba(color, 0.5 + node.glowIntensity * 0.5)
-            : `rgba(255,255,255,${baseAlpha})`;
-          ctx.lineWidth = isGlowing ? 2 : 0.8;
-          ctx.stroke();
+          // Layer 1: Wide outer glow (3D depth)
+          ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
+          ctx.strokeStyle = hexToRgba(color, isGlowing ? 0.12 + node.glowIntensity * 0.15 : 0.02);
+          ctx.lineWidth = isGlowing ? 8 : 4; ctx.stroke();
 
-          // Data flow dots traveling along bezier — MULTIPLE NEURON PULSES
-          if (!isDimmed) {
-            const flowTime = Date.now();
-            const nodeIdx = nodes.indexOf(node);
-            // 3 staggered pulses per connection
-            for (let pi = 0; pi < 3; pi++) {
-              const progress = ((flowTime * 0.0006 + nodeIdx * 0.7 + pi * 1.0) % 3) / 3;
-              const t2 = progress;
-              const dotX = (1-t2)*(1-t2)*node.x + 2*(1-t2)*t2*cpx + t2*t2*other.x;
-              const dotY = (1-t2)*(1-t2)*node.y + 2*(1-t2)*t2*cpy + t2*t2*other.y;
+          // Layer 2: Mid glow
+          ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
+          ctx.strokeStyle = hexToRgba(color, isGlowing ? 0.3 + node.glowIntensity * 0.3 : 0.06);
+          ctx.lineWidth = isGlowing ? 3 : 1.5; ctx.stroke();
 
-              // Trail — draw a fading tail behind the dot
-              const trailLen = 5;
-              for (let ti = trailLen; ti >= 0; ti--) {
-                const tt = Math.max(0, t2 - ti * 0.015);
-                const tx = (1-tt)*(1-tt)*node.x + 2*(1-tt)*tt*cpx + tt*tt*other.x;
-                const ty = (1-tt)*(1-tt)*node.y + 2*(1-tt)*tt*cpy + tt*tt*other.y;
-                const trailAlpha = (1 - ti / trailLen) * (isGlowing ? 0.4 : 0.15);
-                ctx.beginPath(); ctx.arc(tx, ty, 1.2 - ti * 0.15, 0, Math.PI * 2);
-                ctx.fillStyle = hexToRgba(color, trailAlpha);
-                ctx.fill();
-              }
+          // Layer 3: Bright core wire
+          ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
+          ctx.strokeStyle = isGlowing ? hexToRgba(color, 0.6 + node.glowIntensity * 0.4) : hexToRgba(color, 0.12);
+          ctx.lineWidth = isGlowing ? 1.2 : 0.6; ctx.stroke();
 
-              // Glow halo
-              const dotGrad = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 8);
-              dotGrad.addColorStop(0, hexToRgba(color, isGlowing ? 0.5 : 0.2));
-              dotGrad.addColorStop(1, 'rgba(0,0,0,0)');
-              ctx.beginPath(); ctx.arc(dotX, dotY, 8, 0, Math.PI * 2);
-              ctx.fillStyle = dotGrad; ctx.fill();
-              // Bright core
-              ctx.beginPath(); ctx.arc(dotX, dotY, 2, 0, Math.PI * 2);
-              ctx.fillStyle = hexToRgba(color, isGlowing ? 0.9 : 0.5);
+          // Data pulses — 2 per connection
+          const nodeIdx = nodes.indexOf(node);
+          for (let pi = 0; pi < 2; pi++) {
+            const progress = ((time * 0.0005 + nodeIdx * 0.7 + pi * 1.5) % 3) / 3;
+            const t2 = progress;
+            const dotX = (1 - t2) * (1 - t2) * node.x + 2 * (1 - t2) * t2 * cpx + t2 * t2 * other.x;
+            const dotY = (1 - t2) * (1 - t2) * node.y + 2 * (1 - t2) * t2 * cpy + t2 * t2 * other.y;
+
+            // Trail
+            for (let ti = 4; ti >= 0; ti--) {
+              const tt = Math.max(0, t2 - ti * 0.012);
+              const tx = (1 - tt) * (1 - tt) * node.x + 2 * (1 - tt) * tt * cpx + tt * tt * other.x;
+              const ty = (1 - tt) * (1 - tt) * node.y + 2 * (1 - tt) * tt * cpy + tt * tt * other.y;
+              ctx.beginPath(); ctx.arc(tx, ty, 1.5 - ti * 0.25, 0, Math.PI * 2);
+              ctx.fillStyle = hexToRgba(color, (1 - ti / 4) * (isGlowing ? 0.35 : 0.12));
               ctx.fill();
             }
+
+            // Pulse glow
+            const pg = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 6);
+            pg.addColorStop(0, hexToRgba(color, isGlowing ? 0.5 : 0.2));
+            pg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath(); ctx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = pg; ctx.fill();
+
+            // Core dot
+            ctx.beginPath(); ctx.arc(dotX, dotY, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = hexToRgba(color, isGlowing ? 0.9 : 0.5);
+            ctx.fill();
           }
         }
       }
 
-      // Nodes
-      const time = Date.now();
+      // Nodes — premium multi-layer rendering
       for (const node of nodes) {
         const color = catColorMap[node.category] || '#00D4FF';
         const isDimmed = activeCategoryRef.current && node.category !== activeCategoryRef.current;
-        const alphaMult = isDimmed ? 0.15 : 1;
-        const baseR = 8 + (node.proficiency / 100) * 16;
-        const pulseR = baseR + Math.sin(time * 0.003 + nodes.indexOf(node)) * 1.5;
+        const alphaMult = isDimmed ? 0.12 : 1;
+        const baseR = 8 + (node.proficiency / 100) * 14;
+        const pulseR = baseR + Math.sin(time * 0.002 + nodes.indexOf(node)) * 1;
 
-        // Outer glow — BIGGER
-        if (node.glowing && node.glowIntensity > 0) {
-          const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, pulseR + 30);
-          grad.addColorStop(0, hexToRgba(color, node.glowIntensity * 0.4));
-          grad.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.beginPath(); ctx.arc(node.x, node.y, pulseR + 30, 0, Math.PI * 2);
-          ctx.fillStyle = grad; ctx.fill();
+        if (isDimmed) {
+          // Dimmed node — simple
+          ctx.beginPath(); ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
+          ctx.fillStyle = hexToRgba(color, 0.06); ctx.fill();
+          ctx.strokeStyle = hexToRgba(color, 0.08); ctx.lineWidth = 0.5; ctx.stroke();
+          ctx.font = '9px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(232,232,240,0.1)';
+          ctx.textAlign = 'center'; ctx.fillText(node.name, node.x, node.y + pulseR + 14);
+          continue;
         }
 
-        // Node body — BRIGHTER
-        const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, pulseR);
-        grad.addColorStop(0, hexToRgba(color, 1.0 * alphaMult));
-        grad.addColorStop(0.5, hexToRgba(color, 0.6 * alphaMult));
-        grad.addColorStop(1, hexToRgba(color, 0.15 * alphaMult));
-        ctx.beginPath(); ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
-        ctx.fillStyle = grad; ctx.fill();
+        // Layer 1: Outer aurora (largest glow)
+        const auR = pulseR + 20 + (node.glowing ? node.glowIntensity * 15 : 0);
+        const aurora = ctx.createRadialGradient(node.x, node.y, pulseR * 0.5, node.x, node.y, auR);
+        aurora.addColorStop(0, hexToRgba(color, node.glowing ? 0.15 + node.glowIntensity * 0.2 : 0.04));
+        aurora.addColorStop(0.6, hexToRgba(color, 0.01));
+        aurora.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.beginPath(); ctx.arc(node.x, node.y, auR, 0, Math.PI * 2);
+        ctx.fillStyle = aurora; ctx.fill();
 
-        // Ring
+        // Layer 2: Glass body
+        const bodyGrad = ctx.createRadialGradient(
+          node.x - pulseR * 0.25, node.y - pulseR * 0.25, 0,
+          node.x, node.y, pulseR
+        );
+        bodyGrad.addColorStop(0, hexToRgba(color, 0.7));
+        bodyGrad.addColorStop(0.4, hexToRgba(color, 0.35));
+        bodyGrad.addColorStop(0.8, hexToRgba(color, 0.12));
+        bodyGrad.addColorStop(1, hexToRgba(color, 0.04));
         ctx.beginPath(); ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
-        ctx.strokeStyle = node.glowing ? hexToRgba(color, 0.8) : hexToRgba(color, 0.2);
-        ctx.lineWidth = node.glowing ? 2 : 0.8;
-        ctx.stroke();
+        ctx.fillStyle = bodyGrad; ctx.fill();
 
-        // Pulsing glow ring for high-proficiency skills
-        if (node.proficiency > 50) {
-          const ringPulse = 1 + Math.sin(time * 0.002 + nodes.indexOf(node) * 0.5) * 0.3;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, pulseR + 6 * ringPulse, 0, Math.PI * 2);
-          ctx.strokeStyle = hexToRgba(color, 0.08 * ringPulse);
-          ctx.lineWidth = 1;
-          ctx.stroke();
+        // Layer 3: Rim ring
+        ctx.beginPath(); ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
+        ctx.strokeStyle = hexToRgba(color, node.glowing ? 0.7 : 0.25);
+        ctx.lineWidth = node.glowing ? 1.5 : 0.8; ctx.stroke();
+
+        // Layer 4: Specular highlight (top-left shine)
+        const specGrad = ctx.createRadialGradient(
+          node.x - pulseR * 0.3, node.y - pulseR * 0.35, 0,
+          node.x - pulseR * 0.15, node.y - pulseR * 0.2, pulseR * 0.6
+        );
+        specGrad.addColorStop(0, 'rgba(255,255,255,0.2)');
+        specGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.beginPath(); ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
+        ctx.fillStyle = specGrad; ctx.fill();
+
+        // Layer 5: Bright inner core
+        const coreR = pulseR * 0.3;
+        const coreGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, coreR);
+        coreGrad.addColorStop(0, 'rgba(255,255,255,0.4)');
+        coreGrad.addColorStop(0.5, hexToRgba(color, 0.5));
+        coreGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.beginPath(); ctx.arc(node.x, node.y, coreR, 0, Math.PI * 2);
+        ctx.fillStyle = coreGrad; ctx.fill();
+
+        // Layer 6: Orbiting ring
+        if (node.proficiency > 40) {
+          const orbitR = pulseR + 4 + Math.sin(time * 0.0015 + nodes.indexOf(node) * 0.5) * 2;
+          ctx.beginPath(); ctx.arc(node.x, node.y, orbitR, 0, Math.PI * 2);
+          ctx.strokeStyle = hexToRgba(color, 0.08 + (node.glowing ? node.glowIntensity * 0.15 : 0));
+          ctx.lineWidth = 0.5; ctx.stroke();
+
+          // Orbiting dot
+          const orbitAngle = time * 0.002 + nodes.indexOf(node);
+          const odx = node.x + Math.cos(orbitAngle) * orbitR;
+          const ody = node.y + Math.sin(orbitAngle) * orbitR;
+          ctx.beginPath(); ctx.arc(odx, ody, 1.5, 0, Math.PI * 2);
+          ctx.fillStyle = hexToRgba(color, 0.5); ctx.fill();
         }
 
-        // Label — BIGGER
-        ctx.font = '11px "JetBrains Mono", "Space Mono", monospace';
-        ctx.fillStyle = `rgba(232,232,240,${isDimmed ? 0.15 : 0.7})`;
+        // Label
+        ctx.font = 'bold 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = node.glowing ? hexToRgba(color, 0.9) : 'rgba(232,232,240,0.65)';
         ctx.textAlign = 'center';
         ctx.fillText(node.name, node.x, node.y + pulseR + 16);
       }
@@ -295,10 +331,10 @@ export default function SkillsSection() {
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
       let found: Node | null = null;
       for (const node of nodes) {
-        const r = 5 + (node.proficiency / 100) * 14;
+        const r = 8 + (node.proficiency / 100) * 14;
         const dx = mouseRef.current.x - node.x;
         const dy = mouseRef.current.y - node.y;
-        if (Math.sqrt(dx * dx + dy * dy) < r + 8) { found = node; break; }
+        if (Math.sqrt(dx * dx + dy * dy) < r + 12) { found = node; break; }
       }
       if (found) {
         setHoveredSkill(SKILLS.find(s => s.id === found!.id) || null);
@@ -314,8 +350,11 @@ export default function SkillsSection() {
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
       for (const node of nodes) {
-        const r = 5 + (node.proficiency / 100) * 14;
-        if (Math.sqrt(Math.pow(mx - node.x, 2) + Math.pow(my - node.y, 2)) < r + 8) {
+        const r = 8 + (node.proficiency / 100) * 14;
+        if (Math.sqrt(Math.pow(mx - node.x, 2) + Math.pow(my - node.y, 2)) < r + 12) {
+          // Set selected skill for detail panel
+          setSelectedSkill(prev => prev?.id === node.id ? null : node);
+
           // BFS ripple
           const visited = new Set<string>();
           const queue: Array<{ id: string; depth: number }> = [{ id: node.id, depth: 0 }];
@@ -371,22 +410,22 @@ export default function SkillsSection() {
         <p ref={subtitleRef} style={{
           fontSize: '13px', color: 'var(--text-dim)', marginBottom: '40px', maxWidth: '420px', lineHeight: 1.8, opacity: 0,
         }}>
-          Skills rendered as a living neural network. Click a node to send ripples through connected skills.
+          Skills rendered as a living neural network. Click any node to trigger a signal cascade.
         </p>
 
         <div id="skills-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 220px', gap: '20px', minHeight: '500px' }}>
           <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 768px) { #skills-grid { grid-template-columns: 1fr !important; min-height: auto !important; } }' }} />
+
           {/* Canvas */}
           <div ref={graphRef} className="glass-card" style={{ overflow: 'hidden', padding: 0, opacity: 0 }}>
             <canvas ref={canvasRef} style={{ width: '100%', height: '500px', display: 'block', cursor: 'crosshair' }} />
           </div>
 
-          {/* Sidebar — CLICKABLE FILTERS */}
+          {/* Sidebar */}
           <div ref={sidebarRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '2px', marginBottom: '4px' }}>
               FILTER CATEGORIES
             </div>
-            {/* All button */}
             <div
               onClick={() => setActiveCategory(null)}
               style={{
@@ -431,6 +470,28 @@ export default function SkillsSection() {
                 </div>
               );
             })}
+
+            {/* Selected skill detail panel */}
+            {selectedSkill && (
+              <div style={{
+                marginTop: 8, padding: '14px',
+                border: `1px solid ${catColorMap[selectedSkill.category]}33`,
+                borderLeft: `3px solid ${catColorMap[selectedSkill.category]}`,
+                background: `${catColorMap[selectedSkill.category]}08`,
+                borderRadius: '2px', transition: 'all 0.3s',
+              }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,.3)', marginBottom: 6 }}>SELECTED NODE</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, color: catColorMap[selectedSkill.category], marginBottom: 4 }}>{selectedSkill.name}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', marginBottom: 8 }}>{selectedSkill.category}</div>
+                <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', marginBottom: 4 }}>
+                  <div style={{ height: '100%', borderRadius: '2px', background: catColorMap[selectedSkill.category], width: `${selectedSkill.proficiency}%`, boxShadow: `0 0 8px ${catColorMap[selectedSkill.category]}44` }} />
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: catColorMap[selectedSkill.category], fontWeight: 600 }}>{selectedSkill.proficiency}%</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--text-muted)', marginTop: 6 }}>
+                  Connections: {selectedSkill.connections.length}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
