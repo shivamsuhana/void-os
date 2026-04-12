@@ -34,6 +34,7 @@
 
 html {
   scroll-behavior: smooth;
+  overscroll-behavior: none; /* Prevents pull-to-refresh on mobile */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -43,6 +44,7 @@ body {
   background: var(--void);
   color: var(--white);
   overflow-x: hidden;
+  overscroll-behavior: none; /* Prevents pull-to-refresh on mobile */
   min-height: 100vh;
   line-height: 1.6;
   background-image: radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.03) 0%, transparent 60%);
