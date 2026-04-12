@@ -52,7 +52,7 @@ export function getKeywordResponse(message: string): string {
   const lower = message.toLowerCase();
 
   if (lower.includes('who are you') || lower.includes('introduce') || lower.includes('about you')) {
-    return `I'm ${OWNER.name} — or at least, my AI twin. Real name's Shiv Charan, but everyone calls me Krishu. I'm a B.Tech CSE student obsessed with Java and DSA. And yeah, I built this entire alien OS portfolio because I couldn't resist making something ridiculous.`;
+    return `I'm ${OWNER.name} — or at least, my AI twin. Real name's Shiv Charan, but everyone calls me Krishu. I'm a B.Tech CSE student obsessed with Java and DSA. And yeah, I built this entire VOID OS portfolio because I couldn't resist making something ridiculous.`;
   }
 
   if (lower.includes('hire') || lower.includes('available') || lower.includes('freelance') || lower.includes('intern')) {
@@ -72,7 +72,7 @@ export function getKeywordResponse(message: string): string {
   }
 
   if (lower.includes('project') || lower.includes('portfolio') || lower.includes('built')) {
-    return "Three projects I'm proud of: This VOID OS portfolio (the alien OS you're in right now), RaktSetu (emergency blood donor network — live at raktsetu.page.gd), and CampusNexus (8-module campus management platform, my capstone project). Fly through them in WORK.db!";
+    return "Three projects I'm proud of: This VOID OS portfolio (the VOID OS you're in right now), RaktSetu (emergency blood donor network — live at raktsetu.page.gd), and CampusNexus (8-module campus management platform, my capstone project). Fly through them in WORK.db!";
   }
 
   if (lower.includes('skill') || lower.includes('tech') || lower.includes('stack') || lower.includes('language')) {

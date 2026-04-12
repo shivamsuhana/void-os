@@ -13,7 +13,7 @@ export default function AITwinChat() {
   const { activeSection } = useVoidStore();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'system', content: "VOID AI TWIN v2045 — Ask me anything about Krishu's skills, projects, or DSA journey." },
+    { role: 'system', content: "VOID AI TWIN v3.0 — Ask me anything about Krishu's skills, projects, or DSA journey." },
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
