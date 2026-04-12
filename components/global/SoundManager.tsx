@@ -99,8 +99,8 @@ export default function SoundManager() {
         transition: 'all 0.2s ease',
         cursor: 'pointer',
         color: soundEnabled ? 'var(--blue)' : 'var(--text-muted)',
-        animation: !hasInteracted && !soundEnabled ? 'pulse 2s infinite' : 'none',
-        boxShadow: !hasInteracted && !soundEnabled ? '0 0 15px rgba(0,212,255,0.2)' : 'none',
+        animation: !hasInteracted && !soundEnabled ? 'strongPulse 2s infinite' : 'none',
+        boxShadow: !hasInteracted && !soundEnabled ? '0 0 15px rgba(0,212,255,0.4)' : 'none',
       }}
       onMouseEnter={(e) => {
         setHasInteracted(true);
@@ -113,6 +113,14 @@ export default function SoundManager() {
       }}
     >
       {soundEnabled ? '🔊' : '🔇'}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes strongPulse {
+          0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4); border-color: rgba(0, 212, 255, 0.5); }
+          70% { box-shadow: 0 0 0 10px rgba(0, 212, 255, 0); border-color: rgba(255, 255, 255, 0.08); }
+          100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); border-color: rgba(255, 255, 255, 0.08); }
+        }
+      `}} />
     </button>
   );
 }
