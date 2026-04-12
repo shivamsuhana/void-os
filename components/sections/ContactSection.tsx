@@ -517,8 +517,8 @@ export default function ContactSection() {
             </div>
           </div>
 
-          {/* Terminal output */}
-          <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '18px 22px' }}>
+          {/* Terminal output — capped height so input stays visible */}
+          <div ref={termRef} style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', padding: '14px 18px' }}>
             {lines.map((l, i) => (
               <div key={l.id} style={{
                 display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 2,
@@ -527,7 +527,7 @@ export default function ContactSection() {
                 <span style={{ color: l.prompt ? C.blue : 'rgba(232,232,240,0.15)', flexShrink: 0, fontSize: '12px', userSelect: 'none' }}>
                   {l.prompt ? '>' : '  '}
                 </span>
-                <span style={{ fontSize: '12px', lineHeight: 1.75, color: l.color || 'rgba(232,232,240,0.55)', wordBreak: 'break-word', fontWeight: l.color === C.green ? 600 : 400 }}>{l.text || '\u00A0'}</span>
+                <span style={{ fontSize: '11px', lineHeight: 1.6, color: l.color || 'rgba(232,232,240,0.55)', wordBreak: 'break-word', fontWeight: l.color === C.green ? 600 : 400 }}>{l.text || '\u00A0'}</span>
               </div>
             ))}
 
@@ -545,10 +545,11 @@ export default function ContactSection() {
           {/* Input area */}
           {!['booting', 'sending', 'sent'].includes(step) && (
             <div style={{
-              padding: '14px 22px', borderTop: '1px solid rgba(0,212,255,0.1)',
-              background: 'rgba(0,212,255,0.01)',
+              padding: '12px 18px', borderTop: '1px solid rgba(0,212,255,0.1)',
+              background: 'rgba(0,212,255,0.02)',
               display: 'flex', alignItems: 'center', gap: 10,
               animation: 'glow 3s ease infinite',
+              flexShrink: 0,
             }}>
               <span style={{ color: C.green, fontSize: '10px', letterSpacing: '1px', flexShrink: 0 }}>{promptLabel}</span>
               <span style={{ color: C.blue, fontSize: '13px' }}>❯</span>

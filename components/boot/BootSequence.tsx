@@ -6,8 +6,7 @@ import { useVoidStore } from '@/lib/store';
 import { OWNER } from '@/lib/portfolio-data';
 
 /* ============================================
-   FLOATING PARTICLES — Ambient canvas layer
-   200 tiny cyan dots drifting behind everything
+   FLOATING PARTICLES — 300 ambient dots
    ============================================ */
 function FloatingParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,7 +18,7 @@ function FloatingParticles() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const W = window.innerWidth;
     const H = window.innerHeight;
     canvas.width = W * dpr;
@@ -28,15 +27,15 @@ function FloatingParticles() {
     canvas.style.height = H + 'px';
     ctx.scale(dpr, dpr);
 
-    const COLORS = ['0,212,255', '123,47,255', '57,255,20'];
-    const particles = Array.from({ length: 200 }, () => ({
+    const COLORS = ['0,212,255', '123,47,255', '57,255,20', '255,184,0'];
+    const particles = Array.from({ length: 300 }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      size: 0.8 + Math.random() * 2,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      size: 0.5 + Math.random() * 2,
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      alpha: 0.15 + Math.random() * 0.4,
+      alpha: 0.1 + Math.random() * 0.35,
       pulse: Math.random() * Math.PI * 2,
     }));
 
@@ -45,7 +44,7 @@ function FloatingParticles() {
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
-        p.pulse += 0.015;
+        p.pulse += 0.02;
         if (p.x < 0) p.x = W;
         if (p.x > W) p.x = 0;
         if (p.y < 0) p.y = H;
@@ -62,81 +61,70 @@ function FloatingParticles() {
     return () => cancelAnimationFrame(animRef.current);
   }, []);
 
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.85 }} />;
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.8 }} />;
 }
 
 /* ============================================
-   BIOS SCREEN — Enhanced with header, diagnostics grid
+   BIOS SCREEN — Centered terminal-style
    ============================================ */
 function BiosScreen({ onComplete }: { onComplete: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const progressTextRef = useRef<HTMLSpanElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
-  const DIAG_LINES = [
-    { text: 'Quantum Core............', status: '[OK]', color: '#39FF14' },
-    { text: 'Neural Stack............', status: '[OK]', color: '#39FF14' },
-    { text: 'Memory Fabric...........', status: '64 TB', color: '#FFB800' },
-    { text: 'GPU Mesh................', status: '[OK]', color: '#39FF14' },
-    { text: 'Holographic Engine......', status: '[OK]', color: '#39FF14' },
-    { text: 'Sound Reactor...........', status: '[OK]', color: '#39FF14' },
-    { text: 'AI Subsystem............', status: 'ACTIVE', color: '#00D4FF' },
-    { text: 'Consciousness Layer.....', status: '[OK]', color: '#39FF14' },
-    { text: 'Identity Module.........', status: 'LOADING', color: '#00D4FF' },
+  const DIAG = [
+    { text: 'Quantum Core', status: '[OK]', color: '#39FF14' },
+    { text: 'Neural Stack', status: '[OK]', color: '#39FF14' },
+    { text: 'Memory Fabric', status: '64 TB', color: '#FFB800' },
+    { text: 'GPU Mesh', status: '[OK]', color: '#39FF14' },
+    { text: 'Holographic Engine', status: '[OK]', color: '#39FF14' },
+    { text: 'AI Subsystem', status: 'ACTIVE', color: '#00D4FF' },
+    { text: 'Identity Module', status: 'LOADING', color: '#00D4FF' },
   ];
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const tl = gsap.timeline({
-      onComplete: () => { setTimeout(onComplete, 200); },
-    });
+    const tl = gsap.timeline({ onComplete: () => { setTimeout(onComplete, 300); } });
 
-    DIAG_LINES.forEach((line, i) => {
+    // Header fade in
+    if (headerRef.current) {
+      tl.fromTo(headerRef.current, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.3 }, 0);
+    }
+
+    // Diagnostic lines
+    DIAG.forEach((line, i) => {
       const el = document.createElement('div');
-      el.style.cssText = 'display:flex;justify-content:space-between;font-size:11px;line-height:2.4;opacity:0;transform:translateY(5px);padding:0 4px';
-      const statusGlow = ['[OK]', 'ACTIVE'].includes(line.status) ? `text-shadow: 0 0 12px ${line.color}80` : '';
-      el.innerHTML = `<span style="color:rgba(232,232,240,0.75)">${line.text}</span><span style="color:${line.color};font-weight:600;${statusGlow}">${line.status}</span>`;
+      el.style.cssText = 'display:flex;justify-content:space-between;font-size:10px;line-height:2;opacity:0;transform:translateY(4px)';
+      const dots = '.'.repeat(30 - line.text.length);
+      const glow = ['[OK]', 'ACTIVE'].includes(line.status) ? `text-shadow:0 0 10px ${line.color}80` : '';
+      el.innerHTML = `<span style="color:rgba(232,232,240,0.65)">${line.text}<span style="color:rgba(232,232,240,0.15)">${dots}</span></span><span style="color:${line.color};font-weight:600;${glow}">${line.status}</span>`;
       container.appendChild(el);
 
-      tl.to(el, {
-        opacity: 1, y: 0, duration: 0.12, ease: 'power2.out',
-      }, 0.3 + i * 0.18);
+      tl.to(el, { opacity: 1, y: 0, duration: 0.1, ease: 'power2.out' }, 0.2 + i * 0.15);
 
       if (line.status === '[OK]') {
-        const statusSpan = el.querySelector('span:last-child') as HTMLElement;
-        if (statusSpan) {
-          tl.fromTo(statusSpan,
-            { textShadow: `0 0 25px ${line.color}` },
-            { textShadow: `0 0 8px ${line.color}60`, duration: 0.3, ease: 'power2.out' },
-            0.3 + i * 0.18 + 0.08
-          );
-        }
+        const span = el.querySelector('span:last-child') as HTMLElement;
+        if (span) tl.fromTo(span, { textShadow: `0 0 25px ${line.color}` }, { textShadow: `0 0 8px ${line.color}55`, duration: 0.25 }, 0.2 + i * 0.15 + 0.06);
       }
     });
 
-    tl.to(progressRef.current, {
-      scaleX: 1, duration: 1.0, ease: 'power1.inOut',
-      transformOrigin: 'left center',
-    }, 0.3);
-
-    if (glowRef.current) {
-      tl.to(glowRef.current, {
-        scaleX: 1, duration: 1.0, ease: 'power1.inOut',
-        transformOrigin: 'left center',
-      }, 0.3);
-    }
-
+    // Progress bar
+    tl.to(progressRef.current, { scaleX: 1, duration: 0.8, ease: 'power1.inOut', transformOrigin: 'left center' }, 0.2);
+    if (glowRef.current) tl.to(glowRef.current, { scaleX: 1, duration: 0.8, ease: 'power1.inOut', transformOrigin: 'left center' }, 0.2);
     tl.to({ val: 0 }, {
-      val: 100, duration: 1.0,
-      onUpdate: function () {
-        if (progressTextRef.current) {
-          progressTextRef.current.textContent = `${Math.round(this.targets()[0].val)}%`;
-        }
-      },
-    }, 0.3);
+      val: 100, duration: 0.8,
+      onUpdate: function () { if (progressTextRef.current) progressTextRef.current.textContent = `${Math.round(this.targets()[0].val)}%`; },
+    }, 0.2);
+
+    // Footer
+    if (footerRef.current) {
+      tl.fromTo(footerRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 1.0);
+    }
 
     return () => { tl.kill(); };
   }, [onComplete]);
@@ -144,63 +132,67 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 10,
-      display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: "'JetBrains Mono', monospace",
     }}>
-      <div style={{ width: 'min(450px, 85vw)' }}>
-        {/* BIOS Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 4px' }}>
+      <div style={{
+        width: 'min(420px, 85vw)',
+        padding: '24px 28px',
+        border: '1px solid rgba(0,212,255,0.1)',
+        background: 'rgba(3,3,6,0.6)',
+        backdropFilter: 'blur(12px)',
+        boxShadow: '0 0 60px rgba(0,212,255,0.05), inset 0 0 30px rgba(0,0,0,0.3)',
+      }}>
+        {/* Header */}
+        <div ref={headerRef} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, opacity: 0 }}>
           <div>
-            <div style={{ fontSize: '14px', fontWeight: 700, color: '#00D4FF', textShadow: '0 0 15px rgba(0,212,255,0.4)', letterSpacing: '3px' }}>VOID BIOS v3.0.1</div>
-            <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.35)', letterSpacing: '2px', marginTop: 4 }}>QUANTUM RENDERING ENGINE</div>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#00D4FF', textShadow: '0 0 12px rgba(0,212,255,0.4)', letterSpacing: '2px' }}>VOID BIOS</div>
+            <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.3)', letterSpacing: '1.5px', marginTop: 3 }}>v3.0.1 · QUANTUM ENGINE</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '8px', color: '#39FF14', letterSpacing: '1.5px', textShadow: '0 0 8px rgba(57,255,20,0.3)' }}>SYS: ONLINE</div>
-            <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.3)', marginTop: 2 }}>BUILD 2045.04.12</div>
+            <div style={{ fontSize: '7px', color: '#39FF14', letterSpacing: '1px', textShadow: '0 0 6px rgba(57,255,20,0.3)' }}>● ONLINE</div>
           </div>
         </div>
-        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.2), transparent)', marginBottom: 12 }} />
 
-        {/* Diagnostics box */}
-        <div ref={containerRef} style={{ marginBottom: 20, padding: '8px 12px', border: '1px solid rgba(0,212,255,0.08)', background: 'rgba(0,212,255,0.02)' }} />
+        <div style={{ height: 1, background: 'linear-gradient(90deg, rgba(0,212,255,0.15), rgba(123,47,255,0.1), transparent)', marginBottom: 10 }} />
 
-        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)', marginBottom: 16 }} />
+        {/* Diag lines */}
+        <div ref={containerRef} style={{ marginBottom: 14 }} />
 
-        {/* Progress bar */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'rgba(232,232,240,0.6)', marginBottom: '6px', letterSpacing: '1.5px' }}>
-            <span>INITIALIZING VOID OS</span>
-            <span ref={progressTextRef}>0%</span>
-          </div>
-          <div style={{ height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden', position: 'relative' }}>
-            <div ref={progressRef} style={{
-              height: '100%', borderRadius: '2px',
-              background: 'linear-gradient(90deg, #00D4FF, #7B2FFF, #FF3366)',
-              transform: 'scaleX(0)', transformOrigin: 'left center',
-              position: 'relative', zIndex: 2,
-            }} />
-            <div ref={glowRef} style={{
-              position: 'absolute', top: '-4px', left: 0, right: 0, height: '12px',
-              background: 'linear-gradient(90deg, rgba(0,212,255,0.3), rgba(123,47,255,0.3), rgba(255,51,102,0.2))',
-              filter: 'blur(6px)', borderRadius: '6px',
-              transform: 'scaleX(0)', transformOrigin: 'left center',
-            }} />
-          </div>
+        <div style={{ height: 1, background: 'rgba(0,212,255,0.08)', marginBottom: 12 }} />
+
+        {/* Progress */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: 'rgba(232,232,240,0.5)', marginBottom: 5, letterSpacing: '1.5px' }}>
+          <span>LOADING</span>
+          <span ref={progressTextRef}>0%</span>
+        </div>
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden', position: 'relative' }}>
+          <div ref={progressRef} style={{
+            height: '100%', borderRadius: 2,
+            background: 'linear-gradient(90deg, #00D4FF, #7B2FFF)',
+            transform: 'scaleX(0)', transformOrigin: 'left center',
+            position: 'relative', zIndex: 2,
+          }} />
+          <div ref={glowRef} style={{
+            position: 'absolute', top: -3, left: 0, right: 0, height: 9,
+            background: 'linear-gradient(90deg, rgba(0,212,255,0.25), rgba(123,47,255,0.2))',
+            filter: 'blur(4px)', borderRadius: 4,
+            transform: 'scaleX(0)', transformOrigin: 'left center',
+          }} />
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'space-between', padding: '0 4px' }}>
-          <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1.5px' }}>CORES: 8 · THREADS: 16</span>
-          <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1.5px' }}>FREQ: 4.8 GHz</span>
+        <div ref={footerRef} style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', opacity: 0 }}>
+          <span style={{ fontSize: '6px', color: 'rgba(232,232,240,0.18)', letterSpacing: '1px' }}>8 CORES · 16 THREADS</span>
+          <span style={{ fontSize: '6px', color: 'rgba(232,232,240,0.18)', letterSpacing: '1px' }}>4.8 GHz</span>
         </div>
       </div>
     </div>
   );
 }
 
-
 /* ============================================
-   GLITCH TRANSITION — GSAP tearbar animation
+   GLITCH TRANSITION
    ============================================ */
 function GlitchTransition({ onComplete }: { onComplete: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -211,7 +203,6 @@ function GlitchTransition({ onComplete }: { onComplete: () => void }) {
 
     const tl = gsap.timeline({ onComplete });
 
-    // Create 12 tear bars
     const bars: HTMLDivElement[] = [];
     for (let i = 0; i < 12; i++) {
       const bar = document.createElement('div');
@@ -222,21 +213,13 @@ function GlitchTransition({ onComplete }: { onComplete: () => void }) {
       bars.push(bar);
     }
 
-    // Phase 1: Bars flash in (0-150ms)
-    tl.to(bars, {
-      opacity: 1, duration: 0.08, stagger: { each: 0.01, from: 'random' },
-    }, 0);
-
-    // Phase 2: Bars slide and fade (150-350ms)
+    tl.to(bars, { opacity: 1, duration: 0.08, stagger: { each: 0.01, from: 'random' } }, 0);
     tl.to(bars, {
       x: () => `+=${(Math.random() - 0.5) * 60}`,
-      opacity: 0,
-      duration: 0.2,
-      stagger: { each: 0.015, from: 'random' },
-      ease: 'power2.in',
+      opacity: 0, duration: 0.2,
+      stagger: { each: 0.015, from: 'random' }, ease: 'power2.in',
     }, 0.12);
 
-    // Phase 3: White flash
     const flash = document.createElement('div');
     flash.style.cssText = 'position:absolute;inset:0;background:rgba(232,232,240,0.08);opacity:0;';
     container.appendChild(flash);
@@ -250,7 +233,7 @@ function GlitchTransition({ onComplete }: { onComplete: () => void }) {
 }
 
 /* ============================================
-   NAME REVEAL — GSAP text decode + holographic shimmer
+   NAME REVEAL — Decode + holographic shimmer
    ============================================ */
 function NameReveal({ onReady }: { onReady: () => void }) {
   const nameRef = useRef<HTMLHeadingElement>(null);
@@ -296,48 +279,35 @@ function NameReveal({ onReady }: { onReady: () => void }) {
       },
       onComplete: () => {
         name.textContent = nameText;
-        // Start holographic shimmer after name resolves
         if (shimmerRef.current) {
           gsap.to(shimmerRef.current, {
-            x: '200%', duration: 2, ease: 'power1.inOut',
+            left: '120%', duration: 1.2, ease: 'power2.inOut', delay: 0.3,
             repeat: -1, repeatDelay: 3,
           });
         }
       },
-    }, 0.3);
+    }, 0.2);
 
-    // Role: decode
-    role.textContent = roleText.replace(/[^ ]/g, () => chars[Math.floor(Math.random() * chars.length)]);
-    tl.fromTo(role, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.9);
+    // Role
+    tl.fromTo(role, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 1.0);
+    role.textContent = roleText;
+
+    // Tagline typewriter
     tl.to({ progress: 0 }, {
-      progress: 1, duration: 0.8, ease: 'power1.inOut',
+      progress: 1, duration: 1.5, ease: 'none',
       onUpdate: function () {
         const p = this.targets()[0].progress;
-        const resolved = Math.floor(p * roleText.length);
-        let result = '';
-        for (let i = 0; i < roleText.length; i++) {
-          if (roleText[i] === ' ') { result += ' '; continue; }
-          result += i < resolved ? roleText[i] : chars[Math.floor(Math.random() * chars.length)];
-        }
-        role.textContent = result;
+        tagline.textContent = taglineText.slice(0, Math.floor(p * taglineText.length));
       },
-      onComplete: () => { role.textContent = roleText; },
-    }, 1.0);
-
-    // Tagline: typewriter
-    tagline.textContent = '';
-    tl.to({ idx: 0 }, {
-      idx: taglineText.length, duration: 1.2, ease: 'none',
-      onUpdate: function () {
-        tagline.textContent = taglineText.slice(0, Math.floor(this.targets()[0].idx));
-      },
-    }, 1.8);
+    }, 1.3);
 
     // CTA
-    tl.fromTo(cta, { opacity: 0 }, { opacity: 1, duration: 0.5 }, 3.2);
-    tl.call(onReady, [], 3.2);
+    tl.fromTo(cta, { opacity: 0, y: 10 }, {
+      opacity: 1, y: 0, duration: 0.5, ease: 'power2.out',
+      onComplete: onReady,
+    }, 2.5);
 
-    // Cursor blink (infinite)
+    // Cursor blink
     if (cursorRef.current) {
       gsap.to(cursorRef.current, { opacity: 0, duration: 0.5, repeat: -1, yoyo: true, ease: 'steps(1)' });
     }
@@ -357,7 +327,7 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         boxShadow: '0 0 12px rgba(0,212,255,0.3)',
       }} />
 
-      {/* Name with holographic shimmer overlay */}
+      {/* Name with holographic shimmer */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
         <h1 ref={nameRef} style={{
           fontFamily: "'Syne', sans-serif", fontWeight: 800,
@@ -368,7 +338,6 @@ function NameReveal({ onReady }: { onReady: () => void }) {
           textAlign: 'center', opacity: 0,
           filter: 'drop-shadow(0 0 20px rgba(0,212,255,0.3)) drop-shadow(0 0 40px rgba(123,47,255,0.15))',
         }} />
-        {/* Holographic shimmer sweep */}
         <div ref={shimmerRef} style={{
           position: 'absolute', top: 0, left: '-50%', width: '30%', height: '100%',
           background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
@@ -396,7 +365,7 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         }} />
       </div>
 
-      {/* CTA with breathing glow */}
+      {/* CTA */}
       <div ref={ctaRef} className="boot-cta" style={{
         marginTop: '50px', fontFamily: "'JetBrains Mono', monospace",
         fontSize: '10px', color: 'rgba(232,232,240,0.5)',
@@ -409,7 +378,6 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         PRESS ANY KEY TO ENTER VOID OS
       </div>
 
-      {/* Subtitle hint */}
       <div style={{
         marginTop: '16px', fontFamily: "'JetBrains Mono', monospace",
         fontSize: '8px', color: 'rgba(232,232,240,0.2)', letterSpacing: '3px',
@@ -421,11 +389,11 @@ function NameReveal({ onReady }: { onReady: () => void }) {
 }
 
 /* ============================================
-   AMBIENT GRID (pure CSS) — enhanced
+   AMBIENT GRID
    ============================================ */
 function AmbientGrid() {
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', opacity: 0.4, pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', opacity: 0.35, pointerEvents: 'none' }}>
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage: 'linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px)',
@@ -467,15 +435,18 @@ export default function BootSequence() {
     const wCtx = wormhole.getContext('2d')!;
     const cx = wormhole.width / 2, cy = wormhole.height / 2;
 
-    // Phase 1: Zoom text into center (400ms)
-    gsap.to('.boot-container', {
-      scale: 0.3, opacity: 0.4, filter: 'blur(8px)',
-      duration: 0.4, ease: 'power3.in',
-    });
+    // Zoom text effect
+    const bootEl = document.querySelector('.boot-container') as HTMLElement;
+    if (bootEl) {
+      gsap.to(bootEl, {
+        scale: 1.1, filter: 'blur(8px)', opacity: 0,
+        duration: 0.4, ease: 'power2.in',
+      });
+    }
 
-    // Phase 2: Wormhole tunnel (400ms-1200ms)
+    // Wormhole tunnel
+    const colors = ['rgba(0,212,255,0.4)', 'rgba(123,47,255,0.3)', 'rgba(57,255,20,0.2)', 'rgba(255,184,0,0.2)'];
     const rings: { z: number; r: number; color: string; speed: number }[] = [];
-    const colors = ['#00D4FF', '#7B2FFF', '#39FF14', '#FFB800'];
     for (let i = 0; i < 40; i++) {
       rings.push({
         z: i * 25, r: 50 + Math.random() * 200,
@@ -493,11 +464,9 @@ export default function BootSequence() {
       const progress = Math.min(elapsed / duration, 1);
       wCtx.clearRect(0, 0, wormhole.width, wormhole.height);
 
-      // Darken background
       wCtx.fillStyle = `rgba(3,3,6,${0.3 + progress * 0.7})`;
       wCtx.fillRect(0, 0, wormhole.width, wormhole.height);
 
-      // Draw tunnel rings rushing toward camera
       for (const ring of rings) {
         ring.z -= ring.speed * (1 + progress * 3);
         if (ring.z < 1) ring.z += 1000;
@@ -514,7 +483,6 @@ export default function BootSequence() {
         wCtx.stroke();
       }
 
-      // Center glow
       wCtx.globalAlpha = 0.15 + progress * 0.3;
       const cg = wCtx.createRadialGradient(cx, cy, 0, cx, cy, 100 + progress * 300);
       cg.addColorStop(0, 'rgba(0,212,255,0.3)');
@@ -524,7 +492,6 @@ export default function BootSequence() {
       wCtx.fillRect(0, 0, wormhole.width, wormhole.height);
       wCtx.globalAlpha = 1;
 
-      // White flash at end
       if (progress > 0.85) {
         const flashAlpha = (progress - 0.85) / 0.15 * 0.2;
         wCtx.fillStyle = `rgba(232,232,240,${flashAlpha})`;
@@ -534,7 +501,6 @@ export default function BootSequence() {
       if (progress < 1) {
         frame = requestAnimationFrame(drawWormhole);
       } else {
-        // Done — reveal desktop
         cancelAnimationFrame(frame);
         gsap.to(wormhole, {
           opacity: 0, duration: 0.3, ease: 'power2.out',
@@ -569,7 +535,7 @@ export default function BootSequence() {
       gsap.to(el, {
         boxShadow: '0 0 25px rgba(0,212,255,0.15), inset 0 0 15px rgba(0,212,255,0.05)',
         borderColor: 'rgba(0,212,255,0.3)',
-        color: 'rgba(232,232,240,0.5)',
+        color: 'rgba(232,232,240,0.6)',
         duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut',
       });
     }
@@ -582,7 +548,7 @@ export default function BootSequence() {
       <FloatingParticles />
       <AmbientGrid />
 
-      {/* Scanlines (subtler) + Vignette */}
+      {/* Scanlines + Vignette */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 50, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
       <div style={{ position: 'absolute', inset: 0, zIndex: 49, pointerEvents: 'none', background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%)' }} />
 
