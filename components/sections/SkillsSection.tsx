@@ -456,13 +456,18 @@ function ForceGraph({ onSelect, selected, filter }: {
 
     canvas.addEventListener('mousemove', onMove);
     canvas.addEventListener('click', onClick);
-    window.addEventListener('resize', resize);
+    const ro = new ResizeObserver(() => {
+      resize();
+    });
+    if (canvas.parentElement) {
+      ro.observe(canvas.parentElement);
+    }
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       canvas.removeEventListener('mousemove', onMove);
       canvas.removeEventListener('click', onClick);
-      window.removeEventListener('resize', resize);
+      ro.disconnect();
     };
   }, [onSelect]);
 
