@@ -493,12 +493,12 @@ function SkillPopup({ skill, onClose }: { skill: Skill; onClose: () => void }) {
   return (
     <div style={{
       position: 'relative', width: 'clamp(280px, 90vw, 320px)',
-      border: `1px solid ${color}44`, background: 'rgba(5,5,16,0.96)',
+      border: `1px solid ${color}66`, background: 'rgba(5,5,16,0.92)',
       backdropFilter: 'blur(20px)', padding: 24, zIndex: 50,
       transform: vis ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.96)',
       opacity: vis ? 1 : 0,
       transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
-      boxShadow: `0 0 50px ${color}18`,
+      boxShadow: `0 0 60px ${color}25, 0 0 20px ${color}40, inset 0 0 15px ${color}15`,
     }}>
       {/* Corner accents */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: 18, height: 18, borderTop: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
