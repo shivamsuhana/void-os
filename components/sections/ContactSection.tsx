@@ -414,9 +414,9 @@ export default function ContactSection() {
               body: JSON.stringify({ name: form.name, email: form.email, message: `[${subjectLine}] ${form.message}` }),
             });
             const data = await res.json();
-            if (data.fallback && data.mailto) window.open(mailtoUrl, '_blank');
+            if (data.fallback) window.location.href = mailtoUrl;
           } catch {
-            window.open(mailtoUrl, '_blank');
+            window.location.href = mailtoUrl;
           }
         }, 1500);
 
@@ -581,52 +581,69 @@ export default function ContactSection() {
         </div>
 
         {/* RIGHT panels */}
-        <div id="contact-right" style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '75vh', overflowY: 'auto' }}>
+        <div id="contact-right" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '75vh', overflowY: 'auto' }}>
           <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.7)', marginBottom: 6 }}>SIGNAL</div>
+            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.7)', marginBottom: 6 }}>SIGNAL DETECTION</div>
             <RadarCanvas />
-            <div style={{ fontSize: '8px', color: C.green, marginTop: 6, textShadow: `0 0 8px ${C.green}50` }}>● DETECTED</div>
+            <div style={{ fontSize: '8px', color: C.green, marginTop: 6, textShadow: `0 0 8px ${C.green}50` }}>● VISITOR DETECTED</div>
           </div>
 
-          <div style={{ padding: 12, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2px', color: C.purple, marginBottom: 8, textShadow: `0 0 8px ${C.purple}55` }}>DATA</div>
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2px', color: C.purple, marginBottom: 10, textShadow: `0 0 8px ${C.purple}55` }}>TRANSMISSION DATA</div>
             {[
-              { label: 'NAME', value: form.name, s: 'name' },
+              { label: 'SENDER', value: form.name, s: 'name' },
               { label: 'EMAIL', value: form.email, s: 'email' },
-              { label: 'SUBJ', value: form.subject, s: 'subject' },
-              { label: 'MSG', value: form.message ? `"${form.message.slice(0, 25)}..."` : '', s: 'message' },
+              { label: 'SUBJECT', value: form.subject, s: 'subject' },
+              { label: 'MESSAGE', value: form.message ? `"${form.message.slice(0, 30)}..."` : '', s: 'message' },
             ].map(f => (
-              <div key={f.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.55)' }}>{f.label}</span>
-                <span style={{ fontSize: '9px', color: f.value ? C.blue : 'rgba(232,232,240,0.2)', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div key={f.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.55)', letterSpacing: '1px' }}>{f.label}</span>
+                <span style={{ fontSize: '9px', color: f.value ? C.blue : 'rgba(232,232,240,0.2)', maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: f.value ? `0 0 6px ${C.blue}30` : 'none' }}>
                   {f.value || (step === f.s ? '▍' : '—')}
                 </span>
               </div>
             ))}
           </div>
 
-          <div style={{ padding: 12, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.65)', marginBottom: 6 }}>STATUS</div>
-            {[{ l: 'AVAIL', v: 'YES', c: C.green }, { l: 'ETA', v: '<24H', c: C.amber }, { l: 'ENC', v: 'AES-256', c: C.blue }].map(s => (
-              <div key={s.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}>
-                <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.5)' }}>{s.l}</span>
-                <span style={{ fontSize: '9px', color: s.c, fontWeight: 600 }}>{s.v}</span>
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.65)', marginBottom: 8 }}>CONNECTION STATUS</div>
+            {[
+              { l: 'STATUS', v: 'AVAILABLE', c: C.green },
+              { l: 'RESPONSE', v: '< 24 HOURS', c: C.amber },
+              { l: 'CHANNEL', v: 'ENCRYPTED', c: C.blue },
+              { l: 'PROTOCOL', v: 'VOID/3', c: C.purple },
+              { l: 'TIMEZONE', v: 'UTC+5:30', c: C.white },
+            ].map(s => (
+              <div key={s.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.5)', letterSpacing: '1px' }}>{s.l}</span>
+                <span style={{ fontSize: '9px', color: s.c, fontWeight: 600, textShadow: `0 0 6px ${s.c}30` }}>{s.v}</span>
               </div>
             ))}
           </div>
 
-          <div style={{ padding: 12, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.65)', marginBottom: 6 }}>LINKS</div>
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.65)', marginBottom: 8 }}>SIGNAL CHANNELS</div>
             {[
               { l: 'EMAIL', v: OWNER.email, h: `mailto:${OWNER.email}`, c: C.green },
               { l: 'GITHUB', v: '@shivamsuhana', h: OWNER.github, c: C.white },
-              { l: 'LINKEDIN', v: 'in/shivam', h: OWNER.linkedin, c: C.blue },
+              { l: 'LINKEDIN', v: 'in/shivamsuhana', h: OWNER.linkedin, c: C.blue },
             ].map(lk => (
-              <a key={lk.l} href={lk.h} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', textDecoration: 'none' }}>
-                <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.5)' }}>{lk.l}</span>
-                <span style={{ fontSize: '8px', color: lk.c }}>{lk.v}</span>
+              <a key={lk.l} href={lk.h} target="_blank" rel="noopener noreferrer" style={{
+                display: 'flex', justifyContent: 'space-between', padding: '4px 0',
+                textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.03)',
+                transition: 'all 0.2s',
+              }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '4px'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '0'; }}
+              >
+                <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.5)', letterSpacing: '1px' }}>{lk.l}</span>
+                <span style={{ fontSize: '9px', color: lk.c, textShadow: `0 0 6px ${lk.c}30` }}>{lk.v}</span>
               </a>
             ))}
+          </div>
+
+          <div style={{ padding: '8px 14px', fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1.5px', lineHeight: 1.8 }}>
+            SECURE CHANNEL · AES-256<br />VOID OS v3.0.1
           </div>
         </div>
       </div>
