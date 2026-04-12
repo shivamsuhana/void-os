@@ -19,6 +19,9 @@ const NoiseBg = dynamic(() => import('@/components/global/NoiseBg'), { ssr: fals
 const Screensaver = dynamic(() => import('@/components/global/Screensaver'), { ssr: false });
 const TransitionManager = dynamic(() => import('@/components/global/TransitionManager'), { ssr: false });
 const AITwinChat = dynamic(() => import('@/components/global/AITwinChat'), { ssr: false });
+const CommandPalette = dynamic(() => import('@/components/global/CommandPalette'), { ssr: false });
+const AchievementSystem = dynamic(() => import('@/components/global/AchievementSystem'), { ssr: false });
+const TimeTheme = dynamic(() => import('@/components/global/TimeTheme'), { ssr: false });
 
 /* ═══════════════════════════════════════════
    SECTOR LOADING — Brief terminal-style loader
@@ -147,6 +150,9 @@ export default function VoidOS() {
           <NoiseBg />
           <Screensaver />
           <AITwinChat />
+          <CommandPalette />
+          <AchievementSystem />
+          <TimeTheme />
         </>
       )}
     </main>
