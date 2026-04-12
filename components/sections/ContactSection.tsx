@@ -500,12 +500,12 @@ export default function ContactSection() {
       </div>
 
       {/* BODY: Centered floating layout */}
-      <div style={{ position: 'absolute', inset: 0, paddingTop: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '70px 30px 30px' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 20, padding: '70px 30px 30px' }}>
         <style dangerouslySetInnerHTML={{ __html: '@media(max-width:900px){#contact-right{display:none!important;}}' }} />
 
         {/* Terminal card */}
         <div style={{
-          width: '100%', maxWidth: 560, maxHeight: '75vh',
+          width: '100%', maxWidth: 560,
           display: 'flex', flexDirection: 'column',
           border: '1px solid rgba(0,212,255,0.15)',
           background: 'rgba(5,5,16,0.85)',
@@ -513,6 +513,8 @@ export default function ContactSection() {
           borderRadius: 8,
           boxShadow: '0 0 40px rgba(0,212,255,0.06), 0 20px 60px rgba(0,0,0,0.4)',
           overflow: 'hidden',
+          marginTop: 'auto', marginBottom: 'auto',
+          maxHeight: '80vh',
         }}>
           {/* Tab bar */}
           <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(0,212,255,0.1)', background: 'rgba(0,212,255,0.02)', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
@@ -581,7 +583,7 @@ export default function ContactSection() {
         </div>
 
         {/* RIGHT panels */}
-        <div id="contact-right" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '75vh', overflowY: 'auto' }}>
+        <div id="contact-right" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, overflowY: 'auto', maxHeight: '80vh', marginTop: 'auto', marginBottom: 'auto' }}>
           <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.7)', marginBottom: 6 }}>SIGNAL DETECTION</div>
             <RadarCanvas />
