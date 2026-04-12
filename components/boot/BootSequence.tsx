@@ -75,7 +75,7 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
   const glowRef = useRef<HTMLDivElement>(null);
 
   const DIAG_LINES = [
-    { text: 'VOID BIOS v2045.1.0', status: '', color: '#00D4FF' },
+    { text: 'VOID BIOS v3.0.1', status: '', color: '#00D4FF' },
     { text: 'Quantum Core............', status: '[OK]', color: '#39FF14' },
     { text: 'Neural Stack............', status: '[OK]', color: '#39FF14' },
     { text: 'Memory Fabric...........', status: '64 TB', color: '#FFB800' },

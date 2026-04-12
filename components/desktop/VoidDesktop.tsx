@@ -350,7 +350,7 @@ export default function VoidDesktop() {
             background: '#39FF14', boxShadow: '0 0 8px rgba(57,255,20,0.6)',
           }} />
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,0.4)', letterSpacing: '3px' }}>
-            VOID OS v2045.1
+            VOID OS v3.0.1
           </span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(0,212,255,0.4)', letterSpacing: '1px' }}>
             ▸ DESKTOP
