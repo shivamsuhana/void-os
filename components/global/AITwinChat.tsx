@@ -54,9 +54,10 @@ export default function AITwinChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMsg,
+          section: activeSection,
           history: messages
             .filter(m => m.role !== 'system')
-            .slice(-8)
+            .slice(-10)
             .map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.content })),
         }),
       });
