@@ -148,7 +148,7 @@ export default function SkillsSection() {
       // Background hex grid instead of square grid
       const hexR = 30;
       const hexH = hexR * Math.sqrt(3);
-      ctx.strokeStyle = 'rgba(0,212,255,0.025)';
+      ctx.strokeStyle = 'rgba(0,212,255,0.05)';
       ctx.lineWidth = 0.5;
       for (let gy = -1; gy < rect.height / hexH + 1; gy++) {
         for (let gx = -1; gx < rect.width / (hexR * 1.5) + 1; gx++) {
@@ -186,23 +186,23 @@ export default function SkillsSection() {
           if (isDimmed) {
             // Dim connections
             ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
-            ctx.strokeStyle = 'rgba(255,255,255,0.015)'; ctx.lineWidth = 0.5; ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 0.5; ctx.stroke();
             continue;
           }
 
           // Layer 1: Wide outer glow (3D depth)
           ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
-          ctx.strokeStyle = hexToRgba(color, isGlowing ? 0.12 + node.glowIntensity * 0.15 : 0.02);
+          ctx.strokeStyle = hexToRgba(color, isGlowing ? 0.18 + node.glowIntensity * 0.2 : 0.06);
           ctx.lineWidth = isGlowing ? 8 : 4; ctx.stroke();
 
           // Layer 2: Mid glow
           ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
-          ctx.strokeStyle = hexToRgba(color, isGlowing ? 0.3 + node.glowIntensity * 0.3 : 0.06);
+          ctx.strokeStyle = hexToRgba(color, isGlowing ? 0.4 + node.glowIntensity * 0.3 : 0.12);
           ctx.lineWidth = isGlowing ? 3 : 1.5; ctx.stroke();
 
           // Layer 3: Bright core wire
           ctx.beginPath(); ctx.moveTo(node.x, node.y); ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
-          ctx.strokeStyle = isGlowing ? hexToRgba(color, 0.6 + node.glowIntensity * 0.4) : hexToRgba(color, 0.12);
+          ctx.strokeStyle = isGlowing ? hexToRgba(color, 0.7 + node.glowIntensity * 0.3) : hexToRgba(color, 0.25);
           ctx.lineWidth = isGlowing ? 1.2 : 0.6; ctx.stroke();
 
           // Data pulses — 2 per connection
@@ -482,7 +482,7 @@ export default function SkillsSection() {
                 background: `${catColorMap[selectedSkill.category]}08`,
                 borderRadius: '2px', transition: 'all 0.3s',
               }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,.3)', marginBottom: 6 }}>SELECTED NODE</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,.65)', marginBottom: 6 }}>SELECTED NODE</div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, color: catColorMap[selectedSkill.category], marginBottom: 4 }}>{selectedSkill.name}</div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', marginBottom: 8 }}>{selectedSkill.category}</div>
                 <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', marginBottom: 4 }}>

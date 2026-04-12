@@ -25,7 +25,7 @@ function HexGridBG() {
       t += .005;
       ctx.fillStyle = 'rgba(3,3,6,.15)'; ctx.fillRect(0, 0, W, H);
       const hexR = 40;
-      ctx.strokeStyle = `rgba(0,212,255,${.015 + Math.sin(t) * .008})`; ctx.lineWidth = .5;
+      ctx.strokeStyle = `rgba(0,212,255,${.035 + Math.sin(t) * .015})`; ctx.lineWidth = .5;
       for (let gy = -1; gy < H / (hexR * Math.sqrt(3)) + 1; gy++) {
         for (let gx = -1; gx < W / (hexR * 1.5) + 1; gx++) {
           const cx2 = gx * hexR * 1.5, cy2 = gy * hexR * Math.sqrt(3) + (gx % 2 ? hexR * Math.sqrt(3) / 2 : 0);
@@ -68,7 +68,7 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
     <div
       ref={cardRef}
       style={{
-        position: 'relative', background: 'rgba(255,255,255,.03)',
+        position: 'relative', background: 'rgba(255,255,255,.06)',
         border: `1px solid ${color}18`,
         transition: 'border-color .3s, background .5s, box-shadow .3s, transform .3s',
         backdropFilter: 'blur(4px)',
@@ -81,7 +81,7 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
         el.style.borderColor = `${color}18`;
-        el.style.background = 'rgba(255,255,255,.03)';
+        el.style.background = 'rgba(255,255,255,.06)';
         el.style.boxShadow = 'none';
         el.style.transform = 'translateY(0)';
       }}
@@ -373,7 +373,7 @@ function ProfBar({ label, value, color, delay, go }: { label: string; value: num
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.5)' }}>{label}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.65)' }}>{label}</span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color, textShadow: `0 0 6px ${color}66` }}>{value}%</span>
       </div>
       <div style={{ height: 2, background: 'rgba(255,255,255,.06)', borderRadius: 1 }}>
@@ -478,7 +478,7 @@ export default function AboutSection() {
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)' }} />
 
       {/* Process bar with back button */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(3,3,6,.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,212,255,.08)', padding: '12px 40px', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'var(--font-mono)' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(3,3,6,.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,212,255,.15)', padding: '12px 40px', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'var(--font-mono)' }}>
         <button onClick={() => navigateTo('desktop')} style={{
           background: 'none', border: '1px solid rgba(0,212,255,.15)', padding: '5px 14px',
           fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: '#00D4FF',
@@ -487,12 +487,12 @@ export default function AboutSection() {
           onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.5)'; e.currentTarget.style.background = 'rgba(0,212,255,.06)'; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.15)'; e.currentTarget.style.background = 'none'; }}
         >← DESKTOP</button>
-        <div style={{ width: 1, height: 14, background: 'rgba(0,212,255,.1)' }} />
+        <div style={{ width: 1, height: 14, background: 'rgba(0,212,255,.2)' }} />
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 8px #39FF14' }} />
-        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.35)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,.15)' }}>/</span>
+        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.55)' }}>VOID_OS</span>
+        <span style={{ color: 'rgba(232,232,240,.55)' }}>/</span>
         <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#00D4FF', textShadow: '0 0 8px rgba(0,212,255,.3)' }}>ABOUT.exe</span>
-        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.2)' }}>PID: 1337 · RUNNING</div>
+        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.4)' }}>PID: 1337 · RUNNING</div>
       </div>
 
       {/* ─── HERO SPLIT ─── */}
@@ -514,7 +514,7 @@ export default function AboutSection() {
                 onMouseLeave={() => setPhotoHov(false)}
               >
                 <div style={{ position: 'absolute', inset: 0 }}><AsciiPhoto hovered={photoHov} /></div>
-                <div style={{ position: 'absolute', bottom: 12, left: 0, right: 0, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2.5px', color: photoHov ? '#00D4FF' : 'rgba(232,232,240,.25)', transition: 'color .3s' }}>
+                <div style={{ position: 'absolute', bottom: 12, left: 0, right: 0, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2.5px', color: photoHov ? '#00D4FF' : 'rgba(232,232,240,.6)', transition: 'color .3s' }}>
                   {photoHov ? '← REAL HUMAN →' : 'HOVER TO REVEAL'}
                 </div>
                 {['tl', 'tr', 'bl', 'br'].map(p => <div key={p} style={{
@@ -539,7 +539,7 @@ export default function AboutSection() {
                   ['STATUS', 'AVAILABLE FOR HIRE', '#39FF14'],
                 ] as const).map(([k, v, c], i) => (
                   <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 6, fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
-                    <span style={{ color: 'rgba(232,232,240,.3)', minWidth: 52 }}>{k}:</span>
+                    <span style={{ color: 'rgba(232,232,240,.65)', minWidth: 52 }}>{k}:</span>
                     <span style={{ color: c, textShadow: c === '#39FF14' ? '0 0 12px #39FF14' : 'none' }}>{v}</span>
                   </div>
                 ))}
@@ -567,7 +567,7 @@ export default function AboutSection() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3.5px', color: '#7B2FFF', textShadow: '0 0 8px rgba(123,47,255,.3)' }}>ABOUT.exe</div>
                 <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,#7B2FFF,transparent)' }} />
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,.2)' }}>v1.0.0</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,.4)' }}>v1.0.0</div>
               </div>
             </Reveal>
 
@@ -581,14 +581,14 @@ export default function AboutSection() {
             {/* Bio */}
             <Reveal delay={300}>
               <GlowCard color="#7B2FFF" style={{ padding: '18px 20px', marginBottom: 36, borderLeft: '2px solid rgba(0,212,255,.25)' }}>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: 2, color: 'rgba(232,232,240,.5)' }}>{OWNER.bio}</p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: 2, color: 'rgba(232,232,240,.65)' }}>{OWNER.bio}</p>
               </GlowCard>
             </Reveal>
 
             {/* Proficiency */}
             <div ref={statsRef} style={{ marginBottom: 48 }}>
               <Reveal delay={350}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.25)', marginBottom: 16 }}>PROFICIENCY_MATRIX.sys</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>PROFICIENCY_MATRIX.sys</div>
                 <ProfBar label="JAVA / DSA / OOP" value={85} color="#00D4FF" delay={100} go={statsGo} />
                 <ProfBar label="BACKEND / PHP / DATABASES" value={68} color="#7B2FFF" delay={200} go={statsGo} />
                 <ProfBar label="FRONTEND / REACT / UI" value={50} color="#39FF14" delay={300} go={statsGo} />
@@ -600,9 +600,9 @@ export default function AboutSection() {
             {/* Globe */}
             <Reveal delay={450}>
               <GlowCard color="#39FF14" style={{ padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.25)', alignSelf: 'flex-start' }}>LOCATIONS.geojson</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', alignSelf: 'flex-start' }}>LOCATIONS.geojson</div>
                 <Globe />
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '6px', letterSpacing: '2px', color: 'rgba(232,232,240,.2)' }}>DRAG TO ROTATE</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '6px', letterSpacing: '2px', color: 'rgba(232,232,240,.4)' }}>DRAG TO ROTATE</div>
               </GlowCard>
             </Reveal>
           </div>
@@ -620,7 +620,7 @@ export default function AboutSection() {
                   letterSpacing: '.5px', cursor: 'default', borderRadius: 2,
                   transition: 'all .25s cubic-bezier(.16,1,.3,1)', background: 'rgba(0,212,255,.03)',
                 }}
-                  onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor = 'rgba(0,212,255,.5)'; el.style.color = '#00D4FF'; el.style.background = 'rgba(0,212,255,.1)'; el.style.transform = 'translateY(-3px) scale(1.05)'; el.style.textShadow = '0 0 10px rgba(0,212,255,.4)'; el.style.boxShadow = '0 0 12px rgba(0,212,255,.15)'; }}
+                  onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor = 'rgba(0,212,255,.5)'; el.style.color = '#00D4FF'; el.style.background = 'rgba(0,212,255,.2)'; el.style.transform = 'translateY(-3px) scale(1.05)'; el.style.textShadow = '0 0 10px rgba(0,212,255,.4)'; el.style.boxShadow = '0 0 12px rgba(0,212,255,.15)'; }}
                   onMouseLeave={e => { const el = e.currentTarget; el.style.borderColor = 'rgba(0,212,255,.12)'; el.style.color = 'rgba(232,232,240,.6)'; el.style.background = 'rgba(0,212,255,.03)'; el.style.transform = 'translateY(0) scale(1)'; el.style.textShadow = 'none'; el.style.boxShadow = 'none'; }}
                 >{t}</span>
               ))}
@@ -632,7 +632,7 @@ export default function AboutSection() {
         <div style={{ padding: 'clamp(30px,4vw,60px) clamp(20px,5vw,80px)', borderTop: '1px solid rgba(0,212,255,.06)' }}>
           {/* Stats row */}
           <Reveal>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.25)', marginBottom: 16 }}>SYSTEM_METRICS</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>SYSTEM_METRICS</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginBottom: 40 }}>
               {OWNER.stats.map((s, i) => (
                 <GlowCard key={i} style={{ padding: '18px 14px', textAlign: 'center', cursor: 'default', transition: 'transform .3s' }}
@@ -640,7 +640,7 @@ export default function AboutSection() {
                   onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
                 >
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: 800, color: '#00D4FF', textShadow: '0 0 15px rgba(0,212,255,.4)', marginBottom: 6 }}>{s.value}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,.35)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>{s.label}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,.55)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>{s.label}</div>
                 </GlowCard>
               ))}
             </div>
@@ -662,7 +662,7 @@ export default function AboutSection() {
                 >
                   <div style={{ fontSize: '22px', color, textShadow: `0 0 12px ${color}66`, marginBottom: 10 }}>{icon}</div>
                   <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px', marginBottom: 6, letterSpacing: '1px', color: '#E8E8F0' }}>{label}</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: 1.7, color: 'rgba(232,232,240,.45)' }}>{desc}</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: 1.7, color: 'rgba(232,232,240,.6)' }}>{desc}</div>
                 </GlowCard>
               ))}
             </div>
@@ -671,7 +671,7 @@ export default function AboutSection() {
 
         {/* Footer */}
         <div style={{ padding: '20px clamp(20px,5vw,80px)', borderTop: '1px solid rgba(0,212,255,.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,.2)' }}>ABOUT.exe — PROCESS COMPLETE</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,.4)' }}>ABOUT.exe — PROCESS COMPLETE</span>
           <div style={{ display: 'flex', gap: 20 }}>
             {[['work', 'WORK.db →'], ['skills', 'SKILLS.sys →']].map(([section, label]) => (
               <button key={section} onClick={() => navigateTo(section as 'work' | 'skills')} style={{

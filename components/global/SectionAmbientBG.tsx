@@ -58,8 +58,8 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
       y: Math.random() * H,
       vx: (Math.random() - 0.5) * 0.4,
       vy: (Math.random() - 0.5) * 0.4,
-      size: 0.5 + Math.random() * 2,
-      alpha: 0.05 + Math.random() * 0.15,
+      size: 1 + Math.random() * 2.5,
+      alpha: 0.15 + Math.random() * 0.25,
       phase: Math.random() * Math.PI * 2,
     }));
 
@@ -74,13 +74,13 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
       const mx = mouseRef.current.x * W;
       const my = mouseRef.current.y * H;
       const grd = ctx.createRadialGradient(mx, my, 0, mx, my, 400);
-      grd.addColorStop(0, `rgba(${r},${g},${b},0.02)`);
+      grd.addColorStop(0, `rgba(${r},${g},${b},0.06)`);
       grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, W, H);
 
       // Subtle grid
-      ctx.strokeStyle = `rgba(${r},${g},${b},0.015)`;
+      ctx.strokeStyle = `rgba(${r},${g},${b},0.035)`;
       ctx.lineWidth = 0.5;
       const gridSize = 80;
       for (let x = 0; x < W; x += gridSize) {
@@ -129,7 +129,7 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
         if (p.size > 1.5) {
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r},${g},${b},${a * 0.1})`;
+          ctx.fillStyle = `rgba(${r},${g},${b},${a * 0.25})`;
           ctx.fill();
         }
       }
@@ -145,7 +145,7 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(${r},${g},${b},${0.03 * (1 - dist / 120)})`;
+            ctx.strokeStyle = `rgba(${r},${g},${b},${0.08 * (1 - dist / 120)})`;
             ctx.stroke();
           }
         }

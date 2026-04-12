@@ -72,9 +72,9 @@ function ProjectCard3D({ project, position, index, onSelect }: {
       >
         <planeGeometry args={[2.6, 1.6]} />
         <meshStandardMaterial
-          color={hovered ? project.color : '#080814'}
+          color={hovered ? project.color : '#10102a'}
           emissive={project.color}
-          emissiveIntensity={hovered ? 0.2 : 0.03}
+          emissiveIntensity={hovered ? 0.3 : 0.08}
           transparent opacity={0.9} side={THREE.DoubleSide}
           roughness={0.3} metalness={0.6}
         />
@@ -85,19 +85,19 @@ function ProjectCard3D({ project, position, index, onSelect }: {
       {/* Top accent glow bar */}
       <mesh position={[0, 0.8, 0.005]} raycast={noRaycast}>
         <planeGeometry args={[2.6, 0.025]} />
-        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.9 : 0.3} />
+        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 1 : 0.5} />
       </mesh>
 
       {/* Bottom accent */}
       <mesh position={[0, -0.8, 0.005]} raycast={noRaycast}>
         <planeGeometry args={[2.6, 0.012]} />
-        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.35 : 0.06} />
+        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.5 : 0.15} />
       </mesh>
 
       {/* Wireframe edge — BEHIND the card */}
       <mesh position={[0, 0, -0.02]} userData={{ isEdge: true }} raycast={noRaycast}>
         <planeGeometry args={[2.7, 1.7]} />
-        <meshBasicMaterial color={project.color} wireframe transparent opacity={0.06} />
+        <meshBasicMaterial color={project.color} wireframe transparent opacity={0.15} />
       </mesh>
 
       {/* Glow backdrop — BEHIND everything */}
@@ -123,7 +123,7 @@ function ProjectCard3D({ project, position, index, onSelect }: {
           </div>
           <div style={{
             fontFamily: "'Syne', sans-serif", fontSize: hovered ? '16px' : '14px',
-            fontWeight: 700, color: hovered ? '#E8E8F0' : 'rgba(232,232,240,0.5)',
+            fontWeight: 700, color: hovered ? '#EEEEF5' : 'rgba(232,232,240,0.8)',
             transition: 'all 0.3s', textShadow: hovered ? `0 0 20px ${project.color}50` : 'none',
           }}>{project.title}</div>
           <div style={{
@@ -189,7 +189,7 @@ function TunnelParticles() {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.04} vertexColors transparent opacity={0.5} sizeAttenuation blending={THREE.AdditiveBlending} depthWrite={false} />
+      <pointsMaterial size={0.05} vertexColors transparent opacity={0.8} sizeAttenuation blending={THREE.AdditiveBlending} depthWrite={false} />
     </points>
   );
 }
@@ -205,7 +205,7 @@ function TunnelRing({ z, color, radius }: { z: number; color: string; radius: nu
   return (
     <mesh ref={ref} position={[0, 0, z]}>
       <torusGeometry args={[radius, 0.012, 8, 80]} />
-      <meshBasicMaterial color={color} transparent opacity={0.1} />
+      <meshBasicMaterial color={color} transparent opacity={0.25} />
     </mesh>
   );
 }
@@ -238,10 +238,10 @@ function TunnelScene({ scrollProgress, projects, onSelect }: {
 
   return (
     <>
-      <ambientLight intensity={0.12} />
-      <pointLight position={[3, 3, 5]} intensity={0.5} color="#00D4FF" />
-      <pointLight position={[-3, -2, -5]} intensity={0.35} color="#7B2FFF" />
-      <pointLight position={[0, 0, -15]} intensity={0.2} color="#39FF14" />
+      <ambientLight intensity={0.3} />
+      <pointLight position={[3, 3, 5]} intensity={1.0} color="#00D4FF" />
+      <pointLight position={[-3, -2, -5]} intensity={0.7} color="#7B2FFF" />
+      <pointLight position={[0, 0, -15]} intensity={0.5} color="#39FF14" />
       <fog attach="fog" args={['#050510', 5, 45]} />
 
       <TunnelParticles />
@@ -334,8 +334,8 @@ function CaseStudyOverlay({ project, onClose }: { project: Project; onClose: () 
           </div>
 
           {/* Terminal description */}
-          <div style={{ padding: '16px 18px', marginBottom: 20, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.04)', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(232,232,240,0.5)', lineHeight: 1.9 }}>
-            <div style={{ fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,0.2)', marginBottom: 8 }}>$ cat README.md</div>
+          <div style={{ padding: '16px 18px', marginBottom: 20, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(232,232,240,0.5)', lineHeight: 1.9 }}>
+            <div style={{ fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,0.4)', marginBottom: 8 }}>$ cat README.md</div>
             {typewriterText}
             <span style={{ opacity: typewriterText.length < project.longDescription.length ? 1 : 0, color: project.color, animation: 'blink 0.8s infinite' }}>█</span>
           </div>
@@ -421,10 +421,10 @@ export default function WorkSection() {
         >← DESKTOP</button>
         <div style={{ width: 1, height: 14, background: 'rgba(123,47,255,.12)' }} />
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7B2FFF', boxShadow: '0 0 8px #7B2FFF' }} />
-        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.35)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,.15)' }}>/</span>
+        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.55)' }}>VOID_OS</span>
+        <span style={{ color: 'rgba(232,232,240,.55)' }}>/</span>
         <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#7B2FFF', textShadow: '0 0 8px rgba(123,47,255,.3)' }}>WORK.db</span>
-        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.2)' }}>DEPTH: {Math.round(scrollProgress * 100)}%</div>
+        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.4)' }}>DEPTH: {Math.round(scrollProgress * 100)}%</div>
       </div>
 
       {/* 3D Tunnel */}
@@ -443,13 +443,13 @@ export default function WorkSection() {
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 3vw, 36px)', marginBottom: 6, color: '#E8E8F0' }}>
             Project <span style={{ color: '#7B2FFF', textShadow: '0 0 15px rgba(123,47,255,.3)' }}>Tunnel</span>
           </h2>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.3)', letterSpacing: '1px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.65)', letterSpacing: '1px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
         </div>
 
         {/* Vertical progress */}
-        <div style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', width: 2, height: 200, background: 'rgba(255,255,255,0.04)' }}>
+        <div style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', width: 2, height: 200, background: 'rgba(255,255,255,0.08)' }}>
           <div style={{ width: '100%', height: `${scrollProgress * 100}%`, background: 'linear-gradient(180deg, #00D4FF, #7B2FFF)', boxShadow: '0 0 8px rgba(0,212,255,0.3)', transition: 'height 0.1s ease' }} />
-          <div style={{ position: 'absolute', right: 10, whiteSpace: 'nowrap', top: `${scrollProgress * 100}%`, transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.3)' }}>
+          <div style={{ position: 'absolute', right: 10, whiteSpace: 'nowrap', top: `${scrollProgress * 100}%`, transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.65)' }}>
             {Math.round(scrollProgress * PROJECTS.length)}/{PROJECTS.length}
           </div>
         </div>

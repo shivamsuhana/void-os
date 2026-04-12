@@ -192,7 +192,7 @@ function ParticleExperiment() {
           <button key={m} onClick={() => setMode(m)} style={{
             fontFamily: 'var(--font-mono)', fontSize: '9px', padding: '6px 14px',
             borderRadius: '2px', letterSpacing: '1px', cursor: 'pointer',
-            background: mode === m ? 'rgba(0,212,255,0.1)' : 'transparent',
+            background: mode === m ? 'rgba(0,212,255,0.2)' : 'transparent',
             border: `1px solid ${mode === m ? 'rgba(0,212,255,0.3)' : 'rgba(255,255,255,0.06)'}`,
             color: mode === m ? 'var(--blue)' : 'var(--text-muted)',
             transition: 'all 0.2s',
@@ -246,13 +246,13 @@ function SecretTerminal() {
   return (
     <div style={{
       maxWidth: '600px', margin: '0 auto', borderRadius: '2px',
-      overflow: 'hidden', border: '1px solid rgba(0,212,255,0.1)',
+      overflow: 'hidden', border: '1px solid rgba(0,212,255,0.2)',
       background: 'rgba(3,3,6,0.95)',
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: '5px',
         padding: '8px 14px',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
         background: 'rgba(255,255,255,0.02)',
       }}>
         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FF3366' }} />

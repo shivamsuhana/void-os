@@ -98,8 +98,8 @@ function TimelineCard({ entry, index, active, side }: { entry: TimelineEntry; in
       style={{
         maxWidth: 380, width: '100%',
         padding: '20px 22px',
-        background: hov ? `rgba(${rgb},0.06)` : 'rgba(255,255,255,0.025)',
-        border: `1px solid ${active ? entry.color + '33' : 'rgba(255,255,255,0.04)'}`,
+        background: hov ? `rgba(${rgb},0.06)` : 'rgba(255,255,255,0.05)',
+        border: `1px solid ${active ? entry.color + '33' : 'rgba(255,255,255,0.08)'}`,
         borderLeft: side === 'left' ? `3px solid ${active ? entry.color : entry.color + '44'}` : undefined,
         borderRight: side === 'right' ? `3px solid ${active ? entry.color : entry.color + '44'}` : undefined,
         borderRadius: '2px',
@@ -202,10 +202,10 @@ export default function TimelineSection() {
         >← DESKTOP</button>
         <div style={{ width: 1, height: 14, background: 'rgba(57,255,20,.12)' }} />
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 8px #39FF14' }} />
-        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.35)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,.15)' }}>/</span>
+        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.55)' }}>VOID_OS</span>
+        <span style={{ color: 'rgba(232,232,240,.55)' }}>/</span>
         <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#39FF14', textShadow: '0 0 8px rgba(57,255,20,.3)' }}>TIME.log</span>
-        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.2)' }}>
+        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.4)' }}>
           {activeIdx >= 0 ? `NODE ${activeIdx + 1}/${TIMELINE.length}` : 'SCROLL TO BEGIN'}
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function TimelineSection() {
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(32px,5vw,48px)', lineHeight: 1.1, marginBottom: 8, color: '#E8E8F0' }}>
             Signal <span style={{ color: '#39FF14', textShadow: '0 0 20px rgba(57,255,20,.3)' }}>Pathway</span>
           </h2>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'rgba(232,232,240,.35)', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'rgba(232,232,240,.55)', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>
             Scroll to propagate the signal through my journey — each node lights up as the data reaches it.
           </p>
         </div>
@@ -302,7 +302,7 @@ export default function TimelineSection() {
 
         {/* Footer */}
         <div style={{ marginTop: 60, paddingTop: 20, borderTop: '1px solid rgba(57,255,20,.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,.15)' }}>TIME.log — SIGNAL COMPLETE</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,.55)' }}>TIME.log — SIGNAL COMPLETE</span>
           <div style={{ display: 'flex', gap: 20 }}>
             {[['work', 'WORK.db →'], ['skills', 'SKILLS.sys →']].map(([section, label]) => (
               <button key={section} onClick={() => navigateTo(section as 'work' | 'skills')} style={{

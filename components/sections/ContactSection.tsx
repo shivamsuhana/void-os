@@ -135,7 +135,7 @@ function MatrixRain() {
       ctx.font = `${fontSize}px monospace`;
       for (let i = 0; i < drops.length; i++) {
         const ch = chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillStyle = Math.random() > 0.97 ? 'rgba(0,212,255,0.4)' : 'rgba(0,212,255,0.04)';
+        ctx.fillStyle = Math.random() > 0.97 ? 'rgba(0,212,255,0.7)' : 'rgba(0,212,255,0.12)';
         ctx.fillText(ch, i * fontSize, drops[i] * fontSize);
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) drops[i] = 0;
         drops[i] += 0.3 + Math.random() * 0.2;
@@ -144,7 +144,7 @@ function MatrixRain() {
     }; draw();
     return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); };
   }, []);
-  return <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, opacity: 0.3, zIndex: 0 }} />;
+  return <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, opacity: 0.5, zIndex: 0 }} />;
 }
 
 /* ═══════════════════════════════════════════
@@ -230,10 +230,10 @@ export default function ContactSection() {
         >← DESKTOP</button>
         <div style={{ width: 1, height: 14, background: 'rgba(255,51,102,.12)' }} />
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF3366', boxShadow: '0 0 8px #FF3366' }} />
-        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.35)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,.15)' }}>/</span>
+        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.55)' }}>VOID_OS</span>
+        <span style={{ color: 'rgba(232,232,240,.55)' }}>/</span>
         <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#FF3366', textShadow: '0 0 8px rgba(255,51,102,.3)' }}>CONTACT.net</span>
-        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.2)' }}>
+        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.4)' }}>
           {step === 'sent' ? '✓ TRANSMITTED' : step === 'sending' ? 'TRANSMITTING...' : 'CHANNEL OPEN'}
         </div>
       </div>
@@ -253,12 +253,12 @@ export default function ContactSection() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
             {/* Radar */}
             <div style={{
-              padding: 16, border: '1px solid rgba(0,212,255,.08)', background: 'rgba(0,0,0,.2)',
+              padding: 16, border: '1px solid rgba(0,212,255,.15)', background: 'rgba(0,0,0,.2)',
               position: 'relative',
             }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,.2)', marginBottom: 8, textAlign: 'center' }}>SIGNAL DETECTION</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,.4)', marginBottom: 8, textAlign: 'center' }}>SIGNAL DETECTION</div>
               <RadarCanvas />
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.15)', marginTop: 8, textAlign: 'center' }}>VISITOR DETECTED — SECTOR 7G</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.55)', marginTop: 8, textAlign: 'center' }}>VISITOR DETECTED — SECTOR 7G</div>
             </div>
 
             {/* Quick stats */}
@@ -270,10 +270,10 @@ export default function ContactSection() {
               ].map(s => (
                 <div key={s.label} style={{
                   display: 'flex', justifyContent: 'space-between', padding: '8px 12px',
-                  border: '1px solid rgba(255,255,255,.04)', background: 'rgba(255,255,255,.015)',
+                  border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.015)',
                   fontFamily: 'var(--font-mono)', fontSize: '8px',
                 }}>
-                  <span style={{ color: 'rgba(232,232,240,.25)', letterSpacing: '1.5px' }}>{s.label}</span>
+                  <span style={{ color: 'rgba(232,232,240,.6)', letterSpacing: '1.5px' }}>{s.label}</span>
                   <span style={{ color: s.color, textShadow: `0 0 6px ${s.color}44` }}>{s.value}</span>
                 </div>
               ))}
@@ -288,11 +288,11 @@ export default function ContactSection() {
               ].map((link, i) => (
                 <a key={i} href={link.href} target="_blank" rel="noopener noreferrer" style={{
                   flex: 1, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '7px',
-                  letterSpacing: '1.5px', color: 'rgba(232,232,240,.3)', padding: '8px 6px',
+                  letterSpacing: '1.5px', color: 'rgba(232,232,240,.65)', padding: '8px 6px',
                   border: '1px solid rgba(255,255,255,.05)', transition: 'all .2s', textDecoration: 'none',
                 }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.3)'; e.currentTarget.style.color = '#00D4FF'; e.currentTarget.style.background = 'rgba(0,212,255,.04)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.05)'; e.currentTarget.style.color = 'rgba(232,232,240,.3)'; e.currentTarget.style.background = 'transparent'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.05)'; e.currentTarget.style.color = 'rgba(232,232,240,.65)'; e.currentTarget.style.background = 'transparent'; }}
                 >{link.label}</a>
               ))}
             </div>
@@ -316,14 +316,14 @@ export default function ContactSection() {
               {/* Title bar */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-                background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.08)',
               }}>
                 <div style={{ display: 'flex', gap: 5 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF3366' }} />
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFB800' }} />
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#39FF14' }} />
                 </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.3)', letterSpacing: '1px', flex: 1 }}>CONTACT.net — Secure Terminal</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.65)', letterSpacing: '1px', flex: 1 }}>CONTACT.net — Secure Terminal</span>
                 {/* Signal bars + availability dot */}
                 <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', marginRight: 8 }}>
                   {[6, 9, 12, 15, 12].map((h, i) => (
@@ -338,23 +338,23 @@ export default function ContactSection() {
               {/* Output */}
               <div ref={scrollRef} style={{ padding: 16, fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.9, maxHeight: 300, overflowY: 'auto' }}>
                 {terminalLines.map((line, i) => (
-                  <div key={i} style={{ color: lineColor[line.type] || 'rgba(232,232,240,.3)', animation: 'fadeIn 0.15s ease', fontWeight: line.type === 'success' ? 600 : 400 }}>
+                  <div key={i} style={{ color: lineColor[line.type] || 'rgba(232,232,240,.65)', animation: 'fadeIn 0.15s ease', fontWeight: line.type === 'success' ? 600 : 400 }}>
                     {line.text || '\u00A0'}
                   </div>
                 ))}
                 {step === 'sending' && sendProgress < 100 && (
                   <div style={{ marginTop: 8 }}>
-                    <div style={{ height: 3, background: 'rgba(255,255,255,0.04)', borderRadius: 1, overflow: 'hidden' }}>
+                    <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 1, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${sendProgress}%`, background: 'linear-gradient(90deg, #00D4FF, #39FF14)', transition: 'width 0.05s', boxShadow: '0 0 8px rgba(0,212,255,0.4)' }} />
                     </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.3)', marginTop: 4 }}>TRANSMITTING... {sendProgress}%</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.65)', marginTop: 4 }}>TRANSMITTING... {sendProgress}%</div>
                   </div>
                 )}
               </div>
 
               {/* Input */}
               {step !== 'sending' && step !== 'sent' && (
-                <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#39FF14' }}>❯</span>
                   {step === 'message' ? (
                     <textarea
