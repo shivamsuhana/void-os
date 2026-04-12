@@ -429,7 +429,7 @@ function ForceGraph({ onSelect, selected, filter }: {
       const hit = hitTest(x, y);
       
       if (hit?.id !== hoveredRef.current?.id) {
-        if (hit) {
+        if (hit && useVoidStore.getState().soundEnabled) {
           const panX = (e.clientX / window.innerWidth) * 2 - 1;
           audioEngine.play('hover', panX);
         }
@@ -443,8 +443,10 @@ function ForceGraph({ onSelect, selected, filter }: {
       const { x, y } = getPos(e);
       const hit = hitTest(x, y);
       if (hit) {
-        const panX = (e.clientX / window.innerWidth) * 2 - 1;
-        audioEngine.play('click', panX);
+        if (useVoidStore.getState().soundEnabled) {
+          const panX = (e.clientX / window.innerWidth) * 2 - 1;
+          audioEngine.play('click', panX);
+        }
         const skill = SKILLS.find(s => s.id === hit.id);
         onSelect(skill || null);
       } else {
