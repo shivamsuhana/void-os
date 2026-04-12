@@ -393,10 +393,11 @@ export default function WorkSection() {
     return () => { if (container) container.removeEventListener('wheel', handler); };
   }, []);
 
-  // Drag to scroll
+  // Drag & Swipe to scroll
   const isDragging = useRef(false);
   const lastY = useRef(0);
   useEffect(() => {
+    // Mouse
     const handleDown = (e: MouseEvent) => { isDragging.current = true; lastY.current = e.clientY; };
     const handleMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
@@ -405,10 +406,32 @@ export default function WorkSection() {
       setScrollProgress(prev => Math.max(0, Math.min(1, prev + delta * 0.0015)));
     };
     const handleUp = () => { isDragging.current = false; };
+    
+    // Touch
+    const handleTouchStart = (e: TouchEvent) => { isDragging.current = true; lastY.current = e.touches[0].clientY; };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      const delta = lastY.current - e.touches[0].clientY;
+      lastY.current = e.touches[0].clientY;
+      setScrollProgress(prev => Math.max(0, Math.min(1, prev + delta * 0.0015)));
+    };
+
     window.addEventListener('mousedown', handleDown);
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
-    return () => { window.removeEventListener('mousedown', handleDown); window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+    
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleUp);
+    
+    return () => { 
+      window.removeEventListener('mousedown', handleDown); 
+      window.removeEventListener('mousemove', handleMove); 
+      window.removeEventListener('mouseup', handleUp); 
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleUp);
+    };
   }, []);
 
   return (
