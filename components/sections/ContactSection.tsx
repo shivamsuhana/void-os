@@ -500,7 +500,7 @@ export default function ContactSection() {
       </div>
 
       {/* BODY: Centered floating layout */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 20, padding: '70px 30px 30px' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 20, padding: '60px 30px 20px' }}>
         <style dangerouslySetInnerHTML={{ __html: '@media(max-width:900px){#contact-right{display:none!important;}}' }} />
 
         {/* Terminal card */}
