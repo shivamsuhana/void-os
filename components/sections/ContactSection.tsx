@@ -212,7 +212,7 @@ export default function ContactSection() {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#030306', overflow: 'hidden', zIndex: 50 }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#050510', overflow: 'hidden', zIndex: 50 }}>
       <MatrixRain />
       <SectionAmbientBG color="#FF3366" particleCount={35} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)' }} />

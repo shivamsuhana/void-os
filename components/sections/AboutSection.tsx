@@ -311,7 +311,7 @@ function Globe() {
 
       // Globe fill
       const gGlobe = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.25, 0, cx, cy, R);
-      gGlobe.addColorStop(0, '#0d1f3c'); gGlobe.addColorStop(0.6, '#060d1a'); gGlobe.addColorStop(1, '#030306');
+      gGlobe.addColorStop(0, '#0d1f3c'); gGlobe.addColorStop(0.6, '#060d1a'); gGlobe.addColorStop(1, '#050510');
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fillStyle = gGlobe; ctx.fill();
 
       // Atmosphere
@@ -471,7 +471,7 @@ export default function AboutSection() {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#030306', overflowY: 'auto', zIndex: 50 }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#050510', overflowY: 'auto', zIndex: 50 }}>
       <HexGridBG />
       <SectionAmbientBG color="#00D4FF" particleCount={40} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)' }} />

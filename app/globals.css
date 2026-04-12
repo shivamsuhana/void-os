@@ -6,19 +6,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
 
 :root {
-  --void: #030306;
-  --void-deep: #0a0a12;
+  --void: #050510;
+  --void-deep: #0c0c1a;
   --blue: #00D4FF;
-  --white: #E8E8F0;
+  --blue-bright: #33E0FF;
+  --white: #EEEEF5;
   --amber: #FFB800;
   --green: #39FF14;
-  --purple: #7B2FFF;
+  --purple: #8B3FFF;
   --red: #FF3366;
-  --glass: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(0, 212, 255, 0.12);
-  --glass-hover: rgba(255, 255, 255, 0.07);
-  --text-dim: rgba(232, 232, 240, 0.55);
-  --text-muted: rgba(232, 232, 240, 0.25);
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(0, 212, 255, 0.2);
+  --glass-hover: rgba(0, 212, 255, 0.08);
+  --text-dim: rgba(232, 232, 240, 0.7);
+  --text-muted: rgba(232, 232, 240, 0.4);
 
   --font-display: 'Syne', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Space Mono', monospace;
@@ -44,6 +45,7 @@ body {
   overflow-x: hidden;
   min-height: 100vh;
   line-height: 1.6;
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.03) 0%, transparent 60%);
 }
 
 /* ── Scanline overlay — ALWAYS on ── */
@@ -116,13 +118,13 @@ input, textarea { font-family: var(--font-mono); background: transparent; border
 }
 
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(0, 212, 255, 0.1); }
-  50% { box-shadow: 0 0 24px rgba(0, 212, 255, 0.3); }
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 212, 255, 0.15), 0 0 40px rgba(0, 212, 255, 0.05); }
+  50% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), 0 0 60px rgba(0, 212, 255, 0.1); }
 }
 
 @keyframes borderGlow {
-  0%, 100% { border-color: rgba(0, 212, 255, 0.1); }
-  50% { border-color: rgba(0, 212, 255, 0.3); }
+  0%, 100% { border-color: rgba(0, 212, 255, 0.15); }
+  50% { border-color: rgba(0, 212, 255, 0.45); }
 }
 
 @keyframes ripple {
@@ -174,6 +176,7 @@ input, textarea { font-family: var(--font-mono); background: transparent; border
   transition: all 0.35s var(--ease-out-expo);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
 }
 
 .glass-card::before {
@@ -183,14 +186,16 @@ input, textarea { font-family: var(--font-mono); background: transparent; border
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.4), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .glass-card:hover {
   background: var(--glass-hover);
-  border-color: rgba(0, 212, 255, 0.25);
+  border-color: rgba(0, 212, 255, 0.4);
+  box-shadow: 0 4px 30px rgba(0,212,255,0.08), 0 2px 20px rgba(0,0,0,0.4);
+  transform: translateY(-1px);
 }
 
 .glass-card:hover::before {
@@ -294,11 +299,11 @@ input, textarea { font-family: var(--font-mono); background: transparent; border
   text-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
 }
 
-/* ── Glow text variants ── */
-.glow-text-blue { color: var(--blue); text-shadow: 0 0 10px rgba(0,212,255,0.4), 0 0 30px rgba(0,212,255,0.15); }
-.glow-text-green { color: var(--green); text-shadow: 0 0 10px rgba(57,255,20,0.4), 0 0 30px rgba(57,255,20,0.15); }
-.glow-text-purple { color: var(--purple); text-shadow: 0 0 10px rgba(123,47,255,0.4), 0 0 30px rgba(123,47,255,0.15); }
-.glow-text-amber { color: var(--amber); text-shadow: 0 0 10px rgba(255,184,0,0.4), 0 0 30px rgba(255,184,0,0.15); }
+/* ── Glow text variants — VIVID ── */
+.glow-text-blue { color: var(--blue); text-shadow: 0 0 10px rgba(0,212,255,0.6), 0 0 40px rgba(0,212,255,0.25), 0 0 80px rgba(0,212,255,0.1); }
+.glow-text-green { color: var(--green); text-shadow: 0 0 10px rgba(57,255,20,0.6), 0 0 40px rgba(57,255,20,0.25), 0 0 80px rgba(57,255,20,0.1); }
+.glow-text-purple { color: var(--purple); text-shadow: 0 0 10px rgba(139,63,255,0.6), 0 0 40px rgba(139,63,255,0.25), 0 0 80px rgba(139,63,255,0.1); }
+.glow-text-amber { color: var(--amber); text-shadow: 0 0 10px rgba(255,184,0,0.6), 0 0 40px rgba(255,184,0,0.25), 0 0 80px rgba(255,184,0,0.1); }
 
 /* ── Holographic shimmer effect for text ── */
 .holo-shimmer {

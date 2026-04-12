@@ -544,7 +544,7 @@ export default function BootSequence() {
 
   return (
     <div className="boot-container" style={{
-      position: 'fixed', inset: 0, background: '#030306', zIndex: 1000, overflow: 'hidden',
+      position: 'fixed', inset: 0, background: '#050510', zIndex: 1000, overflow: 'hidden',
     }}>
       <FloatingParticles />
       <AmbientGrid />

@@ -50,23 +50,23 @@ function OrbitRings() {
     <>
       <mesh ref={ring1Ref}>
         <torusGeometry args={[1.6, 0.007, 8, 128]} />
-        <meshBasicMaterial color="#00D4FF" transparent opacity={0.28} />
+        <meshBasicMaterial color="#00D4FF" transparent opacity={0.45} />
       </mesh>
       <mesh ref={ring2Ref}>
         <torusGeometry args={[2.0, 0.005, 8, 128]} />
-        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.2} />
+        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.35} />
       </mesh>
       <mesh ref={ring3Ref}>
         <torusGeometry args={[2.4, 0.004, 8, 96]} />
-        <meshBasicMaterial color="#39FF14" transparent opacity={0.12} />
+        <meshBasicMaterial color="#39FF14" transparent opacity={0.25} />
       </mesh>
       <mesh ref={ring4Ref}>
         <torusGeometry args={[1.3, 0.003, 8, 64]} />
-        <meshBasicMaterial color="#FFB800" transparent opacity={0.15} />
+        <meshBasicMaterial color="#FFB800" transparent opacity={0.3} />
       </mesh>
       <mesh ref={ring5Ref}>
         <torusGeometry args={[3.2, 0.002, 8, 128]} />
-        <meshBasicMaterial color="#00D4FF" transparent opacity={0.05} />
+        <meshBasicMaterial color="#00D4FF" transparent opacity={0.1} />
       </mesh>
     </>
   );
@@ -116,7 +116,7 @@ function DataStream() {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.02} color="#00D4FF" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <pointsMaterial size={0.03} color="#00D4FF" transparent opacity={0.75} blending={THREE.AdditiveBlending} depthWrite={false} />
     </points>
   );
 }
@@ -249,9 +249,9 @@ function HudReadout({ position, text, color }: { position: [number, number, numb
     <Html position={position} center style={{ pointerEvents: 'none', userSelect: 'none' }}>
       <div style={{
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: '7px', letterSpacing: '1.5px',
-        color, opacity: 0.4,
-        textShadow: `0 0 6px ${color}40`,
+        fontSize: '8px', letterSpacing: '1.5px',
+        color, opacity: 0.7,
+        textShadow: `0 0 10px ${color}60, 0 0 20px ${color}25`,
         whiteSpace: 'nowrap',
       }}>
         {text}
@@ -272,7 +272,7 @@ function HologramScene({ onSelect, hoveredId, onHover }: {
 
   return (
     <>
-      <ambientLight intensity={0.08} />
+      <ambientLight intensity={0.25} />
       <Starfield />
 
       <group ref={orbitalRef}>
@@ -301,7 +301,7 @@ function HologramScene({ onSelect, hoveredId, onHover }: {
       </group>
 
       <DragRotation groupRef={orbitalRef} />
-      <fog attach="fog" args={['#030306', 8, 30]} />
+      <fog attach="fog" args={['#050510', 8, 30]} />
     </>
   );
 }
@@ -358,7 +358,7 @@ export default function VoidDesktop() {
   }, [handleAppClick]);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#030306', zIndex: 50, overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#050510', zIndex: 50, overflow: 'hidden' }}>
       {/* HUD Corner Brackets */}
       <div style={{ position: 'absolute', top: '50px', left: '16px', zIndex: 10, width: '20px', height: '20px', borderLeft: '1px solid rgba(0,212,255,0.15)', borderTop: '1px solid rgba(0,212,255,0.15)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', top: '50px', right: '16px', zIndex: 10, width: '20px', height: '20px', borderRight: '1px solid rgba(0,212,255,0.15)', borderTop: '1px solid rgba(0,212,255,0.15)', pointerEvents: 'none' }} />
@@ -385,24 +385,24 @@ export default function VoidDesktop() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             width: '6px', height: '6px', borderRadius: '50%',
-            background: '#39FF14', boxShadow: '0 0 8px rgba(57,255,20,0.6)',
+            background: '#39FF14', boxShadow: '0 0 12px rgba(57,255,20,0.8), 0 0 24px rgba(57,255,20,0.3)',
           }} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,0.4)', letterSpacing: '3px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(232,232,240,0.65)', letterSpacing: '3px', textShadow: '0 0 8px rgba(0,212,255,0.15)' }}>
             VOID OS v3.0.1
           </span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(0,212,255,0.4)', letterSpacing: '1px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(0,212,255,0.6)', letterSpacing: '1px' }}>
             ▸ DESKTOP
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ display: 'flex', gap: '3px', alignItems: 'flex-end' }}>
             {[6, 9, 12, 15, 12].map((h, i) => (
-              <div key={i} style={{ width: '2px', height: `${h}px`, background: `rgba(57,255,20,${0.2 + i * 0.08})`, borderRadius: '1px' }} />
+              <div key={i} style={{ width: '2px', height: `${h}px`, background: `rgba(57,255,20,${0.35 + i * 0.12})`, borderRadius: '1px' }} />
             ))}
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'rgba(232,232,240,0.7)', letterSpacing: '2px', fontWeight: 500, textShadow: '0 0 8px rgba(0,212,255,0.2)' }}>{time}</div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,0.25)', letterSpacing: '2px' }}>{date}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'rgba(232,232,240,0.9)', letterSpacing: '2px', fontWeight: 500, textShadow: '0 0 12px rgba(0,212,255,0.3)' }}>{time}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,0.45)', letterSpacing: '2px' }}>{date}</div>
           </div>
         </div>
       </div>
@@ -423,7 +423,7 @@ export default function VoidDesktop() {
               {hoveredSection.icon} {hoveredSection.label}<span style={{ color: 'rgba(232,232,240,0.25)', fontSize: '14px' }}>{hoveredSection.ext}</span>
             </div>
             <div style={{
-              fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,0.35)',
+              fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(232,232,240,0.5)',
               letterSpacing: '2px',
             }}>
               {hoveredSection.desc.toUpperCase()}
@@ -431,8 +431,8 @@ export default function VoidDesktop() {
           </div>
         ) : (
           <div style={{
-            fontFamily: 'var(--font-mono)', fontSize: '9px',
-            color: 'rgba(232,232,240,0.2)', letterSpacing: '3px',
+            fontFamily: 'var(--font-mono)', fontSize: '10px',
+            color: 'rgba(232,232,240,0.4)', letterSpacing: '3px',
           }}>
             DRAG TO ROTATE · CLICK TO LAUNCH
           </div>

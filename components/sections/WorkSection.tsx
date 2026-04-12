@@ -242,7 +242,7 @@ function TunnelScene({ scrollProgress, projects, onSelect }: {
       <pointLight position={[3, 3, 5]} intensity={0.5} color="#00D4FF" />
       <pointLight position={[-3, -2, -5]} intensity={0.35} color="#7B2FFF" />
       <pointLight position={[0, 0, -15]} intensity={0.2} color="#39FF14" />
-      <fog attach="fog" args={['#030306', 5, 45]} />
+      <fog attach="fog" args={['#050510', 5, 45]} />
 
       <TunnelParticles />
 
@@ -412,7 +412,7 @@ export default function WorkSection() {
   }, []);
 
   return (
-    <div ref={containerRef} style={{ position: 'fixed', inset: 0, background: '#030306', zIndex: 50, overflow: 'hidden' }}>
+    <div ref={containerRef} style={{ position: 'fixed', inset: 0, background: '#050510', zIndex: 50, overflow: 'hidden' }}>
       {/* Process bar */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(3,3,6,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(123,47,255,0.08)', padding: '12px 40px', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'var(--font-mono)' }}>
         <button onClick={() => navigateTo('desktop')} style={{ background: 'none', border: '1px solid rgba(0,212,255,.15)', padding: '5px 14px', fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: '#00D4FF', cursor: 'pointer', transition: 'all .2s', borderRadius: 2 }}

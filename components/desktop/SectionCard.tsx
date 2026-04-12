@@ -136,10 +136,10 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
     cardRef.current.scale.z += (targetScale - cardRef.current.scale.z) * 0.08;
 
     // Emissive glow animation
-    glowIntensity.current += ((hovered ? 0.2 : 0.02) - glowIntensity.current) * 0.08;
+    glowIntensity.current += ((hovered ? 0.35 : 0.08) - glowIntensity.current) * 0.08;
     const mat = cardRef.current.material as THREE.MeshStandardMaterial;
     mat.emissiveIntensity = glowIntensity.current;
-    mat.opacity = hovered ? 0.88 : 0.55 + Math.sin(t * 0.5 + index) * 0.05;
+    mat.opacity = hovered ? 0.95 : 0.7 + Math.sin(t * 0.5 + index) * 0.05;
   });
 
   const rgb = `${parseInt(section.color.slice(1, 3), 16)},${parseInt(section.color.slice(3, 5), 16)},${parseInt(section.color.slice(5, 7), 16)}`;
@@ -165,27 +165,27 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
       >
         <planeGeometry args={[1.7, 1.0]} />
         <meshStandardMaterial
-          color={hovered ? section.color : '#0a0a1a'}
+          color={hovered ? section.color : '#10102a'}
           emissive={section.color}
-          emissiveIntensity={0.02}
+          emissiveIntensity={0.06}
           transparent
-          opacity={0.6}
+          opacity={0.7}
           side={THREE.DoubleSide}
-          roughness={0.2}
-          metalness={0.8}
+          roughness={0.15}
+          metalness={0.85}
         />
       </mesh>
 
       {/* ── TOP ACCENT BAR ── */}
       <mesh position={[0, 0.5, 0.005]} raycast={noRaycast}>
         <planeGeometry args={[1.7, hovered ? 0.035 : 0.018]} />
-        <meshBasicMaterial color={section.color} transparent opacity={hovered ? 1 : 0.5} />
+        <meshBasicMaterial color={section.color} transparent opacity={hovered ? 1 : 0.8} />
       </mesh>
 
       {/* ── BOTTOM ACCENT ── */}
       <mesh position={[0, -0.5, 0.005]} raycast={noRaycast}>
         <planeGeometry args={[1.7, hovered ? 0.02 : 0.008]} />
-        <meshBasicMaterial color={section.color} transparent opacity={hovered ? 0.6 : 0.1} />
+        <meshBasicMaterial color={section.color} transparent opacity={hovered ? 0.7 : 0.3} />
       </mesh>
 
       {/* ── SIDE ACCENTS (new) ── */}
@@ -207,7 +207,7 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
         <planeGeometry args={[1.78, 1.08]} />
         <meshBasicMaterial
           color={section.color} transparent
-          opacity={hovered ? 0.5 : 0.1} wireframe side={THREE.DoubleSide}
+          opacity={hovered ? 0.6 : 0.2} wireframe side={THREE.DoubleSide}
         />
       </mesh>
 
@@ -252,9 +252,9 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
           {/* Icon */}
           <div style={{
             fontSize: '30px', lineHeight: 1,
-            color: hovered ? section.color : 'rgba(232,232,240,0.55)',
+            color: hovered ? section.color : 'rgba(232,232,240,0.85)',
             transition: 'all 0.3s',
-            textShadow: hovered ? `0 0 24px ${section.color}, 0 0 48px ${section.color}40` : `0 0 6px ${section.color}30`,
+            textShadow: hovered ? `0 0 24px ${section.color}, 0 0 48px ${section.color}40` : `0 0 10px ${section.color}50`,
             filter: hovered ? `drop-shadow(0 0 14px ${section.color})` : 'none',
             transform: hovered ? 'scale(1.1)' : 'scale(1)',
           }}>
@@ -266,7 +266,7 @@ export default function SectionCard({ section, index, total, onSelect, hovered, 
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: hovered ? '12px' : '11px', fontWeight: 700,
             letterSpacing: '3px',
-            color: hovered ? '#fff' : 'rgba(232,232,240,0.55)',
+            color: hovered ? '#fff' : 'rgba(232,232,240,0.8)',
             transition: 'all 0.3s',
             textShadow: hovered ? `0 0 12px ${section.color}80` : 'none',
           }}>

@@ -155,7 +155,7 @@ export default function CentralHologram() {
       <mesh ref={innerGlowRef}>
         <sphereGeometry args={[0.35, 16, 16]} />
         <meshBasicMaterial
-          color="#00D4FF" transparent opacity={0.25}
+          color="#00D4FF" transparent opacity={0.45}
           blending={THREE.AdditiveBlending} depthWrite={false}
         />
       </mesh>
@@ -164,34 +164,34 @@ export default function CentralHologram() {
       <mesh ref={coreRef}>
         <icosahedronGeometry args={[0.3, 3]} />
         <meshStandardMaterial
-          color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.9}
-          transparent opacity={0.6} roughness={0.1} metalness={0.95}
+          color="#00D4FF" emissive="#00D4FF" emissiveIntensity={1.2}
+          transparent opacity={0.8} roughness={0.1} metalness={0.95}
         />
       </mesh>
 
       {/* Inner wireframe */}
       <mesh ref={innerWireRef}>
         <icosahedronGeometry args={[0.48, 1]} />
-        <meshBasicMaterial color="#00D4FF" transparent opacity={0.4} wireframe />
+        <meshBasicMaterial color="#00D4FF" transparent opacity={0.55} wireframe />
       </mesh>
 
       {/* Outer wireframe */}
       <mesh ref={outerWireRef}>
         <icosahedronGeometry args={[0.7, 1]} />
-        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.22} wireframe />
+        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.35} wireframe />
       </mesh>
 
       {/* Dodecahedron shield */}
       <mesh ref={dodecRef}>
         <dodecahedronGeometry args={[0.9, 0]} />
-        <meshBasicMaterial color="#39FF14" transparent opacity={0.05} wireframe />
+        <meshBasicMaterial color="#39FF14" transparent opacity={0.1} wireframe />
       </mesh>
 
       {/* Glow sphere — outer atmosphere */}
       <mesh ref={glowRef}>
         <sphereGeometry args={[1.1, 32, 32]} />
         <meshBasicMaterial
-          color="#00D4FF" transparent opacity={0.1}
+          color="#00D4FF" transparent opacity={0.18}
           side={THREE.BackSide} blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
@@ -217,7 +217,7 @@ export default function CentralHologram() {
           <bufferAttribute attach="attributes-position" args={[tendrilData, 3]} />
         </bufferGeometry>
         <pointsMaterial
-          size={0.015} color="#00D4FF" transparent opacity={0.4}
+          size={0.02} color="#00D4FF" transparent opacity={0.6}
           blending={THREE.AdditiveBlending} depthWrite={false}
         />
       </points>
@@ -235,10 +235,10 @@ export default function CentralHologram() {
       </points>
 
       {/* Lights — brighter */}
-      <pointLight color="#00D4FF" intensity={2.5} distance={14} />
-      <pointLight color="#7B2FFF" intensity={0.8} distance={10} position={[0, 1, 0]} />
-      <pointLight color="#39FF14" intensity={0.4} distance={7} position={[0, -1, 0]} />
-      <pointLight color="#FFB800" intensity={0.2} distance={5} position={[1, 0, 0]} />
+      <pointLight color="#00D4FF" intensity={4.0} distance={16} />
+      <pointLight color="#7B2FFF" intensity={1.5} distance={12} position={[0, 1, 0]} />
+      <pointLight color="#39FF14" intensity={0.8} distance={8} position={[0, -1, 0]} />
+      <pointLight color="#FFB800" intensity={0.5} distance={6} position={[1, 0, 0]} />
     </group>
   );
 }
