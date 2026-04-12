@@ -29,27 +29,44 @@ function OrbitRings() {
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
   const ring3Ref = useRef<THREE.Mesh>(null);
+  const ring4Ref = useRef<THREE.Mesh>(null);
+  const ring5Ref = useRef<THREE.Mesh>(null);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (ring1Ref.current) { ring1Ref.current.rotation.x = Math.PI / 2; ring1Ref.current.rotation.z = t * 0.12; }
     if (ring2Ref.current) { ring2Ref.current.rotation.x = Math.PI / 3; ring2Ref.current.rotation.y = t * 0.1; }
     if (ring3Ref.current) { ring3Ref.current.rotation.x = Math.PI / 2.5; ring3Ref.current.rotation.z = -t * 0.08; ring3Ref.current.rotation.y = t * 0.04; }
+    if (ring4Ref.current) { ring4Ref.current.rotation.x = Math.PI / 4; ring4Ref.current.rotation.z = t * 0.06; ring4Ref.current.rotation.y = -t * 0.05; }
+    if (ring5Ref.current) {
+      ring5Ref.current.rotation.x = Math.PI / 2;
+      ring5Ref.current.rotation.z = -t * 0.03;
+      const mat = ring5Ref.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.04 + Math.sin(t * 0.5) * 0.02;
+    }
   });
 
   return (
     <>
       <mesh ref={ring1Ref}>
-        <torusGeometry args={[1.6, 0.006, 8, 128]} />
-        <meshBasicMaterial color="#00D4FF" transparent opacity={0.25} />
+        <torusGeometry args={[1.6, 0.007, 8, 128]} />
+        <meshBasicMaterial color="#00D4FF" transparent opacity={0.28} />
       </mesh>
       <mesh ref={ring2Ref}>
-        <torusGeometry args={[2.0, 0.004, 8, 128]} />
-        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.18} />
+        <torusGeometry args={[2.0, 0.005, 8, 128]} />
+        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.2} />
       </mesh>
       <mesh ref={ring3Ref}>
-        <torusGeometry args={[2.4, 0.003, 8, 96]} />
-        <meshBasicMaterial color="#39FF14" transparent opacity={0.1} />
+        <torusGeometry args={[2.4, 0.004, 8, 96]} />
+        <meshBasicMaterial color="#39FF14" transparent opacity={0.12} />
+      </mesh>
+      <mesh ref={ring4Ref}>
+        <torusGeometry args={[1.3, 0.003, 8, 64]} />
+        <meshBasicMaterial color="#FFB800" transparent opacity={0.15} />
+      </mesh>
+      <mesh ref={ring5Ref}>
+        <torusGeometry args={[3.2, 0.002, 8, 128]} />
+        <meshBasicMaterial color="#00D4FF" transparent opacity={0.05} />
       </mesh>
     </>
   );
@@ -124,26 +141,47 @@ function GridFloor() {
    ============================================ */
 function Starfield() {
   const ref = useRef<THREE.Points>(null);
-  const positions = useMemo(() => {
-    const p = new Float32Array(2000 * 3);
-    for (let i = 0; i < 2000; i++) {
-      p[i * 3] = (Math.random() - 0.5) * 50;
-      p[i * 3 + 1] = (Math.random() - 0.5) * 50;
-      p[i * 3 + 2] = (Math.random() - 0.5) * 50;
+  const count = 3000;
+
+  const { positions, colors } = useMemo(() => {
+    const p = new Float32Array(count * 3);
+    const c = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      p[i * 3] = (Math.random() - 0.5) * 60;
+      p[i * 3 + 1] = (Math.random() - 0.5) * 60;
+      p[i * 3 + 2] = (Math.random() - 0.5) * 60;
+      // Color variety
+      const choice = Math.random();
+      if (choice > 0.7) {
+        c[i * 3] = 0; c[i * 3 + 1] = 0.83; c[i * 3 + 2] = 1; // cyan
+      } else if (choice > 0.5) {
+        c[i * 3] = 0.48; c[i * 3 + 1] = 0.18; c[i * 3 + 2] = 1; // purple
+      } else {
+        c[i * 3] = 0.9; c[i * 3 + 1] = 0.9; c[i * 3 + 2] = 0.95; // white
+      }
     }
-    return p;
+    return { positions: p, colors: c };
   }, []);
 
   useFrame(({ clock }) => {
-    if (ref.current) ref.current.rotation.y = clock.getElapsedTime() * 0.003;
+    if (!ref.current) return;
+    ref.current.rotation.y = clock.getElapsedTime() * 0.003;
+    ref.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.002) * 0.02;
+    // Twinkle — vary point size
+    const mat = ref.current.material as THREE.PointsMaterial;
+    mat.size = 0.022 + Math.sin(clock.getElapsedTime() * 0.5) * 0.003;
   });
 
   return (
     <points ref={ref}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.025} color="#FFFFFF" transparent opacity={0.6} depthWrite={false} />
+      <pointsMaterial
+        size={0.025} vertexColors transparent opacity={0.7}
+        depthWrite={false} blending={THREE.AdditiveBlending}
+      />
     </points>
   );
 }
