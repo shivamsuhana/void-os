@@ -614,9 +614,18 @@ export default function SkillsSection() {
   const [selected, setSelected] = useState<Skill | null>(null);
   const [filter, setFilter] = useState<string | null>(null);
   const [entered, setEntered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const onSelect = useCallback((s: Skill | null) => setSelected(s), []);
 
-  useEffect(() => { setTimeout(() => setEntered(true), 100); }, []);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    
+    setTimeout(() => setEntered(true), 100);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#050510', overflow: 'hidden', zIndex: 50, fontFamily: 'var(--font-mono)', color: '#EEEEF5' }}>
@@ -648,71 +657,84 @@ export default function SkillsSection() {
         <span style={{ color: 'rgba(232,232,240,0.2)' }}>/</span>
         <span style={{ fontSize: '9px', letterSpacing: '2px', color: '#FFB800', textShadow: '0 0 8px rgba(255,184,0,0.3)' }}>SKILLS.sys</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 20 }}>
-          <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{SKILLS.length} NODES</span>
+          <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)', display: isMobile ? 'none' : 'inline' }}>{SKILLS.length} NODES</span>
           <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{LINKS.length} CONNECTIONS</span>
         </div>
       </div>
 
       {/* Right sidebar */}
-      <div id="skills-sidebar" style={{
-        position: 'absolute', top: 50, right: 0, bottom: 0,
-        width: 'clamp(200px, 22%, 280px)',
-        padding: 'clamp(16px, 2vw, 28px)',
-        background: 'rgba(5,5,16,0.65)', backdropFilter: 'blur(16px)',
-        borderLeft: '1px solid rgba(0,212,255,0.08)',
-        display: 'flex', flexDirection: 'column', gap: 16,
-        zIndex: 10, overflowY: 'auto',
-        opacity: entered ? 1 : 0,
-        transform: entered ? 'translateX(0)' : 'translateX(30px)',
-        transition: 'opacity 0.8s ease, transform 0.8s cubic-bezier(0.16,1,0.3,1)',
-      }}>
-        <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 768px) { #skills-sidebar { display: none !important; } }' }} />
-
-        <div>
-          <div style={{ fontSize: '8px', letterSpacing: '3.5px', color: '#7B2FFF', marginBottom: 8, textShadow: '0 0 8px rgba(123,47,255,0.3)' }}>NEURAL_MAP.sys</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', lineHeight: 1.15, marginBottom: 8 }}>
-            Skills<br /><span style={{ color: '#FFB800', textShadow: '0 0 12px rgba(255,184,0,0.3)' }}>Network</span>
+      {!isMobile && (
+        <div id="skills-sidebar" style={{
+          position: 'absolute', top: 50, right: 0, bottom: 0,
+          width: 'clamp(200px, 22%, 280px)',
+          padding: 'clamp(16px, 2vw, 28px)',
+          background: 'rgba(5,5,16,0.65)', backdropFilter: 'blur(16px)',
+          borderLeft: '1px solid rgba(0,212,255,0.08)',
+          display: 'flex', flexDirection: 'column', gap: 16,
+          zIndex: 10, overflowY: 'auto',
+          opacity: entered ? 1 : 0,
+          transform: entered ? 'translateX(0)' : 'translateX(30px)',
+          transition: 'opacity 0.8s ease, transform 0.8s cubic-bezier(0.16,1,0.3,1)',
+        }}>
+          <div>
+            <div style={{ fontSize: '8px', letterSpacing: '3.5px', color: '#7B2FFF', marginBottom: 8, textShadow: '0 0 8px rgba(123,47,255,0.3)' }}>NEURAL_MAP.sys</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', lineHeight: 1.15, marginBottom: 8 }}>
+              Skills<br /><span style={{ color: '#FFB800', textShadow: '0 0 12px rgba(255,184,0,0.3)' }}>Network</span>
+            </div>
+            <div style={{ fontSize: '10px', lineHeight: 1.7, color: 'rgba(232,232,240,0.55)' }}>
+              Hover nodes to see connections. Click to inspect details.
+            </div>
           </div>
-          <div style={{ fontSize: '10px', lineHeight: 1.7, color: 'rgba(232,232,240,0.55)' }}>
-            Hover nodes to see connections. Click to inspect details.
+
+          <div style={{ height: 1, background: 'rgba(0,212,255,0.1)' }} />
+
+          <div>
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 10 }}>FILTER BY CATEGORY</div>
+            <CategoryFilter active={filter} onChange={f => { setFilter(f); setSelected(null); }} />
+          </div>
+
+          <div style={{ height: 1, background: 'rgba(0,212,255,0.1)' }} />
+
+          <div>
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 10 }}>NODE SIZE = PROFICIENCY</div>
+            <StatsRow />
+          </div>
+
+          <div style={{ flex: 1 }} />
+          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.25)', letterSpacing: '1.5px', lineHeight: 2 }}>
+            SKILLS.sys v2.0<br />NODES: LIVE SIMULATION<br />ENGINE: FORCE-DIRECTED GRAPH
           </div>
         </div>
-
-        <div style={{ height: 1, background: 'rgba(0,212,255,0.1)' }} />
-
-        <div>
-          <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 10 }}>FILTER BY CATEGORY</div>
-          <CategoryFilter active={filter} onChange={f => { setFilter(f); setSelected(null); }} />
-        </div>
-
-        <div style={{ height: 1, background: 'rgba(0,212,255,0.1)' }} />
-
-        <div>
-          <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 10 }}>NODE SIZE = PROFICIENCY</div>
-          <StatsRow />
-        </div>
-
-        <div style={{ flex: 1 }} />
-        <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.25)', letterSpacing: '1.5px', lineHeight: 2 }}>
-          SKILLS.sys v2.0<br />NODES: LIVE SIMULATION<br />ENGINE: FORCE-DIRECTED GRAPH
-        </div>
-      </div>
+      )}
 
       {/* Graph canvas area */}
       <div style={{
-        position: 'absolute', top: 50, left: 0, right: 'clamp(200px, 22%, 280px)', bottom: 0, zIndex: 5,
+        position: 'absolute', top: 50, left: 0, right: isMobile ? 0 : 'clamp(200px, 22%, 280px)', bottom: 0, zIndex: 5,
+        transition: 'right 0.3s ease',
       }}>
         <ForceGraph onSelect={onSelect} selected={selected} filter={filter} />
 
-        {selected && <SkillPopup skill={selected} onClose={() => setSelected(null)} />}
+        {selected && (
+          <div style={{
+            position: 'absolute',
+            ...(isMobile 
+              ? { bottom: 20, left: '50%', transform: 'translateX(-50%)' } 
+              : { bottom: 24, right: 24 }
+            )
+          }}>
+            <SkillPopup skill={selected} onClose={() => setSelected(null)} />
+          </div>
+        )}
 
         <div style={{
-          position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+          position: 'absolute', 
+          ...(isMobile ? { top: 20 } : { bottom: 20 }),
+          left: '50%', transform: 'translateX(-50%)',
           fontSize: '9px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)',
           pointerEvents: 'none', whiteSpace: 'nowrap',
           textShadow: '0 0 8px rgba(0,0,0,0.5)',
         }}>
-          HOVER NODES · CLICK TO INSPECT · GRAPH IS LIVE
+          {isMobile ? 'TAP NODES TO INSPECT' : 'HOVER NODES · CLICK TO INSPECT · GRAPH IS LIVE'}
         </div>
       </div>
     </div>
