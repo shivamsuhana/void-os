@@ -68,8 +68,8 @@ export const PROJECTS: Project[] = [
   {
     id: 'void-os',
     title: 'PORTFOLIO - VOID OS',
-    description: 'A portfolio disguised as an immersive operating system with 3D holographic desktop and AI twin.',
-    longDescription: 'The most over-engineered portfolio in existence — and I regret nothing. Features a BIOS boot sequence, holographic 3D desktop with orbiting cards around a breathing icosahedron, a fly-through work tunnel, force-directed neural skill graph, hacker-style contact terminal, and an AI twin powered by Gemini. Built with Next.js, Three.js, GSAP, and custom canvas shaders. This project was my way of proving that if I can imagine it, I can build it.',
+    description: 'A portfolio disguised as an immersive operating system with a 3D holographic desktop and AI twin (Fully mobile responsive).',
+    longDescription: 'The most over-engineered portfolio in existence — and I regret nothing. Features a BIOS boot sequence, holographic 3D desktop with orbiting cards around a breathing icosahedron, a fly-through work tunnel, force-directed neural skill graph, hacker-style contact terminal, and an AI twin powered by Gemini. Built with Next.js, Three.js, GSAP, and custom canvas shaders. This project was my way of proving that if I can imagine it, I can build it (Fully optimized for fluid cross-device 3D mobile responsiveness).',
     tags: ['Next.js', 'Three.js', 'GSAP', 'React', 'Gemini AI'],
     liveUrl: 'https://portfolio-void-os.vercel.app/',
     image: '/projects/void-os.png',
