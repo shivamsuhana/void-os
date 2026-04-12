@@ -19,6 +19,8 @@ export default function SkillsSection() {
   const mouseRef = useRef({ x: -999, y: -999 });
   const [hoveredSkill, setHoveredSkill] = useState<Skill | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const activeCategoryRef = useRef<string | null>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -43,6 +45,9 @@ export default function SkillsSection() {
     }
     return () => { tl.kill(); };
   }, []);
+
+  // Keep ref in sync with state
+  useEffect(() => { activeCategoryRef.current = activeCategory; }, [activeCategory]);
 
   // Force Graph
   useEffect(() => {
@@ -140,7 +145,7 @@ export default function SkillsSection() {
       ctx.clearRect(0, 0, rect.width, rect.height);
 
       // Draw background grid
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.02)';
+      ctx.strokeStyle = 'rgba(0, 212, 255, 0.04)';
       ctx.lineWidth = 0.5;
       for (let x = 0; x < rect.width; x += 40) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, rect.height); ctx.stroke();
@@ -149,21 +154,86 @@ export default function SkillsSection() {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(rect.width, y); ctx.stroke();
       }
 
-      // Edges
+      // Edges — NEURON STYLE with bezier curves + glow
       for (const node of nodes) {
         for (const connId of node.connections) {
           const other = nodeMap[connId];
-          if (!other || node.id > other.id) continue; // avoid duplicate lines
+          if (!other || node.id > other.id) continue;
           const isGlowing = node.glowing && other.glowing;
           const color = catColorMap[node.category] || '#00D4FF';
+
+          // Check if dimmed by filter
+          const isDimmed = activeCategoryRef.current && node.category !== activeCategoryRef.current && other.category !== activeCategoryRef.current;
+          const baseAlpha = isDimmed ? 0.02 : 0.08;
+
+          // Bezier curve midpoint — offset perpendicular for organic look
+          const mx = (node.x + other.x) / 2;
+          const my = (node.y + other.y) / 2;
+          const dx = other.x - node.x;
+          const dy = other.y - node.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const perpX = -dy / dist * (dist * 0.08);
+          const perpY = dx / dist * (dist * 0.08);
+          const cpx = mx + perpX;
+          const cpy = my + perpY;
+
+          // Outer glow (drawn first, wider)
+          if (isGlowing || !isDimmed) {
+            ctx.beginPath();
+            ctx.moveTo(node.x, node.y);
+            ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
+            ctx.strokeStyle = isGlowing
+              ? hexToRgba(color, 0.15 + node.glowIntensity * 0.2)
+              : hexToRgba(color, isDimmed ? 0.01 : 0.03);
+            ctx.lineWidth = isGlowing ? 6 : 3;
+            ctx.stroke();
+          }
+
+          // Inner line
           ctx.beginPath();
           ctx.moveTo(node.x, node.y);
-          ctx.lineTo(other.x, other.y);
+          ctx.quadraticCurveTo(cpx, cpy, other.x, other.y);
           ctx.strokeStyle = isGlowing
-            ? hexToRgba(color, 0.3 + node.glowIntensity * 0.5)
-            : 'rgba(255,255,255,0.04)';
-          ctx.lineWidth = isGlowing ? 1.5 : 0.5;
+            ? hexToRgba(color, 0.5 + node.glowIntensity * 0.5)
+            : `rgba(255,255,255,${baseAlpha})`;
+          ctx.lineWidth = isGlowing ? 2 : 0.8;
           ctx.stroke();
+
+          // Data flow dots traveling along bezier — MULTIPLE NEURON PULSES
+          if (!isDimmed) {
+            const flowTime = Date.now();
+            const nodeIdx = nodes.indexOf(node);
+            // 3 staggered pulses per connection
+            for (let pi = 0; pi < 3; pi++) {
+              const progress = ((flowTime * 0.0006 + nodeIdx * 0.7 + pi * 1.0) % 3) / 3;
+              const t2 = progress;
+              const dotX = (1-t2)*(1-t2)*node.x + 2*(1-t2)*t2*cpx + t2*t2*other.x;
+              const dotY = (1-t2)*(1-t2)*node.y + 2*(1-t2)*t2*cpy + t2*t2*other.y;
+
+              // Trail — draw a fading tail behind the dot
+              const trailLen = 5;
+              for (let ti = trailLen; ti >= 0; ti--) {
+                const tt = Math.max(0, t2 - ti * 0.015);
+                const tx = (1-tt)*(1-tt)*node.x + 2*(1-tt)*tt*cpx + tt*tt*other.x;
+                const ty = (1-tt)*(1-tt)*node.y + 2*(1-tt)*tt*cpy + tt*tt*other.y;
+                const trailAlpha = (1 - ti / trailLen) * (isGlowing ? 0.4 : 0.15);
+                ctx.beginPath(); ctx.arc(tx, ty, 1.2 - ti * 0.15, 0, Math.PI * 2);
+                ctx.fillStyle = hexToRgba(color, trailAlpha);
+                ctx.fill();
+              }
+
+              // Glow halo
+              const dotGrad = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 8);
+              dotGrad.addColorStop(0, hexToRgba(color, isGlowing ? 0.5 : 0.2));
+              dotGrad.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.beginPath(); ctx.arc(dotX, dotY, 8, 0, Math.PI * 2);
+              ctx.fillStyle = dotGrad; ctx.fill();
+              // Bright core
+              ctx.beginPath(); ctx.arc(dotX, dotY, 2, 0, Math.PI * 2);
+              ctx.fillStyle = hexToRgba(color, isGlowing ? 0.9 : 0.5);
+              ctx.fill();
+            }
+          }
         }
       }
 
@@ -171,23 +241,25 @@ export default function SkillsSection() {
       const time = Date.now();
       for (const node of nodes) {
         const color = catColorMap[node.category] || '#00D4FF';
-        const baseR = 3 + (node.proficiency / 100) * 12;
-        const pulseR = baseR + Math.sin(time * 0.003 + nodes.indexOf(node)) * 1;
+        const isDimmed = activeCategoryRef.current && node.category !== activeCategoryRef.current;
+        const alphaMult = isDimmed ? 0.15 : 1;
+        const baseR = 8 + (node.proficiency / 100) * 16;
+        const pulseR = baseR + Math.sin(time * 0.003 + nodes.indexOf(node)) * 1.5;
 
-        // Outer glow
+        // Outer glow — BIGGER
         if (node.glowing && node.glowIntensity > 0) {
-          const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, pulseR + 16);
-          grad.addColorStop(0, hexToRgba(color, node.glowIntensity * 0.25));
+          const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, pulseR + 30);
+          grad.addColorStop(0, hexToRgba(color, node.glowIntensity * 0.4));
           grad.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.beginPath(); ctx.arc(node.x, node.y, pulseR + 16, 0, Math.PI * 2);
+          ctx.beginPath(); ctx.arc(node.x, node.y, pulseR + 30, 0, Math.PI * 2);
           ctx.fillStyle = grad; ctx.fill();
         }
 
-        // Node body
+        // Node body — BRIGHTER
         const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, pulseR);
-        grad.addColorStop(0, hexToRgba(color, 0.9));
-        grad.addColorStop(0.6, hexToRgba(color, 0.4));
-        grad.addColorStop(1, hexToRgba(color, 0.1));
+        grad.addColorStop(0, hexToRgba(color, 1.0 * alphaMult));
+        grad.addColorStop(0.5, hexToRgba(color, 0.6 * alphaMult));
+        grad.addColorStop(1, hexToRgba(color, 0.15 * alphaMult));
         ctx.beginPath(); ctx.arc(node.x, node.y, pulseR, 0, Math.PI * 2);
         ctx.fillStyle = grad; ctx.fill();
 
@@ -197,11 +269,21 @@ export default function SkillsSection() {
         ctx.lineWidth = node.glowing ? 2 : 0.8;
         ctx.stroke();
 
-        // Label
-        ctx.font = '9px "JetBrains Mono", "Space Mono", monospace';
-        ctx.fillStyle = 'rgba(232,232,240,0.5)';
+        // Pulsing glow ring for high-proficiency skills
+        if (node.proficiency > 50) {
+          const ringPulse = 1 + Math.sin(time * 0.002 + nodes.indexOf(node) * 0.5) * 0.3;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, pulseR + 6 * ringPulse, 0, Math.PI * 2);
+          ctx.strokeStyle = hexToRgba(color, 0.08 * ringPulse);
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+
+        // Label — BIGGER
+        ctx.font = '11px "JetBrains Mono", "Space Mono", monospace';
+        ctx.fillStyle = `rgba(232,232,240,${isDimmed ? 0.15 : 0.7})`;
         ctx.textAlign = 'center';
-        ctx.fillText(node.name, node.x, node.y + pulseR + 14);
+        ctx.fillText(node.name, node.x, node.y + pulseR + 16);
       }
     };
 
@@ -213,7 +295,7 @@ export default function SkillsSection() {
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
       let found: Node | null = null;
       for (const node of nodes) {
-        const r = 3 + (node.proficiency / 100) * 12;
+        const r = 5 + (node.proficiency / 100) * 14;
         const dx = mouseRef.current.x - node.x;
         const dy = mouseRef.current.y - node.y;
         if (Math.sqrt(dx * dx + dy * dy) < r + 8) { found = node; break; }
@@ -232,7 +314,7 @@ export default function SkillsSection() {
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left, my = e.clientY - rect.top;
       for (const node of nodes) {
-        const r = 3 + (node.proficiency / 100) * 12;
+        const r = 5 + (node.proficiency / 100) * 14;
         if (Math.sqrt(Math.pow(mx - node.x, 2) + Math.pow(my - node.y, 2)) < r + 8) {
           // BFS ripple
           const visited = new Set<string>();
@@ -276,7 +358,7 @@ export default function SkillsSection() {
     <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', overflow: 'auto', zIndex: 50 }}>
       <button ref={backRef} className="back-button" onClick={() => navigateTo('desktop')} style={{ opacity: 0 }}>← VOID DESKTOP</button>
 
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '1100px', margin: '0 auto', paddingTop: '30px' }}>
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: '1100px', margin: '0 auto', padding: '30px 20px 60px' }}>
         <div ref={labelRef} className="section-label" style={{ opacity: 0 }}>
           03 // SKILLS.sys
         </div>
@@ -292,35 +374,59 @@ export default function SkillsSection() {
           Skills rendered as a living neural network. Click a node to send ripples through connected skills.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '20px', minHeight: '500px' }}>
+        <div id="skills-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 220px', gap: '20px', minHeight: '500px' }}>
+          <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 768px) { #skills-grid { grid-template-columns: 1fr !important; min-height: auto !important; } }' }} />
           {/* Canvas */}
           <div ref={graphRef} className="glass-card" style={{ overflow: 'hidden', padding: 0, opacity: 0 }}>
             <canvas ref={canvasRef} style={{ width: '100%', height: '500px', display: 'block', cursor: 'crosshair' }} />
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar — CLICKABLE FILTERS */}
           <div ref={sidebarRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '2px', marginBottom: '4px' }}>
-              CATEGORIES
+              FILTER CATEGORIES
+            </div>
+            {/* All button */}
+            <div
+              onClick={() => setActiveCategory(null)}
+              style={{
+                padding: '10px 12px', cursor: 'pointer',
+                border: `1px solid ${!activeCategory ? 'rgba(0,212,255,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                background: !activeCategory ? 'rgba(0,212,255,0.06)' : 'rgba(255,255,255,0.02)',
+                borderRadius: '2px', transition: 'all 0.2s',
+              }}
+            >
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: !activeCategory ? '#00D4FF' : 'var(--text-muted)', letterSpacing: '1px' }}>ALL NODES</span>
             </div>
             {SKILL_CATEGORIES.map(cat => {
               const catSkills = SKILLS.filter(s => s.category === cat.name);
               const avg = Math.round(catSkills.reduce((a, s) => a + s.proficiency, 0) / catSkills.length);
+              const isActive = activeCategory === cat.name;
               return (
-                <div key={cat.name} className="glass-card" style={{ padding: '12px' }}>
+                <div
+                  key={cat.name}
+                  onClick={() => setActiveCategory(isActive ? null : cat.name)}
+                  style={{
+                    padding: '12px', cursor: 'pointer',
+                    border: `1px solid ${isActive ? cat.color + '44' : 'rgba(255,255,255,0.05)'}`,
+                    borderLeft: isActive ? `3px solid ${cat.color}` : '1px solid rgba(255,255,255,0.05)',
+                    background: isActive ? cat.color + '0a' : 'rgba(255,255,255,0.02)',
+                    borderRadius: '2px', transition: 'all 0.2s',
+                  }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: cat.color }}>{cat.name}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)' }}>{avg}%</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: cat.color, fontWeight: isActive ? 700 : 400 }}>{cat.name}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: isActive ? cat.color : 'var(--text-muted)' }}>{avg}%</span>
                   </div>
-                  <div style={{ height: '2px', borderRadius: '1px', background: 'rgba(255,255,255,0.04)' }}>
+                  <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)' }}>
                     <div style={{
-                      height: '100%', borderRadius: '1px', background: cat.color,
+                      height: '100%', borderRadius: '2px', background: cat.color,
                       width: `${avg}%`, transition: 'width 1.5s ease',
-                      boxShadow: `0 0 6px ${cat.color}33`,
+                      boxShadow: isActive ? `0 0 10px ${cat.color}66` : `0 0 8px ${cat.color}44`,
                     }} />
                   </div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {catSkills.length} skills
+                    {catSkills.length} skills · {isActive ? 'ACTIVE' : 'CLICK TO FILTER'}
                   </div>
                 </div>
               );
@@ -333,17 +439,18 @@ export default function SkillsSection() {
       {hoveredSkill && (
         <div style={{
           position: 'fixed', left: tooltipPos.x + 14, top: tooltipPos.y - 8,
-          zIndex: 100, padding: '10px 14px', borderRadius: '2px',
-          background: 'rgba(3,3,6,0.95)', border: '1px solid var(--glass-border)',
-          backdropFilter: 'blur(8px)', pointerEvents: 'none',
+          zIndex: 100, padding: '12px 16px', borderRadius: '2px',
+          background: 'rgba(3,3,6,0.97)', border: `1px solid ${catColorMap[hoveredSkill.category]}30`,
+          backdropFilter: 'blur(12px)', pointerEvents: 'none',
           animation: 'fadeIn 0.15s ease',
+          boxShadow: `0 0 20px ${catColorMap[hoveredSkill.category]}10`,
         }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '13px', fontWeight: 700, marginBottom: '3px' }}>{hoveredSkill.name}</div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: catColorMap[hoveredSkill.category], marginBottom: '6px' }}>{hoveredSkill.category}</div>
-          <div style={{ height: '2px', borderRadius: '1px', background: 'rgba(255,255,255,0.04)', width: '100px' }}>
-            <div style={{ height: '100%', borderRadius: '1px', background: catColorMap[hoveredSkill.category], width: `${hoveredSkill.proficiency}%` }} />
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 700, marginBottom: '4px' }}>{hoveredSkill.name}</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: catColorMap[hoveredSkill.category], marginBottom: '8px', letterSpacing: '1px' }}>{hoveredSkill.category}</div>
+          <div style={{ height: '3px', borderRadius: '1px', background: 'rgba(255,255,255,0.06)', width: '120px' }}>
+            <div style={{ height: '100%', borderRadius: '1px', background: catColorMap[hoveredSkill.category], width: `${hoveredSkill.proficiency}%`, boxShadow: `0 0 6px ${catColorMap[hoveredSkill.category]}44` }} />
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', marginTop: '3px' }}>{hoveredSkill.proficiency}%</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: catColorMap[hoveredSkill.category], marginTop: '4px', fontWeight: 600 }}>{hoveredSkill.proficiency}%</div>
         </div>
       )}
 

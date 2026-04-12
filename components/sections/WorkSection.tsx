@@ -53,14 +53,14 @@ function ProjectCard3D({ project, position, index, onSelect, scrollProgress }: {
         ref={meshRef}
         onClick={(e) => { e.stopPropagation(); onSelect(project); }}
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { setHovered(false); document.body.style.cursor = 'none'; }}
+        onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
       >
         <planeGeometry args={[2.4, 1.5]} />
         <meshStandardMaterial
-          color={hovered ? project.color : '#0a0a14'}
+          color={hovered ? project.color : '#12121e'}
           emissive={project.color}
-          emissiveIntensity={hovered ? 0.18 : 0.03}
-          transparent opacity={0.92} side={THREE.DoubleSide}
+          emissiveIntensity={hovered ? 0.25 : 0.08}
+          transparent opacity={0.95} side={THREE.DoubleSide}
         />
       </mesh>
 
@@ -73,13 +73,13 @@ function ProjectCard3D({ project, position, index, onSelect, scrollProgress }: {
       {/* Wireframe border */}
       <mesh position={[0, 0, -0.01]}>
         <planeGeometry args={[2.45, 1.55]} />
-        <meshBasicMaterial color={project.color} wireframe transparent opacity={hovered ? 0.25 : 0.06} />
+        <meshBasicMaterial color={project.color} wireframe transparent opacity={hovered ? 0.35 : 0.15} />
       </mesh>
 
       {/* Glow */}
       <mesh ref={glowRef} position={[0, 0, -0.1]} scale={1.3}>
         <planeGeometry args={[2.8, 1.8]} />
-        <meshBasicMaterial color={project.color} transparent opacity={0.02} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.12 : 0.04} side={THREE.DoubleSide} />
       </mesh>
 
       {/* HTML Label — always visible */}
@@ -108,7 +108,7 @@ function ProjectCard3D({ project, position, index, onSelect, scrollProgress }: {
             fontFamily: "'Syne', sans-serif",
             fontSize: hovered ? '15px' : '13px',
             fontWeight: 700,
-            color: hovered ? '#E8E8F0' : 'rgba(232,232,240,0.5)',
+            color: hovered ? '#E8E8F0' : 'rgba(232,232,240,0.7)',
             transition: 'all 0.3s',
             textShadow: hovered ? `0 0 20px ${project.color}50` : 'none',
             lineHeight: 1.2,
@@ -120,7 +120,7 @@ function ProjectCard3D({ project, position, index, onSelect, scrollProgress }: {
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: '8px', letterSpacing: '0.5px',
-            color: hovered ? 'rgba(232,232,240,0.4)' : 'rgba(232,232,240,0.2)',
+            color: hovered ? 'rgba(232,232,240,0.5)' : 'rgba(232,232,240,0.35)',
             transition: 'color 0.3s',
             maxWidth: '160px', lineHeight: 1.5,
           }}>
@@ -220,6 +220,47 @@ function TunnelRing({ z, color, radius }: { z: number; color: string; radius: nu
 }
 
 /* ============================================
+   WARP SPEED LINES — streaking past camera
+   ============================================ */
+function WarpLines() {
+  const ref = useRef<THREE.Points>(null);
+  const count = 300;
+
+  const positions = useMemo(() => {
+    const p = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      p[i * 3] = (Math.random() - 0.5) * 20;
+      p[i * 3 + 1] = (Math.random() - 0.5) * 20;
+      p[i * 3 + 2] = Math.random() * -80;
+    }
+    return p;
+  }, []);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const arr = ref.current.geometry.attributes.position.array as Float32Array;
+    for (let i = 0; i < count; i++) {
+      arr[i * 3 + 2] += 0.15;
+      if (arr[i * 3 + 2] > 10) {
+        arr[i * 3 + 2] = -80;
+        arr[i * 3] = (Math.random() - 0.5) * 20;
+        arr[i * 3 + 1] = (Math.random() - 0.5) * 20;
+      }
+    }
+    ref.current.geometry.attributes.position.needsUpdate = true;
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial size={0.02} color="#00D4FF" transparent opacity={0.15} blending={THREE.AdditiveBlending} depthWrite={false} />
+    </points>
+  );
+}
+
+/* ============================================
    TUNNEL SCENE — curved camera path
    ============================================ */
 function TunnelScene({ scrollProgress, projects, onSelect }: {
@@ -257,6 +298,7 @@ function TunnelScene({ scrollProgress, projects, onSelect }: {
       <fog attach="fog" args={['#030306', 5, 40]} />
 
       <TunnelParticles />
+      <WarpLines />
 
       {Array.from({ length: 25 }).map((_, i) => (
         <TunnelRing
@@ -311,9 +353,15 @@ function CaseStudyOverlay({ project, onClose }: { project: Project; onClose: () 
         background: 'rgba(10,10,18,0.95)', border: `1px solid rgba(${rgb}, 0.2)`,
         borderRadius: '2px', position: 'relative',
       }}>
-        {/* Glitch header bar */}
-        <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${project.color}, transparent)` }} />
-
+        {/* Holographic header shimmer */}
+        <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${project.color}, transparent)`, position: 'relative', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', top: 0, left: '-50%', width: '30%', height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
+            animation: 'case-shimmer 2s linear infinite',
+          }} />
+          <style dangerouslySetInnerHTML={{ __html: '@keyframes case-shimmer { 0% { left: -50%; } 100% { left: 150%; } }' }} />
+        </div>
         <div style={{ padding: '36px' }}>
           <button onClick={onClose} style={{
             position: 'absolute', top: '12px', right: '12px',
@@ -485,6 +533,24 @@ export default function WorkSection() {
           }}>
             {Math.round(scrollProgress * PROJECTS.length)}/{PROJECTS.length}
           </div>
+          {/* Glow dot at progress tip */}
+          <div style={{
+            position: 'absolute', left: '-2px',
+            top: `${scrollProgress * 100}%`, transform: 'translateY(-50%)',
+            width: '6px', height: '6px', borderRadius: '50%',
+            background: '#00D4FF',
+            boxShadow: '0 0 8px rgba(0,212,255,0.6)',
+          }} />
+        </div>
+
+        {/* Velocity readout */}
+        <div style={{
+          position: 'absolute', bottom: '30px', right: '20px',
+          fontFamily: 'var(--font-mono)', fontSize: '8px',
+          color: 'rgba(0,212,255,0.2)', letterSpacing: '1px',
+        }}>
+          <div>DEPTH: {(scrollProgress * 100).toFixed(1)}%</div>
+          <div>SECTOR: {Math.floor(scrollProgress * PROJECTS.length) + 1}</div>
         </div>
 
         {/* Project indicators */}

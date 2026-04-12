@@ -183,18 +183,28 @@ export default function ContactSection() {
             <div className="section-label">05 // CONTACT.net</div>
             <h2 style={{
               fontFamily: 'var(--font-display)', fontWeight: 800,
-              fontSize: 'clamp(22px, 3vw, 32px)', marginBottom: '4px',
+              fontSize: 'clamp(22px, 3vw, 32px)', marginBottom: '8px',
             }}>
               Send a <span className="glow-text-blue">Transmission</span>
             </h2>
+            {/* Dramatic subtext */}
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 700,
+              letterSpacing: '12px', color: 'rgba(0,212,255,0.06)',
+              marginTop: '4px',
+            }}>
+              TRANSMIT
+            </div>
           </div>
 
           {/* Terminal Window */}
           <div ref={terminalRef} style={{
-            background: 'rgba(3,3,6,0.95)',
-            border: '1px solid rgba(0,212,255,0.1)',
+            background: 'rgba(3,3,6,0.98)',
+            border: '1px solid rgba(0,212,255,0.15)',
             borderRadius: '4px', overflow: 'hidden',
             backdropFilter: 'blur(20px)', opacity: 0,
+            boxShadow: '0 0 30px rgba(0,212,255,0.03), inset 0 0 30px rgba(0,0,0,0.3)',
+            animation: 'borderShift 8s linear infinite',
           }}>
             {/* Title bar */}
             <div style={{
@@ -208,9 +218,25 @@ export default function ContactSection() {
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFB800' }} />
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#39FF14' }} />
               </div>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '1px' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '1px', flex: 1 }}>
                 CONTACT.net — Secure Terminal
               </span>
+              {/* Signal strength meter */}
+              <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-end', marginRight: '8px' }}>
+                {[6, 9, 12, 15, 12].map((h, i) => (
+                  <div key={i} style={{
+                    width: '2px', height: `${h}px`,
+                    background: i < 4 ? 'rgba(57,255,20,0.4)' : 'rgba(255,255,255,0.1)',
+                    borderRadius: '1px',
+                  }} />
+                ))}
+              </div>
+              {/* Availability dot */}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 6px rgba(57,255,20,0.5)' }} />
+                <div style={{ position: 'absolute', top: '-2px', left: '-2px', width: '9px', height: '9px', borderRadius: '50%', border: '1px solid rgba(57,255,20,0.3)', animation: 'contact-pulse 2s infinite' }} />
+              </div>
+              <style dangerouslySetInnerHTML={{ __html: '@keyframes contact-pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }' }} />
             </div>
 
             {/* Terminal output */}
@@ -315,12 +341,13 @@ export default function ContactSection() {
               <a key={i} href={link.href} target="_blank" rel="noopener noreferrer" style={{
                 fontFamily: 'var(--font-mono)', fontSize: '9px',
                 color: 'var(--text-muted)', letterSpacing: '1px',
-                padding: '6px 12px', borderRadius: '2px',
-                border: '1px solid rgba(255,255,255,0.04)',
-                transition: 'all 0.2s',
+                padding: '8px 16px', borderRadius: '2px',
+                border: '1px solid rgba(255,255,255,0.06)',
+                transition: 'all 0.3s',
+                display: 'flex', alignItems: 'center', gap: '6px',
               }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.2)'; e.currentTarget.style.color = 'var(--blue)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.3)'; e.currentTarget.style.color = 'var(--blue)'; e.currentTarget.style.background = 'rgba(0,212,255,0.04)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(0,212,255,0.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}
               >
                 {link.label}
               </a>

@@ -51,7 +51,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
   pointer-events: none;
   z-index: 9999;
 }
@@ -147,6 +147,18 @@ input, textarea { font-family: var(--font-mono); background: transparent; border
 @keyframes typewriterCursor {
   0%, 100% { border-right-color: var(--blue); }
   50% { border-right-color: transparent; }
+}
+
+@keyframes holoShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes borderShift {
+  0% { border-color: rgba(0, 212, 255, 0.15); }
+  33% { border-color: rgba(123, 47, 255, 0.15); }
+  66% { border-color: rgba(57, 255, 20, 0.1); }
+  100% { border-color: rgba(0, 212, 255, 0.15); }
 }
 
 /* ============================================
@@ -279,6 +291,7 @@ input, textarea { font-family: var(--font-mono); background: transparent; border
   border-color: rgba(0, 212, 255, 0.3);
   background: rgba(0, 212, 255, 0.04);
   box-shadow: 0 0 12px rgba(0, 212, 255, 0.1);
+  text-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
 }
 
 /* ── Glow text variants ── */
@@ -286,6 +299,23 @@ input, textarea { font-family: var(--font-mono); background: transparent; border
 .glow-text-green { color: var(--green); text-shadow: 0 0 10px rgba(57,255,20,0.4), 0 0 30px rgba(57,255,20,0.15); }
 .glow-text-purple { color: var(--purple); text-shadow: 0 0 10px rgba(123,47,255,0.4), 0 0 30px rgba(123,47,255,0.15); }
 .glow-text-amber { color: var(--amber); text-shadow: 0 0 10px rgba(255,184,0,0.4), 0 0 30px rgba(255,184,0,0.15); }
+
+/* ── Holographic shimmer effect for text ── */
+.holo-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--white) 0%,
+    var(--blue) 25%,
+    var(--white) 50%,
+    var(--purple) 75%,
+    var(--white) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: holoShimmer 6s linear infinite;
+}
 
 /* ── Status Dot ── */
 .status-dot {
@@ -331,9 +361,80 @@ input, textarea { font-family: var(--font-mono); background: transparent; border
   .back-button {
     top: 12px;
     left: 12px;
+    padding: 6px 12px;
+    font-size: 9px;
+  }
+  /* Skills sidebar stacks below graph */
+  .glass-card {
+    min-height: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-button {
+    font-size: 8px;
+    padding: 5px 10px;
+    letter-spacing: 0.5px;
+  }
+  .section-header h2 {
+    font-size: 24px !important;
   }
 }
 
 @media (hover: none) {
   .magnetic-cursor { display: none !important; }
 }
+
+/* ============================================
+   Performance: Reduce motion for battery saving
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  body::before {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   Selection & Scrollbar Styling
+   ============================================ */
+::selection {
+  background: rgba(0, 212, 255, 0.2);
+  color: var(--white);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.15);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.3);
+}
+
+/* ============================================
+   Focus styles for accessibility
+   ============================================ */
+:focus-visible {
+  outline: 1px solid var(--blue);
+  outline-offset: 2px;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 1px solid var(--blue);
+  outline-offset: 2px;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+}
+

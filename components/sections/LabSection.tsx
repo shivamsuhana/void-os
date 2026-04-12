@@ -266,6 +266,7 @@ function SecretTerminal() {
           <div key={i} style={{
             color: line.type === 'input' ? 'var(--green)' : 'var(--text-dim)',
             whiteSpace: 'pre-wrap',
+            textShadow: line.type === 'input' ? '0 0 8px rgba(57,255,20,0.4)' : 'none',
           }}>
             {line.text || '\u00A0'}
           </div>
@@ -414,6 +415,19 @@ export default function LabSection() {
     <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', overflow: 'auto', zIndex: 50 }}>
       <button ref={backRef} className="back-button" onClick={() => navigateTo('desktop')} style={{ opacity: 0 }}>← VOID DESKTOP</button>
 
+      {/* CLASSIFIED watermark */}
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-35deg)',
+        fontFamily: 'var(--font-display)', fontSize: 'clamp(60px, 12vw, 140px)',
+        fontWeight: 800, letterSpacing: '20px',
+        color: 'rgba(57,255,20,0.015)', pointerEvents: 'none', zIndex: 0,
+        userSelect: 'none', whiteSpace: 'nowrap',
+        animation: 'classified-fade 5s ease-in-out infinite',
+      }}>
+        CLASSIFIED
+      </div>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes classified-fade { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }' }} />
+
       <div style={{ maxWidth: '700px', margin: '0 auto', padding: '80px 30px 60px' }}>
         {/* Header */}
         <div ref={headerRef} style={{ marginBottom: '36px', opacity: 0 }}>
@@ -453,7 +467,14 @@ export default function LabSection() {
         </div>
 
         {/* Active experiment */}
-        <div ref={contentRef} style={{ opacity: 0 }}>
+        <div ref={contentRef} style={{ opacity: 0, position: 'relative' }}>
+          {/* Static noise overlay */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5,
+            opacity: 0.02,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            mixBlendMode: 'overlay',
+          }} />
           {activeTab === 'music' && <MusicVisualizer />}
           {activeTab === 'particles' && <ParticleExperiment />}
           {activeTab === 'terminal' && <SecretTerminal />}

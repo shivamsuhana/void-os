@@ -7,138 +7,60 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { useVoidStore, Section } from '@/lib/store';
 import VoidPostProcessing from '@/components/shaders/VoidPostProcessing';
+import CentralHologram from './CentralHologram';
+import SectionCard, { SectionData } from './SectionCard';
 
 /* ============================================
-   CENTRAL HOLOGRAM
+   SECTION DATA
    ============================================ */
-function CentralHologram() {
-  const innerRef = useRef<THREE.Mesh>(null);
-  const midRef = useRef<THREE.Mesh>(null);
-  const outerRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-  const particlesRef = useRef<THREE.Points>(null);
-
-  const particleData = useMemo(() => {
-    const count = 300;
-    const pos = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = 0.6 + Math.random() * 0.6;
-      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      pos[i * 3 + 2] = r * Math.cos(phi);
-      // Color: mix of cyan and purple
-      const isCyan = Math.random() > 0.3;
-      colors[i * 3] = isCyan ? 0 : 0.48;
-      colors[i * 3 + 1] = isCyan ? 0.83 : 0.18;
-      colors[i * 3 + 2] = isCyan ? 1 : 1;
-    }
-    return { pos, colors };
-  }, []);
-
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    if (innerRef.current) {
-      innerRef.current.rotation.x = t * 0.25;
-      innerRef.current.rotation.y = t * 0.18;
-      const s = 1 + Math.sin(t * 0.6) * 0.04;
-      innerRef.current.scale.setScalar(s);
-    }
-    if (midRef.current) {
-      midRef.current.rotation.x = -t * 0.12;
-      midRef.current.rotation.z = t * 0.2;
-    }
-    if (outerRef.current) {
-      outerRef.current.rotation.y = t * 0.08;
-      outerRef.current.rotation.z = -t * 0.06;
-    }
-    if (glowRef.current) {
-      const glow = 0.1 + Math.sin(t * 0.4) * 0.05;
-      (glowRef.current.material as THREE.MeshBasicMaterial).opacity = glow;
-    }
-    if (particlesRef.current) {
-      particlesRef.current.rotation.y = t * 0.04;
-      particlesRef.current.rotation.x = Math.sin(t * 0.1) * 0.2;
-    }
-  });
-
-  return (
-    <group>
-      <mesh ref={innerRef}>
-        <icosahedronGeometry args={[0.3, 2]} />
-        <meshBasicMaterial color="#00D4FF" transparent opacity={0.07} />
-      </mesh>
-      <mesh ref={midRef}>
-        <icosahedronGeometry args={[0.45, 1]} />
-        <meshBasicMaterial color="#00D4FF" transparent opacity={0.12} wireframe />
-      </mesh>
-      <mesh ref={outerRef}>
-        <icosahedronGeometry args={[0.6, 1]} />
-        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.06} wireframe />
-      </mesh>
-      <mesh ref={glowRef}>
-        <sphereGeometry args={[0.85, 16, 16]} />
-        <meshBasicMaterial color="#00D4FF" transparent opacity={0.08} side={THREE.BackSide} />
-      </mesh>
-      <points ref={particlesRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[particleData.pos, 3]} />
-          <bufferAttribute attach="attributes-color" args={[particleData.colors, 3]} />
-        </bufferGeometry>
-        <pointsMaterial size={0.012} vertexColors transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </points>
-      <pointLight color="#00D4FF" intensity={0.5} distance={8} />
-    </group>
-  );
-}
+const SECTIONS: SectionData[] = [
+  { id: 'about', label: 'ABOUT', ext: '.exe', icon: '◎', color: '#00D4FF', desc: 'Identity & manifesto', shortcut: '1' },
+  { id: 'work', label: 'WORK', ext: '.db', icon: '◈', color: '#7B2FFF', desc: 'Project tunnel', shortcut: '2' },
+  { id: 'skills', label: 'SKILLS', ext: '.sys', icon: '⬡', color: '#FFB800', desc: 'Neural network', shortcut: '3' },
+  { id: 'timeline', label: 'TIME', ext: '.log', icon: '◉', color: '#39FF14', desc: 'Career log', shortcut: '4' },
+  { id: 'contact', label: 'CONTACT', ext: '.net', icon: '◇', color: '#FF3366', desc: 'Transmission', shortcut: '5' },
+  { id: 'lab', label: 'LAB', ext: '.beta', icon: '⬢', color: '#39FF14', desc: 'Experiments', shortcut: '6' },
+];
 
 /* ============================================
-   ORBIT RINGS — Animated arcs with dashes
+   ORBIT RINGS — VISIBLE animated arcs
    ============================================ */
 function OrbitRings() {
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
   const ring3Ref = useRef<THREE.Mesh>(null);
-  const ring4Ref = useRef<THREE.Mesh>(null);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (ring1Ref.current) { ring1Ref.current.rotation.x = Math.PI / 2; ring1Ref.current.rotation.z = t * 0.12; }
     if (ring2Ref.current) { ring2Ref.current.rotation.x = Math.PI / 3; ring2Ref.current.rotation.y = t * 0.1; }
     if (ring3Ref.current) { ring3Ref.current.rotation.x = Math.PI / 2.5; ring3Ref.current.rotation.z = -t * 0.08; ring3Ref.current.rotation.y = t * 0.04; }
-    if (ring4Ref.current) { ring4Ref.current.rotation.x = Math.PI / 4; ring4Ref.current.rotation.z = t * 0.06; }
   });
 
   return (
     <>
       <mesh ref={ring1Ref}>
-        <torusGeometry args={[1.6, 0.004, 8, 128]} />
-        <meshBasicMaterial color="#00D4FF" transparent opacity={0.12} />
+        <torusGeometry args={[1.6, 0.006, 8, 128]} />
+        <meshBasicMaterial color="#00D4FF" transparent opacity={0.25} />
       </mesh>
       <mesh ref={ring2Ref}>
-        <torusGeometry args={[2.0, 0.003, 8, 128]} />
-        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.08} />
+        <torusGeometry args={[2.0, 0.004, 8, 128]} />
+        <meshBasicMaterial color="#7B2FFF" transparent opacity={0.18} />
       </mesh>
       <mesh ref={ring3Ref}>
-        <torusGeometry args={[2.4, 0.002, 8, 96]} />
-        <meshBasicMaterial color="#39FF14" transparent opacity={0.05} />
-      </mesh>
-      <mesh ref={ring4Ref}>
-        <torusGeometry args={[1.2, 0.005, 8, 64]} />
-        <meshBasicMaterial color="#FFB800" transparent opacity={0.04} />
+        <torusGeometry args={[2.4, 0.003, 8, 96]} />
+        <meshBasicMaterial color="#39FF14" transparent opacity={0.1} />
       </mesh>
     </>
   );
 }
 
 /* ============================================
-   DATA PARTICLES — streaming from center to cards
+   DATA STREAM — particles flowing from center
    ============================================ */
 function DataStream() {
   const ref = useRef<THREE.Points>(null);
-  const count = 150;
+  const count = 200;
 
   const positions = useMemo(() => {
     const p = new Float32Array(count * 3);
@@ -177,154 +99,23 @@ function DataStream() {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.015} color="#00D4FF" transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <pointsMaterial size={0.02} color="#00D4FF" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
     </points>
   );
 }
 
 /* ============================================
-   SECTION DATA
+   GRID FLOOR
    ============================================ */
-const SECTIONS: Array<{ id: Section; label: string; ext: string; icon: string; color: string; desc: string; shortcut: string }> = [
-  { id: 'about', label: 'ABOUT', ext: '.exe', icon: '◎', color: '#00D4FF', desc: 'Identity & manifesto', shortcut: '1' },
-  { id: 'work', label: 'WORK', ext: '.db', icon: '◈', color: '#7B2FFF', desc: 'Project tunnel', shortcut: '2' },
-  { id: 'skills', label: 'SKILLS', ext: '.sys', icon: '⬡', color: '#FFB800', desc: 'Neural network', shortcut: '3' },
-  { id: 'timeline', label: 'TIME', ext: '.log', icon: '◉', color: '#39FF14', desc: 'Career log', shortcut: '4' },
-  { id: 'contact', label: 'CONTACT', ext: '.net', icon: '◇', color: '#FF3366', desc: 'Transmission', shortcut: '5' },
-  { id: 'lab', label: 'LAB', ext: '.beta', icon: '⬢', color: '#39FF14', desc: 'Experiments', shortcut: '6' },
-];
-
-/* ============================================
-   SECTION CARD — with HTML label overlay
-   ============================================ */
-function SectionCard({ section, index, total, onSelect, hovered, onHover }: {
-  section: typeof SECTIONS[0]; index: number; total: number;
-  onSelect: (id: Section) => void; hovered: boolean;
-  onHover: (id: Section | null) => void;
-}) {
-  const groupRef = useRef<THREE.Group>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const angle = (index / total) * Math.PI * 2;
-  const radius = 3.0;
-
-  useFrame(({ clock }) => {
-    if (!groupRef.current || !meshRef.current) return;
-    const t = clock.getElapsedTime();
-    groupRef.current.position.y = Math.sin(t * 0.4 + index * 1.2) * 0.1;
-
-    const targetScale = hovered ? 1.12 : 1;
-    meshRef.current.scale.x += (targetScale - meshRef.current.scale.x) * 0.08;
-    meshRef.current.scale.y += (targetScale - meshRef.current.scale.y) * 0.08;
-    meshRef.current.scale.z += (targetScale - meshRef.current.scale.z) * 0.08;
-  });
-
+function GridFloor() {
   return (
-    <group
-      ref={groupRef}
-      position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}
-      rotation={[0, -angle + Math.PI / 2, 0]}
-    >
-      {/* Card background */}
-      <mesh
-        ref={meshRef}
-        onClick={() => onSelect(section.id)}
-        onPointerEnter={() => onHover(section.id)}
-        onPointerLeave={() => onHover(null)}
-      >
-        <planeGeometry args={[1.5, 0.85]} />
-        <meshBasicMaterial
-          color={hovered ? section.color : '#080810'}
-          transparent
-          opacity={hovered ? 0.12 : 0.04}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {/* Border */}
-      <mesh>
-        <planeGeometry args={[1.5, 0.85]} />
-        <meshBasicMaterial
-          color={section.color}
-          transparent
-          opacity={hovered ? 0.35 : 0.1}
-          wireframe
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {/* Hover glow plane */}
-      {hovered && (
-        <mesh position={[0, 0, -0.05]}>
-          <planeGeometry args={[1.8, 1.1]} />
-          <meshBasicMaterial color={section.color} transparent opacity={0.04} side={THREE.DoubleSide} />
-        </mesh>
-      )}
-
-      {/* HTML Label overlay */}
-      <Html
-        center
-        distanceFactor={6}
-        style={{ pointerEvents: 'none', userSelect: 'none' }}
-      >
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: '4px', minWidth: '120px', textAlign: 'center',
-        }}>
-          {/* Icon */}
-          <div style={{
-            fontSize: '24px', lineHeight: 1,
-            color: hovered ? section.color : 'rgba(232,232,240,0.35)',
-            transition: 'color 0.3s, text-shadow 0.3s',
-            textShadow: hovered ? `0 0 15px ${section.color}60` : 'none',
-            filter: hovered ? `drop-shadow(0 0 8px ${section.color}40)` : 'none',
-          }}>
-            {section.icon}
-          </div>
-
-          {/* Label */}
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '10px', fontWeight: 600,
-            letterSpacing: '3px',
-            color: hovered ? '#E8E8F0' : 'rgba(232,232,240,0.3)',
-            transition: 'color 0.3s',
-          }}>
-            {section.label}
-          </div>
-
-          {/* Extension */}
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '7px', letterSpacing: '1px',
-            color: hovered ? section.color : 'rgba(232,232,240,0.15)',
-            transition: 'color 0.3s',
-          }}>
-            {section.ext}
-          </div>
-
-          {/* Shortcut badge */}
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '7px', letterSpacing: '1px',
-            color: 'rgba(232,232,240,0.12)',
-            marginTop: '2px',
-          }}>
-            [{section.shortcut}]
-          </div>
-        </div>
-      </Html>
-
-      {/* Connection line to center */}
-      <line>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[new Float32Array([0, 0, 0, -Math.cos(angle) * (radius - 1), 0, -Math.sin(angle) * (radius - 1)]), 3]}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color={section.color} transparent opacity={hovered ? 0.25 : 0.04} />
-      </line>
-    </group>
+    <gridHelper
+      args={[30, 60, '#00D4FF', '#7B2FFF']}
+      position={[0, -2, 0]}
+      material-transparent={true}
+      material-opacity={0.05}
+      material-depthWrite={false}
+    />
   );
 }
 
@@ -334,8 +125,8 @@ function SectionCard({ section, index, total, onSelect, hovered, onHover }: {
 function Starfield() {
   const ref = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
-    const p = new Float32Array(2500 * 3);
-    for (let i = 0; i < 2500; i++) {
+    const p = new Float32Array(2000 * 3);
+    for (let i = 0; i < 2000; i++) {
       p[i * 3] = (Math.random() - 0.5) * 50;
       p[i * 3 + 1] = (Math.random() - 0.5) * 50;
       p[i * 3 + 2] = (Math.random() - 0.5) * 50;
@@ -352,7 +143,7 @@ function Starfield() {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.02} color="#FFFFFF" transparent opacity={0.5} depthWrite={false} />
+      <pointsMaterial size={0.025} color="#FFFFFF" transparent opacity={0.6} depthWrite={false} />
     </points>
   );
 }
@@ -369,13 +160,7 @@ function DragRotation({ groupRef }: { groupRef: React.RefObject<THREE.Group | nu
 
   useEffect(() => {
     const canvas = gl.domElement;
-
-    const onDown = (e: PointerEvent) => {
-      isDragging.current = true;
-      prevMouse.current = { x: e.clientX, y: e.clientY };
-      canvas.style.cursor = 'grabbing';
-    };
-
+    const onDown = (e: PointerEvent) => { isDragging.current = true; prevMouse.current = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; };
     const onMove = (e: PointerEvent) => {
       if (!isDragging.current) return;
       const dx = e.clientX - prevMouse.current.x;
@@ -386,11 +171,7 @@ function DragRotation({ groupRef }: { groupRef: React.RefObject<THREE.Group | nu
       targetRotation.current.x = Math.max(-0.5, Math.min(0.5, targetRotation.current.x));
       prevMouse.current = { x: e.clientX, y: e.clientY };
     };
-
-    const onUp = () => {
-      isDragging.current = false;
-      canvas.style.cursor = 'grab';
-    };
+    const onUp = () => { isDragging.current = false; canvas.style.cursor = 'grab'; };
 
     canvas.addEventListener('pointerdown', onDown);
     canvas.addEventListener('pointermove', onMove);
@@ -423,7 +204,7 @@ function DragRotation({ groupRef }: { groupRef: React.RefObject<THREE.Group | nu
 }
 
 /* ============================================
-   HUD READOUTS — floating data around edges
+   HUD READOUT
    ============================================ */
 function HudReadout({ position, text, color }: { position: [number, number, number]; text: string; color: string }) {
   return (
@@ -431,8 +212,8 @@ function HudReadout({ position, text, color }: { position: [number, number, numb
       <div style={{
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: '7px', letterSpacing: '1.5px',
-        color, opacity: 0.3,
-        textShadow: `0 0 4px ${color}30`,
+        color, opacity: 0.4,
+        textShadow: `0 0 6px ${color}40`,
         whiteSpace: 'nowrap',
       }}>
         {text}
@@ -442,7 +223,7 @@ function HudReadout({ position, text, color }: { position: [number, number, numb
 }
 
 /* ============================================
-   SCENE
+   SCENE COMPOSITION
    ============================================ */
 function HologramScene({ onSelect, hoveredId, onHover }: {
   onSelect: (id: Section) => void;
@@ -453,13 +234,14 @@ function HologramScene({ onSelect, hoveredId, onHover }: {
 
   return (
     <>
-      <ambientLight intensity={0.03} />
+      <ambientLight intensity={0.08} />
       <Starfield />
 
       <group ref={orbitalRef}>
         <CentralHologram />
         <OrbitRings />
         <DataStream />
+        <GridFloor />
 
         {SECTIONS.map((section, i) => (
           <SectionCard
@@ -481,13 +263,13 @@ function HologramScene({ onSelect, hoveredId, onHover }: {
       </group>
 
       <DragRotation groupRef={orbitalRef} />
-      <fog attach="fog" args={['#030306', 7, 28]} />
+      <fog attach="fog" args={['#030306', 8, 30]} />
     </>
   );
 }
 
 /* ============================================
-   VOID DESKTOP
+   VOID DESKTOP — Main component
    ============================================ */
 export default function VoidDesktop() {
   const { navigateTo } = useVoidStore();
@@ -539,6 +321,12 @@ export default function VoidDesktop() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#030306', zIndex: 50, overflow: 'hidden' }}>
+      {/* HUD Corner Brackets */}
+      <div style={{ position: 'absolute', top: '50px', left: '16px', zIndex: 10, width: '20px', height: '20px', borderLeft: '1px solid rgba(0,212,255,0.15)', borderTop: '1px solid rgba(0,212,255,0.15)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '50px', right: '16px', zIndex: 10, width: '20px', height: '20px', borderRight: '1px solid rgba(0,212,255,0.15)', borderTop: '1px solid rgba(0,212,255,0.15)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '50px', left: '16px', zIndex: 10, width: '20px', height: '20px', borderLeft: '1px solid rgba(0,212,255,0.1)', borderBottom: '1px solid rgba(0,212,255,0.1)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '50px', right: '16px', zIndex: 10, width: '20px', height: '20px', borderRight: '1px solid rgba(0,212,255,0.1)', borderBottom: '1px solid rgba(0,212,255,0.1)', pointerEvents: 'none' }} />
+
       {/* 3D Scene */}
       {canvasReady && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
@@ -561,24 +349,22 @@ export default function VoidDesktop() {
             width: '6px', height: '6px', borderRadius: '50%',
             background: '#39FF14', boxShadow: '0 0 8px rgba(57,255,20,0.6)',
           }} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,0.3)', letterSpacing: '3px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,0.4)', letterSpacing: '3px' }}>
             VOID OS v2045.1
           </span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(0,212,255,0.3)', letterSpacing: '1px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(0,212,255,0.4)', letterSpacing: '1px' }}>
             ▸ DESKTOP
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-            <div style={{ width: '3px', height: '8px', background: 'rgba(57,255,20,0.3)' }} />
-            <div style={{ width: '3px', height: '12px', background: 'rgba(57,255,20,0.4)' }} />
-            <div style={{ width: '3px', height: '6px', background: 'rgba(57,255,20,0.2)' }} />
-            <div style={{ width: '3px', height: '14px', background: 'rgba(57,255,20,0.5)' }} />
-            <div style={{ width: '3px', height: '10px', background: 'rgba(57,255,20,0.3)' }} />
+          <div style={{ display: 'flex', gap: '3px', alignItems: 'flex-end' }}>
+            {[6, 9, 12, 15, 12].map((h, i) => (
+              <div key={i} style={{ width: '2px', height: `${h}px`, background: `rgba(57,255,20,${0.2 + i * 0.08})`, borderRadius: '1px' }} />
+            ))}
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'rgba(232,232,240,0.6)', letterSpacing: '2px', fontWeight: 500 }}>{time}</div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '2px' }}>{date}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'rgba(232,232,240,0.7)', letterSpacing: '2px', fontWeight: 500, textShadow: '0 0 8px rgba(0,212,255,0.2)' }}>{time}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,0.25)', letterSpacing: '2px' }}>{date}</div>
           </div>
         </div>
       </div>
@@ -592,14 +378,14 @@ export default function VoidDesktop() {
         {hoveredSection ? (
           <div key={hoveredSection.id}>
             <div style={{
-              fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700,
+              fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 700,
               color: hoveredSection.color, letterSpacing: '4px', marginBottom: '4px',
-              textShadow: `0 0 20px ${hoveredSection.color}40`,
+              textShadow: `0 0 25px ${hoveredSection.color}60`,
             }}>
-              {hoveredSection.icon} {hoveredSection.label}<span style={{ color: 'rgba(232,232,240,0.2)', fontSize: '13px' }}>{hoveredSection.ext}</span>
+              {hoveredSection.icon} {hoveredSection.label}<span style={{ color: 'rgba(232,232,240,0.25)', fontSize: '14px' }}>{hoveredSection.ext}</span>
             </div>
             <div style={{
-              fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,0.3)',
+              fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,0.35)',
               letterSpacing: '2px',
             }}>
               {hoveredSection.desc.toUpperCase()}
@@ -608,7 +394,7 @@ export default function VoidDesktop() {
         ) : (
           <div style={{
             fontFamily: 'var(--font-mono)', fontSize: '9px',
-            color: 'rgba(232,232,240,0.15)', letterSpacing: '3px',
+            color: 'rgba(232,232,240,0.2)', letterSpacing: '3px',
           }}>
             DRAG TO ROTATE · CLICK TO LAUNCH
           </div>
@@ -620,18 +406,22 @@ export default function VoidDesktop() {
         position: 'absolute', bottom: '18px', left: '24px', zIndex: 10,
         fontFamily: 'var(--font-mono)', opacity: 0,
       }}>
-        <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.15)', letterSpacing: '2px', marginBottom: '3px' }}>SYSTEM</div>
+        <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '2px', marginBottom: '3px' }}>SYSTEM</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 4px rgba(57,255,20,0.4)' }} />
-          <span style={{ fontSize: '8px', color: 'rgba(57,255,20,0.4)', letterSpacing: '1px' }}>ONLINE</span>
+          <div style={{ position: 'relative' }}>
+            <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 8px rgba(57,255,20,0.7)' }} />
+            <div style={{ position: 'absolute', top: '-3px', left: '-3px', width: '11px', height: '11px', borderRadius: '50%', border: '1px solid rgba(57,255,20,0.25)', animation: 'pulse-ring 2s infinite' }} />
+          </div>
+          <span style={{ fontSize: '8px', color: 'rgba(57,255,20,0.5)', letterSpacing: '1px' }}>ONLINE</span>
         </div>
+        <style dangerouslySetInnerHTML={{ __html: '@keyframes pulse-ring { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }' }} />
       </div>
 
       {/* Hint */}
       <div ref={hintRef} style={{
         position: 'absolute', bottom: '18px', right: '24px', zIndex: 10,
         fontFamily: 'var(--font-mono)', fontSize: '7px',
-        color: 'rgba(232,232,240,0.12)', letterSpacing: '2px', opacity: 0,
+        color: 'rgba(232,232,240,0.15)', letterSpacing: '2px', opacity: 0,
       }}>
         KEYS [1-6]
       </div>

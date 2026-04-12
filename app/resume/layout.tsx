@@ -10,9 +10,5 @@ export default function ResumeLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div style={{ background: '#0a0a14', minHeight: '100vh' }}>
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }

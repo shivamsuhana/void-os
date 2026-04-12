@@ -6,12 +6,73 @@ import { useVoidStore } from '@/lib/store';
 import { OWNER } from '@/lib/portfolio-data';
 
 /* ============================================
-   BIOS SCREEN — GSAP timeline
+   FLOATING PARTICLES — Ambient canvas layer
+   200 tiny cyan dots drifting behind everything
+   ============================================ */
+function FloatingParticles() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+
+    const COLORS = ['0,212,255', '123,47,255', '57,255,20'];
+    const particles = Array.from({ length: 200 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      size: 0.5 + Math.random() * 1.5,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      alpha: 0.1 + Math.random() * 0.3,
+      pulse: Math.random() * Math.PI * 2,
+    }));
+
+    function animate() {
+      ctx!.clearRect(0, 0, W, H);
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.pulse += 0.015;
+        if (p.x < 0) p.x = W;
+        if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H;
+        if (p.y > H) p.y = 0;
+        const a = p.alpha + Math.sin(p.pulse) * 0.1;
+        ctx!.fillStyle = `rgba(${p.color},${a})`;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx!.fill();
+      }
+      animRef.current = requestAnimationFrame(animate);
+    }
+    animRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animRef.current);
+  }, []);
+
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.6 }} />;
+}
+
+/* ============================================
+   BIOS SCREEN — Enhanced with glow pulses
    ============================================ */
 function BiosScreen({ onComplete }: { onComplete: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const progressTextRef = useRef<HTMLSpanElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
 
   const DIAG_LINES = [
     { text: 'VOID BIOS v2045.1.0', status: '', color: '#00D4FF' },
@@ -31,23 +92,44 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
       onComplete: () => { setTimeout(onComplete, 200); },
     });
 
-    // Create line elements
+    // Create line elements with glow on status
     DIAG_LINES.forEach((line, i) => {
       const el = document.createElement('div');
       el.style.cssText = 'display:flex;justify-content:space-between;font-size:11px;line-height:2.2;opacity:0;transform:translateY(5px)';
-      el.innerHTML = `<span style="color:rgba(232,232,240,0.5)">${line.text}</span><span style="color:${line.color};font-weight:600">${line.status}</span>`;
+      const statusGlow = line.status === '[OK]' ? `text-shadow: 0 0 8px ${line.color}60` : '';
+      el.innerHTML = `<span style="color:rgba(232,232,240,0.5)">${line.text}</span><span style="color:${line.color};font-weight:600;${statusGlow}">${line.status}</span>`;
       container.appendChild(el);
 
       tl.to(el, {
         opacity: 1, y: 0, duration: 0.15, ease: 'power2.out',
       }, 0.3 + i * 0.22);
+
+      // Flash glow on [OK] status
+      if (line.status === '[OK]') {
+        const statusSpan = el.querySelector('span:last-child') as HTMLElement;
+        if (statusSpan) {
+          tl.fromTo(statusSpan,
+            { textShadow: `0 0 20px ${line.color}` },
+            { textShadow: `0 0 8px ${line.color}60`, duration: 0.4, ease: 'power2.out' },
+            0.3 + i * 0.22 + 0.1
+          );
+        }
+      }
     });
 
-    // Progress bar animation
+    // Progress bar with glow trail
     tl.to(progressRef.current, {
       scaleX: 1, duration: 1.2, ease: 'power1.inOut',
       transformOrigin: 'left center',
     }, 0.3);
+
+    // Progress bar glow
+    if (glowRef.current) {
+      tl.to(glowRef.current, {
+        scaleX: 1, duration: 1.2, ease: 'power1.inOut',
+        transformOrigin: 'left center',
+      }, 0.3);
+    }
 
     tl.to({ val: 0 }, {
       val: 100, duration: 1.2,
@@ -65,7 +147,7 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
     <div style={{
       position: 'absolute', inset: 0, zIndex: 10,
       display: 'flex', flexDirection: 'column', justifyContent: 'center',
-      padding: '0 15%', fontFamily: "'JetBrains Mono', monospace",
+      padding: '0 15%', paddingBottom: '10vh', fontFamily: "'JetBrains Mono', monospace",
     }}>
       <div ref={containerRef} style={{ marginBottom: '30px' }} />
 
@@ -74,10 +156,18 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
           <span>BOOT</span>
           <span ref={progressTextRef}>0%</span>
         </div>
-        <div style={{ height: '2px', background: 'rgba(255,255,255,0.04)', borderRadius: '1px', overflow: 'hidden' }}>
+        <div style={{ height: '2px', background: 'rgba(255,255,255,0.04)', borderRadius: '1px', overflow: 'hidden', position: 'relative' }}>
           <div ref={progressRef} style={{
             height: '100%', borderRadius: '1px',
             background: 'linear-gradient(90deg, #00D4FF, #7B2FFF)',
+            transform: 'scaleX(0)', transformOrigin: 'left center',
+            position: 'relative', zIndex: 2,
+          }} />
+          {/* Glow trail behind progress bar */}
+          <div ref={glowRef} style={{
+            position: 'absolute', top: '-3px', left: 0, right: 0, height: '8px',
+            background: 'linear-gradient(90deg, rgba(0,212,255,0.3), rgba(123,47,255,0.3))',
+            filter: 'blur(4px)', borderRadius: '4px',
             transform: 'scaleX(0)', transformOrigin: 'left center',
           }} />
         </div>
@@ -137,7 +227,7 @@ function GlitchTransition({ onComplete }: { onComplete: () => void }) {
 }
 
 /* ============================================
-   NAME REVEAL — GSAP text decode + type
+   NAME REVEAL — GSAP text decode + holographic shimmer
    ============================================ */
 function NameReveal({ onReady }: { onReady: () => void }) {
   const nameRef = useRef<HTMLHeadingElement>(null);
@@ -146,6 +236,7 @@ function NameReveal({ onReady }: { onReady: () => void }) {
   const taglineRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLSpanElement>(null);
+  const shimmerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const name = nameRef.current;
@@ -180,7 +271,16 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         }
         name.textContent = result;
       },
-      onComplete: () => { name.textContent = nameText; },
+      onComplete: () => {
+        name.textContent = nameText;
+        // Start holographic shimmer after name resolves
+        if (shimmerRef.current) {
+          gsap.to(shimmerRef.current, {
+            x: '200%', duration: 2, ease: 'power1.inOut',
+            repeat: -1, repeatDelay: 3,
+          });
+        }
+      },
     }, 0.3);
 
     // Role: decode
@@ -233,18 +333,29 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         transformOrigin: 'center',
       }} />
 
-      <h1 ref={nameRef} style={{
-        fontFamily: "'Syne', sans-serif", fontWeight: 800,
-        fontSize: 'clamp(36px, 6vw, 72px)', letterSpacing: '6px',
-        background: 'linear-gradient(135deg, #E8E8F0 0%, #00D4FF 50%, #7B2FFF 100%)',
-        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text', marginBottom: '12px', lineHeight: 1.1,
-        textAlign: 'center', opacity: 0,
-      }} />
+      {/* Name with holographic shimmer overlay */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        <h1 ref={nameRef} style={{
+          fontFamily: "'Syne', sans-serif", fontWeight: 800,
+          fontSize: 'clamp(36px, 6vw, 72px)', letterSpacing: '6px',
+          background: 'linear-gradient(135deg, #E8E8F0 0%, #00D4FF 50%, #7B2FFF 100%)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text', marginBottom: '12px', lineHeight: 1.1,
+          textAlign: 'center', opacity: 0,
+        }} />
+        {/* Holographic shimmer sweep */}
+        <div ref={shimmerRef} style={{
+          position: 'absolute', top: 0, left: '-50%', width: '30%', height: '100%',
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+          transform: 'skewX(-15deg)',
+          pointerEvents: 'none',
+        }} />
+      </div>
 
       <div ref={roleRef} style={{
         fontFamily: "'JetBrains Mono', monospace", fontSize: '12px',
         color: '#00D4FF', letterSpacing: '4px', marginBottom: '28px', opacity: 0,
+        textShadow: '0 0 12px rgba(0,212,255,0.3)',
       }} />
 
       <div style={{
@@ -256,13 +367,19 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         <span ref={cursorRef} style={{
           width: '7px', height: '15px', background: '#00D4FF',
           marginLeft: '2px', display: 'inline-block',
+          boxShadow: '0 0 8px rgba(0,212,255,0.4)',
         }} />
       </div>
 
-      <div ref={ctaRef} style={{
+      {/* CTA with breathing glow */}
+      <div ref={ctaRef} className="boot-cta" style={{
         marginTop: '50px', fontFamily: "'JetBrains Mono', monospace",
-        fontSize: '10px', color: 'rgba(232,232,240,0.2)',
+        fontSize: '10px', color: 'rgba(232,232,240,0.3)',
         letterSpacing: '3px', opacity: 0,
+        padding: '10px 24px',
+        border: '1px solid rgba(0,212,255,0.15)',
+        borderRadius: '2px',
+        boxShadow: '0 0 15px rgba(0,212,255,0.05), inset 0 0 15px rgba(0,212,255,0.03)',
       }}>
         PRESS ANY KEY TO ENTER VOID OS
       </div>
@@ -271,7 +388,7 @@ function NameReveal({ onReady }: { onReady: () => void }) {
 }
 
 /* ============================================
-   AMBIENT GRID (pure CSS)
+   AMBIENT GRID (pure CSS) — enhanced
    ============================================ */
 function AmbientGrid() {
   return (
@@ -307,7 +424,6 @@ export default function BootSequence() {
 
   const handleEnter = useCallback(() => {
     if (!isReady) return;
-    // Exit animation
     gsap.to('.boot-container', {
       opacity: 0, scale: 1.05, duration: 0.4, ease: 'power2.in',
       onComplete: () => {
@@ -328,21 +444,29 @@ export default function BootSequence() {
     };
   }, [isReady, handleEnter]);
 
-  // Pulse CTA with GSAP
+  // Breathing glow on CTA
   useEffect(() => {
     if (!isReady) return;
-    const el = document.querySelector('.boot-cta');
-    if (el) gsap.to(el, { opacity: 0.5, duration: 1.5, repeat: -1, yoyo: true });
+    const el = document.querySelector('.boot-cta') as HTMLElement;
+    if (el) {
+      gsap.to(el, {
+        boxShadow: '0 0 25px rgba(0,212,255,0.15), inset 0 0 15px rgba(0,212,255,0.05)',
+        borderColor: 'rgba(0,212,255,0.3)',
+        color: 'rgba(232,232,240,0.5)',
+        duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut',
+      });
+    }
   }, [isReady]);
 
   return (
     <div className="boot-container" style={{
       position: 'fixed', inset: 0, background: '#030306', zIndex: 1000, overflow: 'hidden',
     }}>
+      <FloatingParticles />
       <AmbientGrid />
 
-      {/* Scanlines + Vignette */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 50, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)' }} />
+      {/* Scanlines (subtler) + Vignette */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 50, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
       <div style={{ position: 'absolute', inset: 0, zIndex: 49, pointerEvents: 'none', background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%)' }} />
 
       {phase === 'bios' && <BiosScreen onComplete={handleBiosComplete} />}
