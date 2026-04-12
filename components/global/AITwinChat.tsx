@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useVoidStore } from '@/lib/store';
-import { getKeywordResponse } from '@/lib/ai-prompts';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -47,7 +46,6 @@ export default function AITwinChat() {
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setIsTyping(true);
 
-    // Try API first, fall back to keyword
     try {
       const res = await fetch('/api/ai-twin', {
         method: 'POST',
@@ -62,18 +60,13 @@ export default function AITwinChat() {
         }),
       });
 
-      if (!res.ok) throw new Error('API failed');
-
       const data = await res.json();
       // Simulate typing delay
-      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 800));
-
+      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
       setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch {
-      // Keyword fallback
-      await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 600));
-      const response = getKeywordResponse(userMsg);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setMessages(prev => [...prev, { role: 'assistant', content: "Connection issue — try again in a moment. The matrix is glitching. 🔌" }]);
     }
 
     setIsTyping(false);
