@@ -420,10 +420,15 @@ export default function VoidDesktop() {
       {/* Hint */}
       <div ref={hintRef} style={{
         position: 'absolute', bottom: '18px', right: '24px', zIndex: 10,
-        fontFamily: 'var(--font-mono)', fontSize: '7px',
-        color: 'rgba(232,232,240,0.15)', letterSpacing: '2px', opacity: 0,
+        fontFamily: 'var(--font-mono)', opacity: 0,
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px',
       }}>
-        KEYS [1-6]
+        <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '2px' }}>
+          ⌘K SEARCH · KEYS [1-6]
+        </div>
+        <div style={{ fontSize: '7px', color: 'rgba(0,212,255,0.15)', letterSpacing: '1px' }}>
+          6 SECTORS · 10 SYSTEMS ACTIVE
+        </div>
       </div>
     </div>
   );
