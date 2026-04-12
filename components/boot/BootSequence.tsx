@@ -424,13 +424,97 @@ export default function BootSequence() {
 
   const handleEnter = useCallback(() => {
     if (!isReady) return;
+
+    // Create wormhole canvas
+    const wormhole = document.createElement('canvas');
+    wormhole.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;';
+    wormhole.width = window.innerWidth;
+    wormhole.height = window.innerHeight;
+    document.body.appendChild(wormhole);
+    const wCtx = wormhole.getContext('2d')!;
+    const cx = wormhole.width / 2, cy = wormhole.height / 2;
+
+    // Phase 1: Zoom text into center (400ms)
     gsap.to('.boot-container', {
-      opacity: 0, scale: 1.05, duration: 0.4, ease: 'power2.in',
-      onComplete: () => {
+      scale: 0.3, opacity: 0.4, filter: 'blur(8px)',
+      duration: 0.4, ease: 'power3.in',
+    });
+
+    // Phase 2: Wormhole tunnel (400ms-1200ms)
+    const rings: { z: number; r: number; color: string; speed: number }[] = [];
+    const colors = ['#00D4FF', '#7B2FFF', '#39FF14', '#FFB800'];
+    for (let i = 0; i < 40; i++) {
+      rings.push({
+        z: i * 25, r: 50 + Math.random() * 200,
+        color: colors[i % colors.length],
+        speed: 8 + Math.random() * 8,
+      });
+    }
+
+    const startT = performance.now();
+    const duration = 1200;
+    let frame: number;
+
+    const drawWormhole = (now: number) => {
+      const elapsed = now - startT;
+      const progress = Math.min(elapsed / duration, 1);
+      wCtx.clearRect(0, 0, wormhole.width, wormhole.height);
+
+      // Darken background
+      wCtx.fillStyle = `rgba(3,3,6,${0.3 + progress * 0.7})`;
+      wCtx.fillRect(0, 0, wormhole.width, wormhole.height);
+
+      // Draw tunnel rings rushing toward camera
+      for (const ring of rings) {
+        ring.z -= ring.speed * (1 + progress * 3);
+        if (ring.z < 1) ring.z += 1000;
+
+        const scale = 400 / ring.z;
+        const screenR = ring.r * scale;
+        const alpha = Math.max(0, 0.4 - ring.z / 1000) * (1 - progress * 0.5);
+
+        wCtx.beginPath();
+        wCtx.arc(cx, cy, Math.max(1, screenR), 0, Math.PI * 2);
+        wCtx.strokeStyle = ring.color;
+        wCtx.globalAlpha = alpha;
+        wCtx.lineWidth = Math.max(0.5, 2 * scale);
+        wCtx.stroke();
+      }
+
+      // Center glow
+      wCtx.globalAlpha = 0.15 + progress * 0.3;
+      const cg = wCtx.createRadialGradient(cx, cy, 0, cx, cy, 100 + progress * 300);
+      cg.addColorStop(0, 'rgba(0,212,255,0.3)');
+      cg.addColorStop(0.5, 'rgba(123,47,255,0.1)');
+      cg.addColorStop(1, 'rgba(0,0,0,0)');
+      wCtx.fillStyle = cg;
+      wCtx.fillRect(0, 0, wormhole.width, wormhole.height);
+      wCtx.globalAlpha = 1;
+
+      // White flash at end
+      if (progress > 0.85) {
+        const flashAlpha = (progress - 0.85) / 0.15 * 0.2;
+        wCtx.fillStyle = `rgba(232,232,240,${flashAlpha})`;
+        wCtx.fillRect(0, 0, wormhole.width, wormhole.height);
+      }
+
+      if (progress < 1) {
+        frame = requestAnimationFrame(drawWormhole);
+      } else {
+        // Done — reveal desktop
+        cancelAnimationFrame(frame);
+        gsap.to(wormhole, {
+          opacity: 0, duration: 0.3, ease: 'power2.out',
+          onComplete: () => wormhole.remove(),
+        });
         setBootComplete(true);
         setActiveSection('desktop');
-      },
-    });
+      }
+    };
+
+    setTimeout(() => {
+      frame = requestAnimationFrame(drawWormhole);
+    }, 350);
   }, [isReady, setBootComplete, setActiveSection]);
 
   useEffect(() => {
