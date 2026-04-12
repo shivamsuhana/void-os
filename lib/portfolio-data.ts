@@ -33,7 +33,7 @@ Backend engineering is the goal. Java is the weapon. The grind never stops.`,
     'Backend in the bones.',
     'Built a blood donation network.',
     'An 8-module campus platform.',
-    'And a whole alien OS—',
+    'And a whole VOID OS—',
     'just because I could.',
   ],
   stats: [
@@ -68,7 +68,7 @@ export const PROJECTS: Project[] = [
   {
     id: 'void-os',
     title: 'VOID OS',
-    description: 'A portfolio disguised as an alien operating system with 3D holographic desktop and AI twin.',
+    description: 'A portfolio disguised as an immersive operating system with 3D holographic desktop and AI twin.',
     longDescription: 'The most over-engineered portfolio in existence — and I regret nothing. Features a BIOS boot sequence, holographic 3D desktop with orbiting cards around a breathing icosahedron, a fly-through work tunnel, force-directed neural skill graph, hacker-style contact terminal, and an AI twin powered by Gemini. Built with Next.js, Three.js, GSAP, and custom canvas shaders. This project was my way of proving that if I can imagine it, I can build it.',
     tags: ['Next.js', 'Three.js', 'GSAP', 'React', 'Gemini AI'],
     image: '/projects/void-os.png',
@@ -262,7 +262,7 @@ export const TERMINAL_COMMANDS: Record<string, string> = {
   'cat bio': OWNER.bio,
   java: `Why Java? Because:\n→ Enterprise & backend backbone\n→ DSA feels natural in Java\n→ Spring Boot ecosystem is massive\n→ Clear career path with great pay\n→ JDBC, Hibernate, Spring Boot — next stops\n→ And honestly? It just clicks.`,
   projects: PROJECTS.map((p) => `[${p.featured ? '★' : ' '}] ${p.title} — ${p.description}`).join('\n'),
-  status: `VOID OS v2045.1
+  status: `VOID OS v3.0.1
 Uptime: ∞
 CPU: Quantum (128 qubits)
 RAM: 1 PB Holographic
