@@ -48,17 +48,43 @@ function HexGridBG() {
 }
 
 /* ═══════════════════════════════════════════
-   GLOW CARD
+   GLOW CARD — Premium with mouse-tracking gradient
    ═══════════════════════════════════════════ */
 function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...props }: { children: React.ReactNode; color?: string; style?: React.CSSProperties; className?: string; [k: string]: unknown }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}12, ${color}04 50%, rgba(255,255,255,.02))`;
+    card.style.borderColor = `${color}55`;
+    card.style.boxShadow = `0 0 20px ${color}10, inset 0 0 30px ${color}05`;
+  }, [color]);
+
   return (
-    <div style={{
-      position: 'relative', background: 'rgba(255,255,255,.03)',
-      border: `1px solid ${color}18`, transition: 'border-color .3s, background .3s',
-      ...style
-    }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = `${color}44`; (e.currentTarget as HTMLElement).style.background = `${color}08`; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = `${color}18`; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.03)'; }}
+    <div
+      ref={cardRef}
+      style={{
+        position: 'relative', background: 'rgba(255,255,255,.03)',
+        border: `1px solid ${color}18`,
+        transition: 'border-color .3s, background .5s, box-shadow .3s, transform .3s',
+        backdropFilter: 'blur(4px)',
+        ...style
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.borderColor = `${color}18`;
+        el.style.background = 'rgba(255,255,255,.03)';
+        el.style.boxShadow = 'none';
+        el.style.transform = 'translateY(0)';
+      }}
       {...props}
     >{children}</div>
   );
