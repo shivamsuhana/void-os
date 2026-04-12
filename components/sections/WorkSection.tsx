@@ -9,148 +9,139 @@ import { useVoidStore } from '@/lib/store';
 import { PROJECTS, Project } from '@/lib/portfolio-data';
 import VoidPostProcessing from '@/components/shaders/VoidPostProcessing';
 
-/* ============================================
-   3D PROJECT CARD with Html label
-   ============================================ */
-function ProjectCard3D({ project, position, index, onSelect, scrollProgress }: {
+/* ═══════════════════════════════════════════
+   NO-OP RAYCAST — prevents decorative meshes from stealing clicks
+   ═══════════════════════════════════════════ */
+const noRaycast = () => {};
+
+/* ═══════════════════════════════════════════
+   3D PROJECT CARD — Fixed interaction + enhanced visuals
+   ═══════════════════════════════════════════ */
+function ProjectCard3D({ project, position, index, onSelect }: {
   project: Project; position: [number, number, number]; index: number;
-  onSelect: (p: Project) => void; scrollProgress: number;
+  onSelect: (p: Project) => void;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const { pointer } = useThree();
-  const color = useMemo(() => new THREE.Color(project.color), [project.color]);
+  const glowOpacity = useRef(0.015);
+  const edgeOpacity = useRef(0.08);
 
   useFrame(({ clock }) => {
-    if (!meshRef.current) return;
+    if (!groupRef.current) return;
     const t = clock.getElapsedTime();
 
-    meshRef.current.position.y = position[1] + Math.sin(t * 0.4 + index * 2) * 0.15;
-    meshRef.current.position.x = position[0] + Math.cos(t * 0.3 + index) * 0.08;
+    // Gentle float
+    groupRef.current.position.y = position[1] + Math.sin(t * 0.4 + index * 2) * 0.12;
+    groupRef.current.position.x = position[0] + Math.cos(t * 0.3 + index) * 0.06;
 
+    // Tilt
     if (hovered) {
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, pointer.x * 0.4, 0.08);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, -pointer.y * 0.3, 0.08);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, pointer.x * 0.25, 0.05);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -pointer.y * 0.15, 0.05);
     } else {
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, Math.sin(t * 0.2 + index) * 0.1, 0.03);
-      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, Math.cos(t * 0.15 + index) * 0.05, 0.03);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.sin(t * 0.2 + index) * 0.06, 0.025);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, Math.cos(t * 0.15 + index) * 0.03, 0.025);
     }
 
-    const targetScale = hovered ? 1.1 : 1;
-    meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, targetScale, 0.1);
-    meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, targetScale, 0.1);
+    // Scale
+    const s = hovered ? 1.08 : 1;
+    groupRef.current.scale.x = THREE.MathUtils.lerp(groupRef.current.scale.x, s, 0.06);
+    groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, s, 0.06);
 
-    if (glowRef.current) {
-      const mat = glowRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = hovered ? 0.12 + Math.sin(t * 3) * 0.04 : 0.02;
-    }
+    // Update child material opacities
+    glowOpacity.current = hovered ? 0.1 + Math.sin(t * 3) * 0.03 : 0.015;
+    edgeOpacity.current = hovered ? 0.35 : 0.06;
+    groupRef.current.children.forEach((child) => {
+      if (child.userData.isGlow && (child as THREE.Mesh).material) {
+        ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = glowOpacity.current;
+      }
+      if (child.userData.isEdge && (child as THREE.Mesh).material) {
+        ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = edgeOpacity.current;
+      }
+    });
   });
 
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
+      {/* ── CLICKABLE HITBOX — the ONLY mesh that receives pointer events ── */}
       <mesh
-        ref={meshRef}
         onClick={(e) => { e.stopPropagation(); onSelect(project); }}
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
+        onPointerOut={() => { setHovered(false); document.body.style.cursor = 'none'; }}
       >
-        <planeGeometry args={[2.4, 1.5]} />
+        <planeGeometry args={[2.6, 1.6]} />
         <meshStandardMaterial
-          color={hovered ? project.color : '#12121e'}
+          color={hovered ? project.color : '#080814'}
           emissive={project.color}
-          emissiveIntensity={hovered ? 0.25 : 0.08}
-          transparent opacity={0.95} side={THREE.DoubleSide}
+          emissiveIntensity={hovered ? 0.2 : 0.03}
+          transparent opacity={0.9} side={THREE.DoubleSide}
+          roughness={0.3} metalness={0.6}
         />
       </mesh>
 
-      {/* Top accent line */}
-      <mesh position={[0, 0.75, 0.01]}>
-        <planeGeometry args={[2.4, 0.025]} />
-        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.9 : 0.4} />
+      {/* ── DECORATIVE LAYERS — all raycast disabled ── */}
+
+      {/* Top accent glow bar */}
+      <mesh position={[0, 0.8, 0.005]} raycast={noRaycast}>
+        <planeGeometry args={[2.6, 0.025]} />
+        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.9 : 0.3} />
       </mesh>
 
-      {/* Wireframe border */}
-      <mesh position={[0, 0, -0.01]}>
-        <planeGeometry args={[2.45, 1.55]} />
-        <meshBasicMaterial color={project.color} wireframe transparent opacity={hovered ? 0.35 : 0.15} />
+      {/* Bottom accent */}
+      <mesh position={[0, -0.8, 0.005]} raycast={noRaycast}>
+        <planeGeometry args={[2.6, 0.012]} />
+        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.35 : 0.06} />
       </mesh>
 
-      {/* Glow */}
-      <mesh ref={glowRef} position={[0, 0, -0.1]} scale={1.3}>
-        <planeGeometry args={[2.8, 1.8]} />
-        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.12 : 0.04} side={THREE.DoubleSide} />
+      {/* Wireframe edge — BEHIND the card */}
+      <mesh position={[0, 0, -0.02]} userData={{ isEdge: true }} raycast={noRaycast}>
+        <planeGeometry args={[2.7, 1.7]} />
+        <meshBasicMaterial color={project.color} wireframe transparent opacity={0.06} />
       </mesh>
 
-      {/* HTML Label — always visible */}
+      {/* Glow backdrop — BEHIND everything */}
+      <mesh position={[0, 0, -0.08]} userData={{ isGlow: true }} raycast={noRaycast}>
+        <planeGeometry args={[3.0, 1.9]} />
+        <meshBasicMaterial color={project.color} transparent opacity={0.015} side={THREE.BackSide} />
+      </mesh>
+
+      {/* HTML Label — overlaid on the card */}
       <Html
         center
-        position={[0, 0, 0.02]}
+        position={[0, 0, 0.01]}
         distanceFactor={5.5}
         style={{ pointerEvents: 'none', userSelect: 'none' }}
       >
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: '6px', minWidth: '180px', textAlign: 'center',
-          padding: '12px',
+          gap: '6px', minWidth: '200px', textAlign: 'center', padding: '14px',
         }}>
-          {/* Year badge */}
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '8px', letterSpacing: '2px',
-            color: project.color, opacity: 0.7,
-          }}>
-            {project.year}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '2px', color: project.color, opacity: 0.7 }}>{project.year}</span>
+            {project.featured && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '6px', letterSpacing: '1px', color: '#39FF14', padding: '1px 4px', border: '1px solid rgba(57,255,20,0.3)' }}>★</span>}
           </div>
-
-          {/* Project title */}
           <div style={{
-            fontFamily: "'Syne', sans-serif",
-            fontSize: hovered ? '15px' : '13px',
-            fontWeight: 700,
-            color: hovered ? '#E8E8F0' : 'rgba(232,232,240,0.7)',
-            transition: 'all 0.3s',
-            textShadow: hovered ? `0 0 20px ${project.color}50` : 'none',
-            lineHeight: 1.2,
-          }}>
-            {project.title}
-          </div>
-
-          {/* Description */}
+            fontFamily: "'Syne', sans-serif", fontSize: hovered ? '16px' : '14px',
+            fontWeight: 700, color: hovered ? '#E8E8F0' : 'rgba(232,232,240,0.5)',
+            transition: 'all 0.3s', textShadow: hovered ? `0 0 20px ${project.color}50` : 'none',
+          }}>{project.title}</div>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: '8px', letterSpacing: '0.5px',
-            color: hovered ? 'rgba(232,232,240,0.5)' : 'rgba(232,232,240,0.35)',
-            transition: 'color 0.3s',
-            maxWidth: '160px', lineHeight: 1.5,
-          }}>
-            {project.description.slice(0, 60)}...
-          </div>
-
-          {/* Tags */}
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '0.5px',
+            color: hovered ? 'rgba(232,232,240,0.4)' : 'rgba(232,232,240,0.15)',
+            transition: 'color 0.3s', maxWidth: '170px', lineHeight: 1.6,
+          }}>{project.description.slice(0, 65)}...</div>
           <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {project.tags.slice(0, 3).map(tag => (
               <span key={tag} style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '6px', padding: '1px 4px',
-                border: `1px solid ${project.color}30`,
-                borderRadius: '1px',
-                color: hovered ? project.color : 'rgba(232,232,240,0.2)',
-                transition: 'color 0.3s',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: '6px', padding: '1px 5px',
+                border: `1px solid ${project.color}30`, borderRadius: '1px',
+                color: hovered ? project.color : 'rgba(232,232,240,0.18)', transition: 'color 0.3s',
               }}>{tag}</span>
             ))}
           </div>
-
-          {/* Click hint */}
           {hovered && (
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '7px', letterSpacing: '2px',
-              color: project.color, opacity: 0.5,
-              marginTop: '4px',
-            }}>
-              ▸ CLICK TO EXPLORE
-            </div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '2px', color: project.color, opacity: 0.6, marginTop: '4px' }}>▸ CLICK TO EXPLORE</div>
           )}
         </div>
       </Html>
@@ -158,12 +149,12 @@ function ProjectCard3D({ project, position, index, onSelect, scrollProgress }: {
   );
 }
 
-/* ============================================
-   TUNNEL PARTICLES
-   ============================================ */
+/* ═══════════════════════════════════════════
+   TUNNEL PARTICLES — Enhanced density + glow
+   ═══════════════════════════════════════════ */
 function TunnelParticles() {
   const ref = useRef<THREE.Points>(null);
-  const count = 1000;
+  const count = 1500;
 
   const [positions, colors] = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -171,10 +162,10 @@ function TunnelParticles() {
     const palette: [number, number, number][] = [[0, 0.83, 1], [0.48, 0.18, 1], [0.22, 1, 0.08], [1, 0.72, 0]];
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 3 + Math.random() * 10;
+      const radius = 2.5 + Math.random() * 12;
       pos[i * 3] = Math.cos(angle) * radius;
       pos[i * 3 + 1] = Math.sin(angle) * radius;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 80;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 100;
       const c = palette[Math.floor(Math.random() * palette.length)];
       col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
     }
@@ -185,11 +176,11 @@ function TunnelParticles() {
     if (!ref.current) return;
     const arr = ref.current.geometry.attributes.position.array as Float32Array;
     for (let i = 0; i < count; i++) {
-      arr[i * 3 + 2] += 0.08;
-      if (arr[i * 3 + 2] > 40) arr[i * 3 + 2] = -40;
+      arr[i * 3 + 2] += 0.06;
+      if (arr[i * 3 + 2] > 50) arr[i * 3 + 2] = -50;
     }
     ref.current.geometry.attributes.position.needsUpdate = true;
-    ref.current.rotation.z = clock.getElapsedTime() * 0.006;
+    ref.current.rotation.z = clock.getElapsedTime() * 0.004;
   });
 
   return (
@@ -203,66 +194,25 @@ function TunnelParticles() {
   );
 }
 
-/* ============================================
-   TUNNEL RINGS
-   ============================================ */
+/* ═══════════════════════════════════════════
+   TUNNEL RING — glowing torus at depth intervals
+   ═══════════════════════════════════════════ */
 function TunnelRing({ z, color, radius }: { z: number; color: string; radius: number }) {
   const ref = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
-    if (ref.current) ref.current.rotation.z = clock.getElapsedTime() * 0.1;
+    if (ref.current) ref.current.rotation.z = clock.getElapsedTime() * 0.06;
   });
   return (
     <mesh ref={ref} position={[0, 0, z]}>
-      <torusGeometry args={[radius, 0.01, 8, 64]} />
-      <meshBasicMaterial color={color} transparent opacity={0.08} />
+      <torusGeometry args={[radius, 0.012, 8, 80]} />
+      <meshBasicMaterial color={color} transparent opacity={0.1} />
     </mesh>
   );
 }
 
-/* ============================================
-   WARP SPEED LINES — streaking past camera
-   ============================================ */
-function WarpLines() {
-  const ref = useRef<THREE.Points>(null);
-  const count = 300;
-
-  const positions = useMemo(() => {
-    const p = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      p[i * 3] = (Math.random() - 0.5) * 20;
-      p[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      p[i * 3 + 2] = Math.random() * -80;
-    }
-    return p;
-  }, []);
-
-  useFrame(() => {
-    if (!ref.current) return;
-    const arr = ref.current.geometry.attributes.position.array as Float32Array;
-    for (let i = 0; i < count; i++) {
-      arr[i * 3 + 2] += 0.15;
-      if (arr[i * 3 + 2] > 10) {
-        arr[i * 3 + 2] = -80;
-        arr[i * 3] = (Math.random() - 0.5) * 20;
-        arr[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      }
-    }
-    ref.current.geometry.attributes.position.needsUpdate = true;
-  });
-
-  return (
-    <points ref={ref}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.02} color="#00D4FF" transparent opacity={0.15} blending={THREE.AdditiveBlending} depthWrite={false} />
-    </points>
-  );
-}
-
-/* ============================================
-   TUNNEL SCENE — curved camera path
-   ============================================ */
+/* ═══════════════════════════════════════════
+   TUNNEL SCENE — Curved camera fly-through
+   ═══════════════════════════════════════════ */
 function TunnelScene({ scrollProgress, projects, onSelect }: {
   scrollProgress: number; projects: Project[];
   onSelect: (p: Project) => void;
@@ -271,44 +221,42 @@ function TunnelScene({ scrollProgress, projects, onSelect }: {
 
   const cardPositions: [number, number, number][] = useMemo(() =>
     projects.map((_, i) => {
-      const side = i % 2 === 0 ? -1.8 : 1.8;
-      const z = -i * 6;
+      const side = i % 2 === 0 ? -2.0 : 2.0;
+      const z = -i * 7;
       const y = Math.sin(i * 0.8) * 0.3;
       return [side, y, z] as [number, number, number];
     }), [projects]);
 
-  // Curved camera path — sine wave on X and Y for cinematic feel
   useFrame(() => {
-    const maxZ = -(projects.length - 1) * 6;
+    const maxZ = -(projects.length - 1) * 7;
     const targetZ = -scrollProgress * Math.abs(maxZ);
     camera.position.z = THREE.MathUtils.lerp(camera.position.z, 5 + targetZ, 0.05);
-    // Gentle S-curve on X axis
-    camera.position.x = Math.sin(camera.position.z * 0.015) * 0.6;
-    // Gentle bob on Y axis
-    camera.position.y = Math.cos(camera.position.z * 0.01) * 0.25 + 0.1;
-    // Slight roll for cinematic tilt
-    camera.rotation.z = Math.sin(camera.position.z * 0.008) * 0.02;
+    camera.position.x = Math.sin(camera.position.z * 0.012) * 0.5;
+    camera.position.y = Math.cos(camera.position.z * 0.008) * 0.2 + 0.1;
+    camera.rotation.z = Math.sin(camera.position.z * 0.006) * 0.015;
   });
 
   return (
     <>
-      <ambientLight intensity={0.15} />
-      <pointLight position={[3, 3, 5]} intensity={0.4} color="#00D4FF" />
-      <pointLight position={[-3, -2, -5]} intensity={0.3} color="#7B2FFF" />
-      <fog attach="fog" args={['#030306', 5, 40]} />
+      <ambientLight intensity={0.12} />
+      <pointLight position={[3, 3, 5]} intensity={0.5} color="#00D4FF" />
+      <pointLight position={[-3, -2, -5]} intensity={0.35} color="#7B2FFF" />
+      <pointLight position={[0, 0, -15]} intensity={0.2} color="#39FF14" />
+      <fog attach="fog" args={['#030306', 5, 45]} />
 
       <TunnelParticles />
-      <WarpLines />
 
-      {Array.from({ length: 25 }).map((_, i) => (
+      {/* Tunnel rings — more, varied */}
+      {Array.from({ length: 30 }).map((_, i) => (
         <TunnelRing
           key={i}
-          z={-i * 6}
-          color={i % 3 === 0 ? '#00D4FF' : i % 3 === 1 ? '#7B2FFF' : '#39FF14'}
-          radius={4 + Math.sin(i * 0.7) * 1.5}
+          z={-i * 5}
+          color={i % 4 === 0 ? '#00D4FF' : i % 4 === 1 ? '#7B2FFF' : i % 4 === 2 ? '#39FF14' : '#FFB800'}
+          radius={3.5 + Math.sin(i * 0.6) * 1.5}
         />
       ))}
 
+      {/* Project cards */}
       {projects.map((project, i) => (
         <ProjectCard3D
           key={project.id}
@@ -316,151 +264,136 @@ function TunnelScene({ scrollProgress, projects, onSelect }: {
           position={cardPositions[i]}
           index={i}
           onSelect={onSelect}
-          scrollProgress={scrollProgress}
         />
       ))}
     </>
   );
 }
 
-/* ============================================
-   CASE STUDY OVERLAY — GSAP entrance
-   ============================================ */
+/* ═══════════════════════════════════════════
+   CASE STUDY MODAL — Full-screen project detail
+   ═══════════════════════════════════════════ */
 function CaseStudyOverlay({ project, onClose }: { project: Project; onClose: () => void }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [typewriterText, setTypewriterText] = useState('');
+  const [statsVisible, setStatsVisible] = useState(false);
+  const rgb = `${parseInt(project.color.slice(1, 3), 16)},${parseInt(project.color.slice(3, 5), 16)},${parseInt(project.color.slice(5, 7), 16)}`;
 
   useEffect(() => {
     const tl = gsap.timeline();
     if (overlayRef.current) tl.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0);
     if (cardRef.current) tl.fromTo(cardRef.current, { opacity: 0, scale: 0.92, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: 'back.out(1.3)' }, 0.1);
-
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
-    return () => { tl.kill(); window.removeEventListener('keydown', handler); };
-  }, [onClose]);
 
-  const rgb = `${parseInt(project.color.slice(1, 3), 16)},${parseInt(project.color.slice(3, 5), 16)},${parseInt(project.color.slice(5, 7), 16)}`;
+    // Typewriter
+    let i = 0;
+    const text = project.longDescription;
+    const iv = setInterval(() => { i += 2; setTypewriterText(text.slice(0, i)); if (i >= text.length) { clearInterval(iv); setTimeout(() => setStatsVisible(true), 300); } }, 8);
+    return () => { tl.kill(); window.removeEventListener('keydown', handler); clearInterval(iv); };
+  }, [onClose, project.longDescription]);
+
+  const handleClose = () => {
+    if (overlayRef.current) gsap.to(overlayRef.current, { opacity: 0, duration: 0.2 });
+    if (cardRef.current) gsap.to(cardRef.current, { opacity: 0, y: 20, duration: 0.2, onComplete: onClose });
+  };
 
   return (
-    <div ref={overlayRef} onClick={onClose} style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(3,3,6,0.94)', backdropFilter: 'blur(20px)',
+    <div ref={overlayRef} onClick={handleClose} style={{
+      position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(3,3,6,0.88)', backdropFilter: 'blur(25px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, opacity: 0,
     }}>
       <div ref={cardRef} onClick={e => e.stopPropagation()} style={{
-        maxWidth: '680px', width: '92%', maxHeight: '85vh', overflow: 'auto',
-        background: 'rgba(10,10,18,0.95)', border: `1px solid rgba(${rgb}, 0.2)`,
-        borderRadius: '2px', position: 'relative',
+        width: '100%', maxWidth: 680, maxHeight: '85vh', overflowY: 'auto',
+        background: 'rgba(8,8,20,0.95)', border: `1px solid ${project.color}22`,
+        boxShadow: `0 0 60px rgba(${rgb},0.1), 0 0 1px ${project.color}44`, opacity: 0,
       }}>
-        {/* Holographic header shimmer */}
-        <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${project.color}, transparent)`, position: 'relative', overflow: 'hidden' }}>
-          <div style={{
-            position: 'absolute', top: 0, left: '-50%', width: '30%', height: '100%',
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-            animation: 'case-shimmer 2s linear infinite',
-          }} />
-          <style dangerouslySetInnerHTML={{ __html: '@keyframes case-shimmer { 0% { left: -50%; } 100% { left: 150%; } }' }} />
+        {/* Header bar */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(8,8,20,0.95)', borderBottom: `1px solid ${project.color}15`, backdropFilter: 'blur(10px)' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: project.color, boxShadow: `0 0 8px ${project.color}` }} />
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px', color: project.color }}>{project.title}.exe</span>
+          <div style={{ flex: 1 }} />
+          <button onClick={handleClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', padding: '4px 12px', fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,0.4)', cursor: 'pointer', letterSpacing: '1px', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#FF3B5C44'; e.currentTarget.style.color = '#FF3B5C'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(232,232,240,0.4)'; }}
+          >✕ CLOSE</button>
         </div>
-        <div style={{ padding: '36px' }}>
-          <button onClick={onClose} style={{
-            position: 'absolute', top: '12px', right: '12px',
-            fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)',
-            width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '1px solid rgba(255,255,255,0.06)', borderRadius: '2px', cursor: 'pointer',
-          }}
-            onMouseEnter={e => { gsap.to(e.currentTarget, { borderColor: project.color, color: project.color, duration: 0.2 }); }}
-            onMouseLeave={e => { gsap.to(e.currentTarget, { borderColor: 'rgba(255,255,255,0.06)', color: 'var(--text-muted)', duration: 0.3 }); }}
-          >✕</button>
 
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: project.color, letterSpacing: '3px', marginBottom: '10px' }}>
-            CASE STUDY · {project.year}
-          </div>
+        <div style={{ height: 2, background: `linear-gradient(90deg, transparent, ${project.color}, transparent)`, opacity: 0.4 }} />
 
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: 800, marginBottom: '12px', lineHeight: 1.1 }}>
-            {project.title}
-          </h2>
+        <div style={{ padding: '24px' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 800, marginBottom: 4, color: '#E8E8F0' }}>{project.title}</h2>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: project.color, marginBottom: 16, letterSpacing: '0.5px' }}>{project.description}</p>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '24px' }}>
+          {/* Tags */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
             {project.tags.map(tag => (
-              <span key={tag} style={{
-                fontFamily: 'var(--font-mono)', fontSize: '9px', padding: '3px 8px',
-                borderRadius: '2px', background: `rgba(${rgb}, 0.08)`,
-                border: `1px solid rgba(${rgb}, 0.15)`, color: project.color,
-              }}>{tag}</span>
+              <span key={tag} style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', padding: '4px 10px', border: `1px solid ${project.color}30`, background: `rgba(${rgb},0.08)`, color: project.color, letterSpacing: '0.5px' }}>{tag}</span>
             ))}
           </div>
 
-          <p style={{
-            fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--text-dim)',
-            lineHeight: 1.9, marginBottom: '32px',
-          }}>
-            {project.longDescription}
-          </p>
+          {/* Terminal description */}
+          <div style={{ padding: '16px 18px', marginBottom: 20, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.04)', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(232,232,240,0.5)', lineHeight: 1.9 }}>
+            <div style={{ fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,0.2)', marginBottom: 8 }}>$ cat README.md</div>
+            {typewriterText}
+            <span style={{ opacity: typewriterText.length < project.longDescription.length ? 1 : 0, color: project.color, animation: 'blink 0.8s infinite' }}>█</span>
+          </div>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {/* Stats */}
+          {statsVisible && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 20 }}>
+              {[{ label: 'YEAR', value: project.year }, { label: 'TECH STACK', value: `${project.tags.length} tools` }, { label: 'STATUS', value: project.liveUrl ? 'LIVE' : 'SOURCE' }].map(s => (
+                <div key={s.label} style={{ padding: '12px', textAlign: 'center', background: `rgba(${rgb},0.04)`, border: `1px solid ${project.color}15` }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 800, color: project.color, textShadow: `0 0 10px ${project.color}44` }}>{s.value}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.3)', marginTop: 4 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: 10 }}>
             {project.liveUrl && (
-              <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" style={{
-                fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '10px 22px',
-                borderRadius: '2px', background: project.color, color: '#030306',
-                fontWeight: 600, letterSpacing: '1px', cursor: 'pointer',
-              }}
-                onMouseEnter={e => { gsap.to(e.currentTarget, { scale: 1.03, duration: 0.15 }); }}
-                onMouseLeave={e => { gsap.to(e.currentTarget, { scale: 1, duration: 0.2 }); }}
+              <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '12px 20px', textAlign: 'center', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px', background: `rgba(${rgb},0.08)`, border: `1px solid ${project.color}33`, color: project.color, transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = `rgba(${rgb},0.15)`; }} onMouseLeave={e => { e.currentTarget.style.background = `rgba(${rgb},0.08)`; }}
               >◉ LIVE DEMO</a>
             )}
             {project.githubUrl && (
-              <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" style={{
-                fontFamily: 'var(--font-mono)', fontSize: '11px', padding: '10px 22px',
-                borderRadius: '2px', border: '1px solid rgba(255,255,255,0.08)',
-                color: 'var(--white)', letterSpacing: '1px', cursor: 'pointer',
-              }}
-                onMouseEnter={e => { gsap.to(e.currentTarget, { borderColor: project.color, color: project.color, scale: 1.03, duration: 0.15 }); }}
-                onMouseLeave={e => { gsap.to(e.currentTarget, { borderColor: 'rgba(255,255,255,0.08)', color: '#E8E8F0', scale: 1, duration: 0.2 }); }}
+              <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '12px 20px', textAlign: 'center', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(232,232,240,0.5)', transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#E8E8F0'; }} onMouseLeave={e => { e.currentTarget.style.color = 'rgba(232,232,240,0.5)'; }}
               >⌥ SOURCE CODE</a>
             )}
           </div>
         </div>
+
+        <style dangerouslySetInnerHTML={{ __html: '@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}' }} />
       </div>
     </div>
   );
 }
 
-/* ============================================
-   WORK.db — MAIN
-   ============================================ */
+/* ═══════════════════════════════════════════
+   WORK SECTION — MAIN
+   ═══════════════════════════════════════════ */
 export default function WorkSection() {
   const { navigateTo } = useVoidStore();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const backRef = useRef<HTMLButtonElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
-  const indicatorsRef = useRef<HTMLDivElement>(null);
 
-  // GSAP entrance
-  useEffect(() => {
-    const tl = gsap.timeline({ delay: 0.15 });
-    if (backRef.current) tl.fromTo(backRef.current, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }, 0);
-    if (headerRef.current) tl.fromTo(headerRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.1);
-    if (progressRef.current) tl.fromTo(progressRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.4);
-    if (indicatorsRef.current) tl.fromTo(indicatorsRef.current, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0.5);
-    return () => { tl.kill(); };
-  }, []);
-
-  // Scroll/wheel
+  // Scroll/wheel control
   useEffect(() => {
     const handler = (e: WheelEvent) => {
       e.preventDefault();
-      setScrollProgress(prev => Math.max(0, Math.min(1, prev + e.deltaY * 0.0008)));
+      setScrollProgress(prev => Math.max(0, Math.min(1, prev + e.deltaY * 0.0006)));
     };
     const container = containerRef.current;
     if (container) container.addEventListener('wheel', handler, { passive: false });
     return () => { if (container) container.removeEventListener('wheel', handler); };
   }, []);
 
-  // Drag
+  // Drag to scroll
   const isDragging = useRef(false);
   const lastY = useRef(0);
   useEffect(() => {
@@ -469,24 +402,30 @@ export default function WorkSection() {
       if (!isDragging.current) return;
       const delta = lastY.current - e.clientY;
       lastY.current = e.clientY;
-      setScrollProgress(prev => Math.max(0, Math.min(1, prev + delta * 0.002)));
+      setScrollProgress(prev => Math.max(0, Math.min(1, prev + delta * 0.0015)));
     };
     const handleUp = () => { isDragging.current = false; };
     window.addEventListener('mousedown', handleDown);
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
-    return () => {
-      window.removeEventListener('mousedown', handleDown);
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', handleUp);
-    };
+    return () => { window.removeEventListener('mousedown', handleDown); window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
   }, []);
 
   return (
-    <div ref={containerRef} style={{
-      position: 'fixed', inset: 0, background: '#030306', zIndex: 50, overflow: 'hidden',
-    }}>
-      <button ref={backRef} className="back-button" onClick={() => navigateTo('desktop')} style={{ opacity: 0 }}>← VOID DESKTOP</button>
+    <div ref={containerRef} style={{ position: 'fixed', inset: 0, background: '#030306', zIndex: 50, overflow: 'hidden' }}>
+      {/* Process bar */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(3,3,6,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(123,47,255,0.08)', padding: '12px 40px', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'var(--font-mono)' }}>
+        <button onClick={() => navigateTo('desktop')} style={{ background: 'none', border: '1px solid rgba(0,212,255,.15)', padding: '5px 14px', fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: '#00D4FF', cursor: 'pointer', transition: 'all .2s', borderRadius: 2 }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.5)'; e.currentTarget.style.background = 'rgba(0,212,255,.06)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.15)'; e.currentTarget.style.background = 'none'; }}
+        >← DESKTOP</button>
+        <div style={{ width: 1, height: 14, background: 'rgba(123,47,255,.12)' }} />
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7B2FFF', boxShadow: '0 0 8px #7B2FFF' }} />
+        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.35)' }}>VOID_OS</span>
+        <span style={{ color: 'rgba(232,232,240,.15)' }}>/</span>
+        <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#7B2FFF', textShadow: '0 0 8px rgba(123,47,255,.3)' }}>WORK.db</span>
+        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.2)' }}>DEPTH: {Math.round(scrollProgress * 100)}%</div>
+      </div>
 
       {/* 3D Tunnel */}
       <div style={{ position: 'absolute', inset: 0 }}>
@@ -496,85 +435,43 @@ export default function WorkSection() {
         <VoidPostProcessing intensity={1.0} />
       </div>
 
-      {/* HUD */}
+      {/* HUD Overlay */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
-        <div ref={headerRef} style={{
-          position: 'absolute', top: '80px', left: '40px', opacity: 0,
-        }}>
-          <div className="section-label" style={{ marginBottom: '8px' }}>02 // WORK.db</div>
-          <h2 style={{
-            fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 3vw, 36px)',
-            marginBottom: '6px',
-          }}>
-            Selected <span className="glow-text-purple">Work</span>
+        {/* Header */}
+        <div style={{ position: 'absolute', top: 80, left: 40 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 10px rgba(123,47,255,.3)', marginBottom: 8 }}>02 // WORK.db</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 3vw, 36px)', marginBottom: 6, color: '#E8E8F0' }}>
+            Project <span style={{ color: '#7B2FFF', textShadow: '0 0 15px rgba(123,47,255,.3)' }}>Tunnel</span>
           </h2>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '1px' }}>
-            SCROLL OR DRAG TO FLY · CLICK CARD TO EXPLORE
-          </p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.3)', letterSpacing: '1px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
         </div>
 
-        {/* Progress bar */}
-        <div ref={progressRef} style={{
-          position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
-          width: '2px', height: '200px', borderRadius: '1px',
-          background: 'rgba(255,255,255,0.04)', opacity: 0,
-        }}>
-          <div style={{
-            width: '100%', borderRadius: '1px',
-            height: `${scrollProgress * 100}%`,
-            background: 'linear-gradient(180deg, var(--blue), var(--purple))',
-            boxShadow: '0 0 8px rgba(0,212,255,0.3)',
-            transition: 'height 0.1s ease',
-          }} />
-          <div style={{
-            position: 'absolute', right: '10px', whiteSpace: 'nowrap',
-            top: `${scrollProgress * 100}%`, transform: 'translateY(-50%)',
-            fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)',
-          }}>
+        {/* Vertical progress */}
+        <div style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', width: 2, height: 200, background: 'rgba(255,255,255,0.04)' }}>
+          <div style={{ width: '100%', height: `${scrollProgress * 100}%`, background: 'linear-gradient(180deg, #00D4FF, #7B2FFF)', boxShadow: '0 0 8px rgba(0,212,255,0.3)', transition: 'height 0.1s ease' }} />
+          <div style={{ position: 'absolute', right: 10, whiteSpace: 'nowrap', top: `${scrollProgress * 100}%`, transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.3)' }}>
             {Math.round(scrollProgress * PROJECTS.length)}/{PROJECTS.length}
           </div>
-          {/* Glow dot at progress tip */}
-          <div style={{
-            position: 'absolute', left: '-2px',
-            top: `${scrollProgress * 100}%`, transform: 'translateY(-50%)',
-            width: '6px', height: '6px', borderRadius: '50%',
-            background: '#00D4FF',
-            boxShadow: '0 0 8px rgba(0,212,255,0.6)',
-          }} />
         </div>
 
-        {/* Velocity readout */}
-        <div style={{
-          position: 'absolute', bottom: '30px', right: '20px',
-          fontFamily: 'var(--font-mono)', fontSize: '8px',
-          color: 'rgba(0,212,255,0.2)', letterSpacing: '1px',
-        }}>
-          <div>DEPTH: {(scrollProgress * 100).toFixed(1)}%</div>
-          <div>SECTOR: {Math.floor(scrollProgress * PROJECTS.length) + 1}</div>
-        </div>
-
-        {/* Project indicators */}
-        <div ref={indicatorsRef} style={{
-          position: 'absolute', bottom: '30px', left: '40px',
-          display: 'flex', gap: '6px', opacity: 0,
-        }}>
+        {/* Project indicators — bottom */}
+        <div style={{ position: 'absolute', bottom: 30, left: 40, display: 'flex', gap: 6 }}>
           {PROJECTS.map((p, i) => {
-            const isActive = Math.abs(scrollProgress - i / PROJECTS.length) < 0.15;
+            const isActive = Math.abs(scrollProgress - i / Math.max(PROJECTS.length - 1, 1)) < 0.18;
             return (
               <div key={p.id} style={{
                 pointerEvents: 'auto', cursor: 'pointer',
-                width: isActive ? '24px' : '8px', height: '3px', borderRadius: '1px',
+                width: isActive ? 24 : 8, height: 3, borderRadius: 1,
                 background: isActive ? p.color : 'rgba(255,255,255,0.1)',
                 boxShadow: isActive ? `0 0 6px ${p.color}55` : 'none',
                 transition: 'all 0.4s ease',
-              }}
-                onClick={() => setScrollProgress(i / PROJECTS.length)}
-              />
+              }} onClick={() => setScrollProgress(i / Math.max(PROJECTS.length - 1, 1))} />
             );
           })}
         </div>
       </div>
 
+      {/* Case study modal */}
       {selectedProject && <CaseStudyOverlay project={selectedProject} onClose={() => setSelectedProject(null)} />}
     </div>
   );
