@@ -499,176 +499,138 @@ export default function ContactSection() {
         </div>
       </div>
 
-      {/* BODY: Terminal LEFT + Data Preview RIGHT */}
-      <div id="contact-grid" style={{ display: 'grid', gridTemplateColumns: '1fr clamp(240px,28%,320px)', height: '100%', paddingTop: 50, overflow: 'hidden' }}>
-        <style dangerouslySetInnerHTML={{ __html: '@media(max-width:768px){#contact-grid{grid-template-columns:1fr!important;} #contact-right{display:none!important;}}' }} />
+      {/* BODY: Centered floating layout */}
+      <div style={{ position: 'absolute', inset: 0, paddingTop: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '70px 30px 30px' }}>
+        <style dangerouslySetInnerHTML={{ __html: '@media(max-width:900px){#contact-right{display:none!important;}}' }} />
 
-        {/* LEFT — Terminal */}
-        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(0,212,255,0.08)', overflow: 'hidden', position: 'relative' }}>
-
+        {/* Terminal card */}
+        <div style={{
+          width: '100%', maxWidth: 560, maxHeight: '75vh',
+          display: 'flex', flexDirection: 'column',
+          border: '1px solid rgba(0,212,255,0.15)',
+          background: 'rgba(5,5,16,0.85)',
+          backdropFilter: 'blur(16px)',
+          borderRadius: 8,
+          boxShadow: '0 0 40px rgba(0,212,255,0.06), 0 20px 60px rgba(0,0,0,0.4)',
+          overflow: 'hidden',
+        }}>
           {/* Tab bar */}
-          <div style={{ padding: '10px 18px', borderBottom: '1px solid rgba(0,212,255,0.08)', background: 'rgba(0,212,255,0.015)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(0,212,255,0.1)', background: 'rgba(0,212,255,0.02)', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
             {['#FF3B5C', '#FFB800', '#39FF14'].map((c, i) => (
-              <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c, opacity: 0.65 }} />
+              <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: c, opacity: 0.7 }} />
             ))}
-            <span style={{ fontSize: '9px', letterSpacing: '2px', color: 'rgba(232,232,240,0.35)', marginLeft: 6 }}>
-              VOID_SHELL — CONTACT.net
-            </span>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 14 }}>
-              {['AES-256', 'VOID/3'].map(s => (
-                <span key={s} style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1px' }}>{s}</span>
-              ))}
-            </div>
+            <span style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.5)', marginLeft: 6 }}>CONTACT.net</span>
           </div>
 
-          {/* Terminal output — capped height so input stays visible */}
-          <div ref={termRef} style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', padding: '14px 18px' }}>
+          {/* Terminal output */}
+          <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', minHeight: 0 }}>
             {lines.map((l, i) => (
               <div key={l.id} style={{
-                display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 2,
+                display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 1,
                 animation: i === lines.length - 1 ? 'fadeIn 0.15s ease' : 'none',
               }}>
-                <span style={{ color: l.prompt ? C.blue : 'rgba(232,232,240,0.15)', flexShrink: 0, fontSize: '12px', userSelect: 'none' }}>
-                  {l.prompt ? '>' : '  '}
+                <span style={{ color: l.prompt ? C.blue : 'rgba(232,232,240,0.2)', flexShrink: 0, fontSize: '11px', userSelect: 'none' }}>
+                  {l.prompt ? '>' : ' '}
                 </span>
-                <span style={{ fontSize: '11px', lineHeight: 1.6, color: l.color || 'rgba(232,232,240,0.55)', wordBreak: 'break-word', fontWeight: l.color === C.green ? 600 : 400 }}>{l.text || '\u00A0'}</span>
+                <span style={{ fontSize: '11px', lineHeight: 1.55, color: l.color || 'rgba(232,232,240,0.7)', wordBreak: 'break-word', fontWeight: l.color === C.green ? 600 : 400 }}>{l.text || '\u00A0'}</span>
               </div>
             ))}
-
-            {/* Sending progress */}
             {step === 'sending' && sendProgress < 100 && (
-              <div style={{ marginTop: 8, marginLeft: 20 }}>
-                <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden', maxWidth: 300 }}>
+              <div style={{ marginTop: 6, marginLeft: 16 }}>
+                <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', maxWidth: 280 }}>
                   <div style={{ height: '100%', width: `${sendProgress}%`, background: `linear-gradient(90deg, ${C.blue}, ${C.green})`, transition: 'width 0.05s', boxShadow: `0 0 10px ${C.blue}60` }} />
                 </div>
-                <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.5)', marginTop: 4, letterSpacing: '1px' }}>TRANSMITTING... {Math.floor(sendProgress)}%</div>
+                <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.6)', marginTop: 3, letterSpacing: '1px' }}>TRANSMITTING... {Math.floor(sendProgress)}%</div>
               </div>
             )}
           </div>
 
-          {/* Input area with label */}
+          {/* Input */}
           {!['booting', 'sending', 'sent'].includes(step) && (
-            <div style={{
-              borderTop: '1px solid rgba(0,212,255,0.12)',
-              background: 'rgba(0,212,255,0.025)',
-              flexShrink: 0,
-            }}>
-              {/* Current question label */}
-              <div style={{ padding: '8px 18px 0', fontSize: '9px', letterSpacing: '2px', color: C.amber, textShadow: `0 0 8px ${C.amber}30` }}>
+            <div style={{ borderTop: '1px solid rgba(0,212,255,0.12)', background: 'rgba(0,212,255,0.03)', flexShrink: 0 }}>
+              <div style={{ padding: '6px 16px 0', fontSize: '9px', letterSpacing: '2px', color: C.amber, textShadow: `0 0 8px ${C.amber}30` }}>
                 {step === 'name' && '> ENTER YOUR NAME'}
                 {step === 'email' && '> ENTER YOUR EMAIL'}
                 {step === 'subject' && '> SUBJECT OF TRANSMISSION'}
-                {step === 'message' && '> TYPE YOUR MESSAGE (Shift+Enter for new line)'}
-                {step === 'confirm' && '> CONFIRM TRANSMISSION? [Y / N]'}
+                {step === 'message' && '> YOUR MESSAGE (Shift+Enter for newline)'}
+                {step === 'confirm' && '> CONFIRM? [Y / N]'}
               </div>
-              <div style={{ padding: '8px 18px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ color: C.blue, fontSize: '13px', flexShrink: 0 }}>❯</span>
+              <div style={{ padding: '6px 16px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: C.blue, fontSize: '12px', flexShrink: 0 }}>❯</span>
                 {step === 'message' ? (
-                  <textarea
-                    ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
+                  <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-                    placeholder="Type your message..."
-                    rows={3}
-                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, caretColor: C.blue, resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }}
-                  />
+                    placeholder="Type your message..." rows={3}
+                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: C.white, caretColor: C.blue, resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }} />
                 ) : (
-                  <input
-                    ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+                  <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-                    placeholder={step === 'confirm' ? 'Type Y or N...' : `Type here...`}
-                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, caretColor: C.blue, background: 'transparent', border: 'none', outline: 'none' }}
-                  />
+                    placeholder={step === 'confirm' ? 'Y or N...' : 'Type here...'}
+                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: C.white, caretColor: C.blue, background: 'transparent', border: 'none', outline: 'none' }} />
                 )}
                 <button onClick={handleSubmit} style={{
-                  fontFamily: 'var(--font-mono)', fontSize: '9px', color: C.blue, cursor: 'pointer', padding: '6px 14px',
-                  border: `1px solid ${C.blue}44`, background: `${C.blue}10`, transition: 'all 0.2s', letterSpacing: '1px',
+                  fontFamily: 'var(--font-mono)', fontSize: '9px', color: C.blue, cursor: 'pointer', padding: '5px 12px',
+                  border: `1px solid ${C.blue}44`, background: `${C.blue}10`, transition: 'all 0.2s', borderRadius: 3,
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}22`; e.currentTarget.style.borderColor = `${C.blue}66`; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}10`; e.currentTarget.style.borderColor = `${C.blue}44`; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}22`; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}10`; }}
                 >ENTER ↵</button>
               </div>
             </div>
           )}
         </div>
 
-        {/* RIGHT — Live data preview */}
-        <div id="contact-right" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: 'clamp(14px,2vw,24px)', gap: 14, background: 'rgba(0,212,255,0.015)' }}>
-
-          {/* Radar */}
-          <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(0,212,255,0.03)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.6)', marginBottom: 8 }}>SIGNAL DETECTION</div>
+        {/* RIGHT panels */}
+        <div id="contact-right" style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '75vh', overflowY: 'auto' }}>
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.7)', marginBottom: 6 }}>SIGNAL</div>
             <RadarCanvas />
-            <div style={{ fontSize: '8px', letterSpacing: '1.5px', color: C.green, marginTop: 8, textShadow: `0 0 8px ${C.green}50` }}>● VISITOR DETECTED · SECTOR 7G</div>
+            <div style={{ fontSize: '8px', color: C.green, marginTop: 6, textShadow: `0 0 8px ${C.green}50` }}>● DETECTED</div>
           </div>
 
-          {/* Live form data preview */}
-          <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(0,212,255,0.03)' }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: C.purple, marginBottom: 12, textShadow: `0 0 10px ${C.purple}55` }}>TRANSMISSION DATA</div>
+          <div style={{ padding: 12, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2px', color: C.purple, marginBottom: 8, textShadow: `0 0 8px ${C.purple}55` }}>DATA</div>
             {[
-              { label: 'SENDER', value: form.name, step: 'name' },
-              { label: 'EMAIL', value: form.email, step: 'email' },
-              { label: 'SUBJECT', value: form.subject, step: 'subject' },
-              { label: 'MESSAGE', value: form.message ? `"${form.message.slice(0, 50)}${form.message.length > 50 ? '...' : ''}"` : '', step: 'message' },
-            ].map(field => (
-              <div key={field.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{field.label}</span>
-                <span style={{
-                  fontSize: '10px', color: field.value ? C.blue : 'rgba(232,232,240,0.15)',
-                  maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  textShadow: field.value ? `0 0 8px ${C.blue}30` : 'none',
-                  transition: 'all 0.3s ease',
-                }}>
-                  {field.value || (step === field.step ? '▍' : '—')}
+              { label: 'NAME', value: form.name, s: 'name' },
+              { label: 'EMAIL', value: form.email, s: 'email' },
+              { label: 'SUBJ', value: form.subject, s: 'subject' },
+              { label: 'MSG', value: form.message ? `"${form.message.slice(0, 25)}..."` : '', s: 'message' },
+            ].map(f => (
+              <div key={f.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.55)' }}>{f.label}</span>
+                <span style={{ fontSize: '9px', color: f.value ? C.blue : 'rgba(232,232,240,0.2)', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {f.value || (step === f.s ? '▍' : '—')}
                 </span>
               </div>
             ))}
           </div>
 
-          {/* Status info */}
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(0,212,255,0.03)' }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.55)', marginBottom: 10 }}>CONNECTION STATUS</div>
-            {[
-              { label: 'STATUS', value: 'AVAILABLE', color: C.green },
-              { label: 'RESPONSE', value: '< 24 HRS', color: C.amber },
-              { label: 'CHANNEL', value: 'ENCRYPTED', color: C.blue },
-              { label: 'PROTOCOL', value: 'VOID/3', color: C.purple },
-            ].map(s => (
-              <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.55)' }}>{s.label}</span>
-                <span style={{ fontSize: '10px', color: s.color, textShadow: `0 0 8px ${s.color}50`, fontWeight: 600 }}>{s.value}</span>
+          <div style={{ padding: 12, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.65)', marginBottom: 6 }}>STATUS</div>
+            {[{ l: 'AVAIL', v: 'YES', c: C.green }, { l: 'ETA', v: '<24H', c: C.amber }, { l: 'ENC', v: 'AES-256', c: C.blue }].map(s => (
+              <div key={s.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}>
+                <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.5)' }}>{s.l}</span>
+                <span style={{ fontSize: '9px', color: s.c, fontWeight: 600 }}>{s.v}</span>
               </div>
             ))}
           </div>
 
-          {/* Social links */}
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(0,212,255,0.03)' }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.55)', marginBottom: 10 }}>SIGNAL CHANNELS</div>
+          <div style={{ padding: 12, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
+            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.65)', marginBottom: 6 }}>LINKS</div>
             {[
-              { label: 'EMAIL', value: OWNER.email, href: `mailto:${OWNER.email}`, color: C.green },
-              { label: 'GITHUB', value: '@shivamsuhana', href: OWNER.github, color: C.white },
-              { label: 'LINKEDIN', value: '/in/shivamsuhana', href: OWNER.linkedin, color: C.blue },
-            ].map(link => (
-              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.03)',
-                textDecoration: 'none', transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '6px'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '0'; }}
-              >
-                <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{link.label}</span>
-                <span style={{ fontSize: '9px', color: link.color }}>{link.value}</span>
+              { l: 'EMAIL', v: OWNER.email, h: `mailto:${OWNER.email}`, c: C.green },
+              { l: 'GITHUB', v: '@shivamsuhana', h: OWNER.github, c: C.white },
+              { l: 'LINKEDIN', v: 'in/shivam', h: OWNER.linkedin, c: C.blue },
+            ].map(lk => (
+              <a key={lk.l} href={lk.h} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', textDecoration: 'none' }}>
+                <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.5)' }}>{lk.l}</span>
+                <span style={{ fontSize: '8px', color: lk.c }}>{lk.v}</span>
               </a>
             ))}
-          </div>
-
-          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.15)', letterSpacing: '1.5px', lineHeight: 2 }}>
-            SECURE CHANNEL · AES-256<br />VOID OS v3.0.1
           </div>
         </div>
       </div>
 
-      {/* Success popup */}
       {showSuccess && <SuccessPopup name={form.name} onBack={() => navigateTo('desktop')} />}
     </div>
   );
