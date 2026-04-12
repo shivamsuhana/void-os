@@ -14,12 +14,12 @@ import SectionCard, { SectionData } from './SectionCard';
    SECTION DATA
    ============================================ */
 const SECTIONS: SectionData[] = [
-  { id: 'about', label: 'ABOUT', ext: '.exe', icon: '◎', color: '#00D4FF', desc: 'Identity & manifesto', shortcut: '1' },
-  { id: 'work', label: 'WORK', ext: '.db', icon: '◈', color: '#7B2FFF', desc: 'Project tunnel', shortcut: '2' },
-  { id: 'skills', label: 'SKILLS', ext: '.sys', icon: '⬡', color: '#FFB800', desc: 'Neural network', shortcut: '3' },
-  { id: 'timeline', label: 'TIME', ext: '.log', icon: '◉', color: '#39FF14', desc: 'Career log', shortcut: '4' },
-  { id: 'contact', label: 'CONTACT', ext: '.net', icon: '◇', color: '#FF3366', desc: 'Transmission', shortcut: '5' },
-  { id: 'lab', label: 'LAB', ext: '.beta', icon: '⬢', color: '#39FF14', desc: 'Experiments', shortcut: '6' },
+  { id: 'about', label: 'ABOUT', ext: '.exe', icon: '◎', color: '#00D4FF', desc: 'Who am I? Decode my identity', shortcut: '1' },
+  { id: 'work', label: 'WORK', ext: '.db', icon: '◈', color: '#7B2FFF', desc: 'Projects that break boundaries', shortcut: '2' },
+  { id: 'skills', label: 'SKILLS', ext: '.sys', icon: '⬡', color: '#FFB800', desc: 'Living neural tech stack', shortcut: '3' },
+  { id: 'timeline', label: 'TIME', ext: '.log', icon: '◉', color: '#39FF14', desc: 'Journey from zero to now', shortcut: '4' },
+  { id: 'contact', label: 'CONTACT', ext: '.net', icon: '◇', color: '#FF3366', desc: 'Open a secure channel', shortcut: '5' },
+  { id: 'lab', label: 'LAB', ext: '.beta', icon: '⬢', color: '#39FF14', desc: 'AI twin + secret experiments', shortcut: '6' },
 ];
 
 /* ============================================

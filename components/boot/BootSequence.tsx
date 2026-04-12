@@ -34,9 +34,9 @@ function FloatingParticles() {
       y: Math.random() * H,
       vx: (Math.random() - 0.5) * 0.3,
       vy: (Math.random() - 0.5) * 0.3,
-      size: 0.5 + Math.random() * 1.5,
+      size: 0.8 + Math.random() * 2,
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      alpha: 0.1 + Math.random() * 0.3,
+      alpha: 0.15 + Math.random() * 0.4,
       pulse: Math.random() * Math.PI * 2,
     }));
 
@@ -62,7 +62,7 @@ function FloatingParticles() {
     return () => cancelAnimationFrame(animRef.current);
   }, []);
 
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.6 }} />;
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.85 }} />;
 }
 
 /* ============================================
@@ -80,6 +80,8 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
     { text: 'Neural Stack............', status: '[OK]', color: '#39FF14' },
     { text: 'Memory Fabric...........', status: '64 TB', color: '#FFB800' },
     { text: 'GPU Mesh................', status: '[OK]', color: '#39FF14' },
+    { text: 'Holographic Engine......', status: '[OK]', color: '#39FF14' },
+    { text: 'AI Subsystem............', status: 'ACTIVE', color: '#00D4FF' },
     { text: 'Consciousness Layer.....', status: '[OK]', color: '#39FF14' },
     { text: 'Identity Module.........', status: 'LOADING', color: '#00D4FF' },
   ];
@@ -96,8 +98,8 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
     DIAG_LINES.forEach((line, i) => {
       const el = document.createElement('div');
       el.style.cssText = 'display:flex;justify-content:space-between;font-size:11px;line-height:2.2;opacity:0;transform:translateY(5px)';
-      const statusGlow = line.status === '[OK]' ? `text-shadow: 0 0 8px ${line.color}60` : '';
-      el.innerHTML = `<span style="color:rgba(232,232,240,0.5)">${line.text}</span><span style="color:${line.color};font-weight:600;${statusGlow}">${line.status}</span>`;
+      const statusGlow = line.status === '[OK]' ? `text-shadow: 0 0 12px ${line.color}80` : line.status === 'ACTIVE' ? `text-shadow: 0 0 12px ${line.color}80` : '';
+      el.innerHTML = `<span style="color:rgba(232,232,240,0.75)">${line.text}</span><span style="color:${line.color};font-weight:600;${statusGlow}">${line.status}</span>`;
       container.appendChild(el);
 
       tl.to(el, {
@@ -152,11 +154,11 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
       <div ref={containerRef} style={{ marginBottom: '30px' }} />
 
       <div style={{ maxWidth: '300px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'rgba(232,232,240,0.3)', marginBottom: '4px', letterSpacing: '1px' }}>
-          <span>BOOT</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'rgba(232,232,240,0.6)', marginBottom: '6px', letterSpacing: '1px' }}>
+          <span>INITIALIZING VOID OS</span>
           <span ref={progressTextRef}>0%</span>
         </div>
-        <div style={{ height: '2px', background: 'rgba(255,255,255,0.04)', borderRadius: '1px', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden', position: 'relative' }}>
           <div ref={progressRef} style={{
             height: '100%', borderRadius: '1px',
             background: 'linear-gradient(90deg, #00D4FF, #7B2FFF)',
@@ -346,7 +348,7 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         {/* Holographic shimmer sweep */}
         <div ref={shimmerRef} style={{
           position: 'absolute', top: 0, left: '-50%', width: '30%', height: '100%',
-          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
           transform: 'skewX(-15deg)',
           pointerEvents: 'none',
         }} />
@@ -360,21 +362,21 @@ function NameReveal({ onReady }: { onReady: () => void }) {
 
       <div style={{
         fontFamily: "'JetBrains Mono', monospace", fontSize: '13px',
-        color: 'rgba(232,232,240,0.4)', letterSpacing: '0.5px',
+        color: 'rgba(232,232,240,0.65)', letterSpacing: '0.5px',
         minHeight: '20px', display: 'flex', alignItems: 'center',
       }}>
         <span ref={taglineRef} />
         <span ref={cursorRef} style={{
           width: '7px', height: '15px', background: '#00D4FF',
           marginLeft: '2px', display: 'inline-block',
-          boxShadow: '0 0 8px rgba(0,212,255,0.4)',
+          boxShadow: '0 0 12px rgba(0,212,255,0.6)',
         }} />
       </div>
 
       {/* CTA with breathing glow */}
       <div ref={ctaRef} className="boot-cta" style={{
         marginTop: '50px', fontFamily: "'JetBrains Mono', monospace",
-        fontSize: '10px', color: 'rgba(232,232,240,0.3)',
+        fontSize: '10px', color: 'rgba(232,232,240,0.5)',
         letterSpacing: '3px', opacity: 0,
         padding: '10px 24px',
         border: '1px solid rgba(0,212,255,0.15)',

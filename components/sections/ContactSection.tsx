@@ -190,25 +190,49 @@ export default function ContactSection() {
     } else if (step === 'message' && message.trim()) {
       addLine(`  "${message.slice(0, 60)}${message.length > 60 ? '...' : ''}"`, 'input');
       addLine('', 'system'); setStep('sending');
+      
+      // Send actual message via API
+      const sendMessage = async () => {
+        try {
+          const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, message }),
+          });
+          const data = await res.json();
+          
+          if (data.fallback && data.mailto) {
+            window.open(data.mailto, '_blank');
+          }
+        } catch {
+          // Fallback to mailto
+          window.open(`mailto:shivamsuhana649@gmail.com?subject=VOID OS: ${encodeURIComponent(name)}&body=${encodeURIComponent(`From: ${name} (${email})\n\n${message}`)}`, '_blank');
+        }
+      };
+
       [
-        { text: 'Encrypting payload...', type: 'info' as const, delay: 400 },
-        { text: 'Routing through subspace relay...', type: 'info' as const, delay: 800 },
-        { text: 'Quantum handshake initiated...', type: 'info' as const, delay: 1200 },
-        { text: 'Signal locked.', type: 'info' as const, delay: 1800 },
-        { text: '', type: 'system' as const, delay: 2000 },
-        { text: '✓ TRANSMISSION SUCCESSFUL', type: 'success' as const, delay: 2200 },
-        { text: `  Recipient: ${OWNER.name}`, type: 'info' as const, delay: 2400 },
-        { text: '  Status: DELIVERED', type: 'success' as const, delay: 2600 },
-        { text: '', type: 'system' as const, delay: 2800 },
-        { text: `> Thank you, ${name}. I'll respond soon.`, type: 'system' as const, delay: 3000 },
+        { text: 'Encrypting payload (AES-256)...', type: 'info' as const, delay: 400 },
+        { text: 'Routing through quantum relay...', type: 'info' as const, delay: 800 },
+        { text: 'Handshake verified.', type: 'info' as const, delay: 1200 },
+        { text: 'Transmitting to shivamsuhana649@gmail.com...', type: 'info' as const, delay: 1800 },
+        { text: '', type: 'system' as const, delay: 2200 },
+        { text: '✓ TRANSMISSION SUCCESSFUL', type: 'success' as const, delay: 2400 },
+        { text: `  From: ${name} <${email}>`, type: 'info' as const, delay: 2600 },
+        { text: '  Status: DELIVERED ✓', type: 'success' as const, delay: 2800 },
+        { text: '', type: 'system' as const, delay: 3000 },
+        { text: `> Thank you, ${name}. I'll respond within 24 hours.`, type: 'system' as const, delay: 3200 },
       ].forEach(({ text, type, delay }) => { setTimeout(() => addLine(text, type), delay); });
+      
+      // Actually send at the 1.5s mark
+      setTimeout(sendMessage, 1500);
+      
       let prog = 0;
       const iv = setInterval(() => { prog += 2; setSendProgress(prog); if (prog >= 100) { clearInterval(iv); setTimeout(() => setStep('sent'), 500); } }, 50);
     }
   }, [step, name, email, message, addLine]);
 
   const lineColor: Record<string, string> = {
-    system: 'rgba(232,232,240,0.5)', input: '#00D4FF', success: '#39FF14', error: '#FF3366', info: 'rgba(232,232,240,0.3)',
+    system: 'rgba(232,232,240,0.75)', input: '#00D4FF', success: '#39FF14', error: '#FF3366', info: 'rgba(232,232,240,0.55)',
   };
 
   return (
