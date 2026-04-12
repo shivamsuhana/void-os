@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useVoidStore } from '@/lib/store';
 import { audioEngine } from '@/lib/audio-engine';
 
@@ -16,11 +16,13 @@ export default function SoundManager() {
   const { soundEnabled, toggleSound, isTransitioning, activeSection } = useVoidStore();
   const prevSectionRef = useRef(activeSection);
   const initializedRef = useRef(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   // Start/stop ambient drone
   useEffect(() => {
     if (soundEnabled) {
       audioEngine.startDrone();
+      setHasInteracted(true);
     } else {
       audioEngine.stopDrone();
     }
@@ -74,7 +76,10 @@ export default function SoundManager() {
 
   return (
     <button
-      onClick={toggleSound}
+      onClick={() => {
+        setHasInteracted(true);
+        toggleSound();
+      }}
       title={soundEnabled ? 'Mute sounds' : 'Enable sounds'}
       style={{
         position: 'fixed',
@@ -94,8 +99,11 @@ export default function SoundManager() {
         transition: 'all 0.2s ease',
         cursor: 'pointer',
         color: soundEnabled ? 'var(--blue)' : 'var(--text-muted)',
+        animation: !hasInteracted && !soundEnabled ? 'pulse 2s infinite' : 'none',
+        boxShadow: !hasInteracted && !soundEnabled ? '0 0 15px rgba(0,212,255,0.2)' : 'none',
       }}
       onMouseEnter={(e) => {
+        setHasInteracted(true);
         e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
         e.currentTarget.style.borderColor = 'rgba(0,212,255,0.3)';
       }}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { SKILLS, SKILL_CATEGORIES, Skill } from '@/lib/portfolio-data';
+import { audioEngine } from '@/lib/audio-engine';
 
 /* ═══════════════════════════════════════════
    COLOR MAP
@@ -425,7 +426,16 @@ function ForceGraph({ onSelect, selected, filter }: {
     const onMove = (e: MouseEvent) => {
       const { x, y } = getPos(e);
       mouseRef.current = { x, y };
-      hoveredRef.current = hitTest(x, y);
+      const hit = hitTest(x, y);
+      
+      if (hit?.id !== hoveredRef.current?.id) {
+        if (hit) {
+          const panX = (e.clientX / window.innerWidth) * 2 - 1;
+          audioEngine.play('hover', panX);
+        }
+      }
+      
+      hoveredRef.current = hit;
       canvas.style.cursor = hoveredRef.current ? 'pointer' : 'crosshair';
     };
 
@@ -433,6 +443,8 @@ function ForceGraph({ onSelect, selected, filter }: {
       const { x, y } = getPos(e);
       const hit = hitTest(x, y);
       if (hit) {
+        const panX = (e.clientX / window.innerWidth) * 2 - 1;
+        audioEngine.play('click', panX);
         const skill = SKILLS.find(s => s.id === hit.id);
         onSelect(skill || null);
       } else {
