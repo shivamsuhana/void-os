@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { TERMINAL_COMMANDS, OWNER } from '@/lib/portfolio-data';
+import SectionAmbientBG from '@/components/global/SectionAmbientBG';
 
 type LabTab = 'music' | 'particles' | 'terminal';
 
@@ -413,6 +414,7 @@ export default function LabSection() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', overflow: 'auto', zIndex: 50 }}>
+      <SectionAmbientBG color="#7B2FFF" particleCount={30} />
       <button ref={backRef} className="back-button" onClick={() => navigateTo('desktop')} style={{ opacity: 0 }}>← VOID DESKTOP</button>
 
       {/* CLASSIFIED watermark */}

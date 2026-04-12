@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { OWNER } from '@/lib/portfolio-data';
+import SectionAmbientBG from '@/components/global/SectionAmbientBG';
 
 /* ═══════════════════════════════════════════
    RADAR ANIMATION
@@ -191,6 +192,7 @@ export default function ContactSection() {
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#030306', overflow: 'hidden', zIndex: 50 }}>
       <MatrixRain />
+      <SectionAmbientBG color="#FF3366" particleCount={35} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%)' }} />
 

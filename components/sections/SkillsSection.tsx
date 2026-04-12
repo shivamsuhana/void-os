@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { SKILLS, SKILL_CATEGORIES, Skill } from '@/lib/portfolio-data';
+import SectionAmbientBG from '@/components/global/SectionAmbientBG';
 
 interface Node {
   id: string; name: string; category: string; proficiency: number;
@@ -395,6 +396,7 @@ export default function SkillsSection() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', overflow: 'auto', zIndex: 50 }}>
+      <SectionAmbientBG color="#FFB800" particleCount={35} />
       <button ref={backRef} className="back-button" onClick={() => navigateTo('desktop')} style={{ opacity: 0 }}>← VOID DESKTOP</button>
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: '1100px', margin: '0 auto', padding: '30px 20px 60px' }}>

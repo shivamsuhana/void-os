@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { OWNER, LOCATIONS } from '@/lib/portfolio-data';
 import { enableMagneticHover } from '@/lib/animations';
+import SectionAmbientBG from '@/components/global/SectionAmbientBG';
 
 /* ═══════════════════════════════════════════
    HEX GRID BACKGROUND
@@ -446,6 +447,7 @@ export default function AboutSection() {
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#030306', overflowY: 'auto', zIndex: 50 }}>
       <HexGridBG />
+      <SectionAmbientBG color="#00D4FF" particleCount={40} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)' }} />
 
