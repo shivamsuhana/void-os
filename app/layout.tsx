@@ -3,19 +3,19 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'VOID OS — Krishu\'s Portfolio',
-  description: 'A portfolio disguised as an alien operating system from 2045. Boot in, explore, and discover — every section is an app, every interaction is a moment of awe.',
+  description: 'A portfolio disguised as an next-generation operating system. Boot in, explore, and discover — every section is an app, every interaction is a moment of awe.',
   keywords: ['developer', 'portfolio', 'java', 'dsa', 'backend', 'three.js', 'react', 'next.js', 'creative coding'],
   authors: [{ name: 'Krishu' }],
   openGraph: {
     title: 'VOID OS — Krishu\'s Portfolio',
-    description: 'A portfolio that feels like booting into an alien operating system from 2045.',
+    description: 'A portfolio that feels like booting into an next-generation operating system.',
     type: 'website',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'VOID OS — Krishu\'s Portfolio',
-    description: 'A portfolio that feels like booting into an alien operating system from 2045.',
+    description: 'A portfolio that feels like booting into an next-generation operating system.',
   },
   robots: { index: true, follow: true },
 };
