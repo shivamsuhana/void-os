@@ -492,7 +492,7 @@ function SkillPopup({ skill, onClose }: { skill: Skill; onClose: () => void }) {
 
   return (
     <div style={{
-      position: 'absolute', bottom: 24, right: 24, width: 280,
+      position: 'relative', width: 'clamp(280px, 90vw, 320px)',
       border: `1px solid ${color}44`, background: 'rgba(5,5,16,0.96)',
       backdropFilter: 'blur(20px)', padding: 24, zIndex: 50,
       transform: vis ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.96)',
