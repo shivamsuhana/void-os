@@ -114,7 +114,7 @@ function Diagnostics({ onComplete }: { onComplete: () => void }) {
     <div style={{
       position: 'absolute', inset: 0, zIndex: 10,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      paddingBottom: '8vh',
+      paddingBottom: '14vh',
       fontFamily: "'JetBrains Mono', monospace",
     }}>
       <div style={{ width: 'min(480px, 88vw)' }}>
@@ -257,7 +257,7 @@ function NameReveal({ onReady }: { onReady: () => void }) {
     <div style={{
       position: 'absolute', inset: 0, zIndex: 10,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      paddingBottom: '6vh',
+      paddingBottom: '10vh',
     }}>
       {/* Separator line */}
       <div ref={lineRef} style={{

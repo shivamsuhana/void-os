@@ -583,7 +583,7 @@ export default function ContactSection() {
         </div>
 
         {/* RIGHT panels */}
-        <div id="contact-right" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, overflowY: 'auto', maxHeight: '80vh', marginTop: 'auto', marginBottom: 'auto' }}>
+        <div id="contact-right" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, marginTop: 'auto', marginBottom: 'auto' }}>
           <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.7)', marginBottom: 6 }}>SIGNAL DETECTION</div>
             <RadarCanvas />
