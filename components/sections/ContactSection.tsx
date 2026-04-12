@@ -1,111 +1,119 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { OWNER } from '@/lib/portfolio-data';
-import SectionAmbientBG from '@/components/global/SectionAmbientBG';
 
 /* ═══════════════════════════════════════════
-   RADAR ANIMATION
+   COLORS
+   ═══════════════════════════════════════════ */
+const C = {
+  void: '#030306', blue: '#00D4FF', white: '#E8E8F0',
+  amber: '#FFB800', green: '#39FF14', purple: '#7B2FFF', red: '#FF3B5C',
+};
+
+/* ═══════════════════════════════════════════
+   BOOT SEQUENCE LINES
+   ═══════════════════════════════════════════ */
+const BOOT_SEQ = [
+  { text: 'CONTACT.net v2045.1 — INITIALIZING...', color: C.blue, delay: 0 },
+  { text: 'Establishing secure channel...', color: 'rgba(232,232,240,0.5)', delay: 280 },
+  { text: 'Encrypting transmission route (AES-256)...', color: 'rgba(232,232,240,0.5)', delay: 560 },
+  { text: `Signal locked. Target: UTC+5:30`, color: C.green, delay: 840 },
+  { text: 'Status: AVAILABLE FOR NEW PROJECTS', color: C.green, delay: 1100 },
+  { text: '────────────────────────────────────────', color: 'rgba(232,232,240,0.1)', delay: 1350 },
+  { text: 'READY. Begin transmission.', color: C.white, delay: 1600 },
+];
+
+const ANALYZE = [
+  'Scanning identity signature...',
+  'Cross-referencing signal origin...',
+  'Verifying transmission protocol...',
+  'Identity confirmed. Proceeding.',
+];
+
+const SEND_SEQ = [
+  'Compressing payload...',
+  'Routing through secure nodes...',
+  'Establishing handshake...',
+  'Transmitting to shivamsuhana649@gmail.com...',
+  'Awaiting confirmation...',
+  '✓ SIGNAL RECEIVED',
+];
+
+/* ═══════════════════════════════════════════
+   RADAR CANVAS
    ═══════════════════════════════════════════ */
 function RadarCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
+
   useEffect(() => {
     const c = ref.current; if (!c) return;
     const ctx = c.getContext('2d')!;
-    const SIZE = 320; c.width = SIZE; c.height = SIZE;
-    const cx = SIZE / 2, cy = SIZE / 2, R = SIZE * 0.42;
-    let t = 0, frame: number;
-
-    // Blips — detected visitors
-    const blips = [
-      { angle: 0.8, dist: 0.6, alpha: 0 },
-      { angle: 2.1, dist: 0.3, alpha: 0 },
-      { angle: 4.2, dist: 0.8, alpha: 0 },
-      { angle: 5.5, dist: 0.5, alpha: 0 },
-    ];
+    const size = 160;
+    c.width = size; c.height = size;
+    let t = 0;
+    let frame: number;
 
     const draw = () => {
-      t += 0.012;
-      ctx.clearRect(0, 0, SIZE, SIZE);
+      t += 0.015;
+      const cx = size / 2, cy = size / 2, r = size / 2 - 8;
+      ctx.clearRect(0, 0, size, size);
 
       // Rings
-      for (let i = 1; i <= 4; i++) {
-        ctx.beginPath(); ctx.arc(cx, cy, R * (i / 4), 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0,212,255,${0.06 + (i === 4 ? 0.02 : 0)})`;
-        ctx.lineWidth = 0.5; ctx.stroke();
-      }
+      [0.3, 0.6, 0.9].forEach(s => {
+        ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,212,255,0.12)'; ctx.lineWidth = 0.5; ctx.stroke();
+      });
 
       // Cross lines
-      ctx.strokeStyle = 'rgba(0,212,255,0.04)'; ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R); ctx.stroke();
+      ctx.strokeStyle = 'rgba(0,212,255,0.08)'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
 
       // Sweep
-      const sweepAngle = t * 1.5;
-      const sweepGrad = ctx.createConicGradient(sweepAngle, cx, cy);
-      sweepGrad.addColorStop(0, 'rgba(0,212,255,0.12)');
-      sweepGrad.addColorStop(0.15, 'rgba(0,212,255,0)');
-      sweepGrad.addColorStop(1, 'rgba(0,212,255,0)');
-      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, sweepAngle, sweepAngle + Math.PI * 0.3);
-      ctx.closePath(); ctx.fillStyle = sweepGrad; ctx.fill();
+      const sweepAngle = t % (Math.PI * 2);
+      {
+        // Fallback sweep line
+        const sx = cx + Math.cos(sweepAngle) * r;
+        const sy = cy + Math.sin(sweepAngle) * r;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(sx, sy);
+        ctx.strokeStyle = 'rgba(0,212,255,0.5)'; ctx.lineWidth = 1.5; ctx.stroke();
 
-      // Sweep line
-      ctx.beginPath(); ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(sweepAngle) * R, cy + Math.sin(sweepAngle) * R);
-      ctx.strokeStyle = 'rgba(0,212,255,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+        // Sweep glow
+        const g = ctx.createRadialGradient(sx * 0.5 + cx * 0.5, sy * 0.5 + cy * 0.5, 0, cx, cy, r);
+        g.addColorStop(0, 'rgba(0,212,255,0.08)');
+        g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, sweepAngle - 0.4, sweepAngle);
+        ctx.closePath(); ctx.fill();
+      }
 
       // Blips
+      const blips = [
+        { angle: t * 0.3 + 1, dist: 0.45 },
+        { angle: t * 0.2 + 3, dist: 0.7 },
+        { angle: t * 0.15 + 5, dist: 0.55 },
+      ];
       blips.forEach(b => {
-        const angleDiff = ((sweepAngle % (Math.PI * 2)) - b.angle + Math.PI * 4) % (Math.PI * 2);
-        if (angleDiff < 0.3) b.alpha = Math.min(1, b.alpha + 0.1);
-        else b.alpha = Math.max(0, b.alpha - 0.006);
-
-        if (b.alpha > 0.01) {
-          const bx = cx + Math.cos(b.angle) * (R * b.dist);
-          const by = cy + Math.sin(b.angle) * (R * b.dist);
-          // Glow
-          const g = ctx.createRadialGradient(bx, by, 0, bx, by, 8);
-          g.addColorStop(0, `rgba(57,255,20,${b.alpha * 0.5})`);
-          g.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.beginPath(); ctx.arc(bx, by, 8, 0, Math.PI * 2);
-          ctx.fillStyle = g; ctx.fill();
-          // Dot
-          ctx.beginPath(); ctx.arc(bx, by, 2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(57,255,20,${b.alpha * 0.8})`; ctx.fill();
+        const bx = cx + Math.cos(b.angle) * r * b.dist;
+        const by = cy + Math.sin(b.angle) * r * b.dist;
+        const angleDiff = ((sweepAngle - b.angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const alpha = angleDiff < 1 ? (1 - angleDiff) * 0.8 : 0.1;
+        ctx.beginPath(); ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,212,255,${alpha})`; ctx.fill();
+        if (alpha > 0.3) {
+          ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0,212,255,${alpha * 0.2})`; ctx.fill();
         }
       });
 
       // Center dot
       ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(0,212,255,0.5)'; ctx.fill();
-      const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 10);
-      cg.addColorStop(0, 'rgba(0,212,255,0.15)'); cg.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2);
-      ctx.fillStyle = cg; ctx.fill();
-
-      // Cardinal direction labels
-      ctx.font = '8px monospace';
-      ctx.fillStyle = 'rgba(0,212,255,0.25)';
-      ctx.textAlign = 'center';
-      ctx.fillText('N', cx, cy - R - 6);
-      ctx.fillText('S', cx, cy + R + 12);
-      ctx.fillText('E', cx + R + 10, cy + 3);
-      ctx.fillText('W', cx - R - 10, cy + 3);
-
-      // Diagonal tick marks (every 45°)
-      for (let a = 0; a < 8; a++) {
-        const ang = (a / 8) * Math.PI * 2 - Math.PI / 2;
-        const inner = R * 0.92;
-        const outer = R * 1.0;
-        ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(ang) * inner, cy + Math.sin(ang) * inner);
-        ctx.lineTo(cx + Math.cos(ang) * outer, cy + Math.sin(ang) * outer);
-        ctx.strokeStyle = 'rgba(0,212,255,0.12)';
-        ctx.lineWidth = a % 2 === 0 ? 1.5 : 0.5;
-        ctx.stroke();
-      }
+      ctx.fillStyle = `rgba(0,212,255,${0.5 + Math.sin(t * 3) * 0.3})`;
+      ctx.fill();
 
       frame = requestAnimationFrame(draw);
     };
@@ -113,299 +121,394 @@ function RadarCanvas() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  return <canvas ref={ref} style={{ width: 220, height: 220, display: 'block', margin: '0 auto' }} />;
+  return <canvas ref={ref} style={{ width: 160, height: 160, display: 'block' }} />;
 }
 
 /* ═══════════════════════════════════════════
-   MATRIX RAIN (kept but simplified)
+   PARTICLE BURST
    ═══════════════════════════════════════════ */
-function MatrixRain() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+function Burst({ active }: { active: boolean }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+
   useEffect(() => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    resize(); window.addEventListener('resize', resize);
-    const chars = 'アイウエオカキクケコ0123456789ABCDEF'; const fontSize = 12;
-    const columns = Math.floor(canvas.width / fontSize);
-    const drops = new Array(columns).fill(0).map(() => Math.random() * -100);
+    if (!active) return;
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext('2d')!;
+    c.width = c.offsetWidth; c.height = c.offsetHeight;
+    const cx = c.width / 2, cy = c.height / 2;
+    const colors = [C.green, C.blue, C.white, C.purple];
+    const pts = Array.from({ length: 80 }, () => {
+      const a = Math.random() * Math.PI * 2, s = 2 + Math.random() * 6;
+      return { x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s, alpha: 1, size: Math.random() * 3 + 1, color: colors[Math.floor(Math.random() * 4)] };
+    });
     let frame: number;
     const draw = () => {
-      ctx.fillStyle = 'rgba(3,3,6,0.06)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.font = `${fontSize}px monospace`;
-      for (let i = 0; i < drops.length; i++) {
-        const ch = chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillStyle = Math.random() > 0.97 ? 'rgba(0,212,255,0.7)' : 'rgba(0,212,255,0.12)';
-        ctx.fillText(ch, i * fontSize, drops[i] * fontSize);
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) drops[i] = 0;
-        drops[i] += 0.3 + Math.random() * 0.2;
-      }
-      frame = requestAnimationFrame(draw);
-    }; draw();
-    return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); };
-  }, []);
-  return <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, opacity: 0.5, zIndex: 0 }} />;
+      ctx.clearRect(0, 0, c.width, c.height);
+      let alive = false;
+      pts.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.alpha -= 0.022; p.vx *= 0.97;
+        if (p.alpha <= 0) return; alive = true;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+      if (alive) frame = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(frame);
+  }, [active]);
+
+  return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 20 }} />;
 }
 
 /* ═══════════════════════════════════════════
-   CONTACT SECTION
+   FORM FIELD
+   ═══════════════════════════════════════════ */
+function Field({ label, value, onChange, multiline, placeholder, focused, onFocus, onBlur, disabled }: {
+  label: string; value: string; onChange: (v: string) => void;
+  multiline?: boolean; placeholder: string;
+  focused: boolean; onFocus: () => void; onBlur: () => void; disabled: boolean;
+}) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+        padding: '10px 14px',
+        border: `1px solid ${focused ? C.blue : 'rgba(0,212,255,0.12)'}`,
+        background: focused ? 'rgba(0,212,255,0.04)' : 'rgba(255,255,255,0.02)',
+        transition: 'border-color 0.2s, background 0.2s',
+        boxShadow: focused ? '0 0 20px rgba(0,212,255,0.08)' : 'none',
+      }}>
+        <span style={{ color: C.blue, fontSize: '12px', flexShrink: 0, paddingTop: multiline ? 2 : 0 }}>{'>'}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 4 }}>{label}</div>
+          {multiline
+            ? <textarea value={value} onChange={e => onChange(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+                disabled={disabled} placeholder={placeholder} rows={3}
+                style={{ background: 'none', border: 'none', outline: 'none', fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, width: '100%', resize: 'none', lineHeight: 1.7, caretColor: C.blue }} />
+            : <input type="text" value={value} onChange={e => onChange(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+                disabled={disabled} placeholder={placeholder}
+                style={{ background: 'none', border: 'none', outline: 'none', fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, width: '100%', caretColor: C.blue }} />
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   TERMINAL LINE
+   ═══════════════════════════════════════════ */
+function TLine({ text, color, prompt, isNew }: { text: string; color: string; prompt: boolean; isNew: boolean }) {
+  return (
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 2, animation: isNew ? 'fadeIn 0.15s ease' : 'none' }}>
+      <span style={{ color: prompt ? C.blue : 'rgba(232,232,240,0.15)', flexShrink: 0, fontSize: '12px', userSelect: 'none' }}>
+        {prompt ? '>' : '  '}
+      </span>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', lineHeight: 1.75, color: color || 'rgba(232,232,240,0.55)', wordBreak: 'break-word' }}>{text}</span>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   CONTACT SECTION — Main
    ═══════════════════════════════════════════ */
 export default function ContactSection() {
   const { navigateTo } = useVoidStore();
-  const [step, setStep] = useState<'name' | 'email' | 'message' | 'sending' | 'sent'>('name');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [terminalLines, setTerminalLines] = useState<Array<{ text: string; type: 'system' | 'input' | 'success' | 'error' | 'info' }>>([
-    { text: '╔══════════════════════════════════════╗', type: 'system' },
-    { text: '║   VOID OS — CONTACT.net v3.0.1        ║', type: 'system' },
-    { text: '║   Secure Transmission Protocol       ║', type: 'system' },
-    { text: '╚══════════════════════════════════════╝', type: 'system' },
-    { text: '', type: 'system' },
-    { text: 'Establishing secure channel...', type: 'info' },
-    { text: 'Connection established.', type: 'success' },
-    { text: '', type: 'system' },
-    { text: '> WHO ARE YOU? (Enter your name)', type: 'system' },
-  ]);
-  const [sendProgress, setSendProgress] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  type LineData = { text: string; color: string; prompt: boolean; id: number };
+  const [lines, setLines] = useState<LineData[]>([]);
+  const [phase, setPhase] = useState<'booting' | 'namePrompt' | 'analyzing' | 'form' | 'sending' | 'sent'>('booting');
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [focused, setFocused] = useState<string | null>(null);
+  const [nameInput, setNameInput] = useState('');
+  const [nameSubmitted, setNameSubmitted] = useState(false);
+  const [burst, setBurst] = useState(false);
+  const [headerIn, setHeaderIn] = useState(false);
+  const [clock, setClock] = useState(new Date());
+  const termRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [terminalLines]);
-  useEffect(() => { if (step === 'message') textareaRef.current?.focus(); else if (step !== 'sending' && step !== 'sent') inputRef.current?.focus(); }, [step]);
-
-  const addLine = useCallback((text: string, type: 'system' | 'input' | 'success' | 'error' | 'info') => {
-    setTerminalLines(prev => [...prev, { text, type }]);
+  const addLine = useCallback((text: string, color: string, prompt = false) => {
+    setLines(p => [...p, { text, color, prompt, id: Date.now() + Math.random() }]);
+    setTimeout(() => { if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight; }, 40);
   }, []);
 
-  const handleSubmit = useCallback(() => {
-    if (step === 'name' && name.trim()) {
-      addLine(`  ${name}`, 'input'); addLine('', 'system');
-      addLine(`> Hello, ${name}. Your email address?`, 'system'); setStep('email');
-    } else if (step === 'email' && email.trim()) {
-      if (!email.includes('@')) { addLine('  ERROR: Invalid email format', 'error'); return; }
-      addLine(`  ${email}`, 'input'); addLine('', 'system');
-      addLine('> Your transmission message:', 'system'); setStep('message');
-    } else if (step === 'message' && message.trim()) {
-      addLine(`  "${message.slice(0, 60)}${message.length > 60 ? '...' : ''}"`, 'input');
-      addLine('', 'system'); setStep('sending');
-      
-      // Send actual message via API
-      const sendMessage = async () => {
-        try {
-          const res = await fetch('/api/contact', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, message }),
-          });
-          const data = await res.json();
-          
-          if (data.fallback && data.mailto) {
-            window.open(data.mailto, '_blank');
-          }
-        } catch {
-          // Fallback to mailto
-          window.open(`mailto:shivamsuhana649@gmail.com?subject=VOID OS: ${encodeURIComponent(name)}&body=${encodeURIComponent(`From: ${name} (${email})\n\n${message}`)}`, '_blank');
+  // Boot sequence
+  useEffect(() => {
+    setTimeout(() => setHeaderIn(true), 100);
+    BOOT_SEQ.forEach(({ text, color, delay }) => setTimeout(() => addLine(text, color), delay + 300));
+    setTimeout(() => { setPhase('namePrompt'); setTimeout(() => nameRef.current?.focus(), 80); }, 2100);
+    const ti = setInterval(() => setClock(new Date()), 1000);
+    return () => clearInterval(ti);
+  }, [addLine]);
+
+  const submitName = useCallback(() => {
+    if (!nameInput.trim() || nameSubmitted) return;
+    setNameSubmitted(true);
+    addLine(nameInput, C.white, true);
+    setPhase('analyzing');
+    addLine('', '');
+    ANALYZE.forEach((l, i) => {
+      setTimeout(() => {
+        addLine(l, i === ANALYZE.length - 1 ? C.green : 'rgba(232,232,240,0.5)');
+        if (i === ANALYZE.length - 1) setTimeout(() => {
+          addLine('', '');
+          addLine(`Welcome, ${nameInput.trim()}. Fill the transmission form.`, C.blue);
+          addLine('────────────────────────────────────────', 'rgba(232,232,240,0.1)');
+          setForm(f => ({ ...f, name: nameInput.trim() }));
+          setPhase('form');
+        }, 300);
+      }, i * 300 + 200);
+    });
+  }, [nameInput, nameSubmitted, addLine]);
+
+  const handleSend = useCallback(async () => {
+    if (!form.email || !form.message) { addLine('ERROR: Email and message required.', C.red); return; }
+    setPhase('sending');
+    addLine('', ''); addLine('INITIATING TRANSMISSION...', C.amber);
+
+    // Actually send via API
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: form.name, email: form.email, message: `${form.subject ? `[${form.subject}] ` : ''}${form.message}` }),
+        });
+        const data = await res.json();
+        if (data.fallback && data.mailto) window.open(data.mailto, '_blank');
+      } catch {
+        window.open(`mailto:shivamsuhana649@gmail.com?subject=VOID OS: ${encodeURIComponent(form.name)}&body=${encodeURIComponent(`From: ${form.name} (${form.email})\n\n${form.message}`)}`, '_blank');
+      }
+    }, 1500);
+
+    SEND_SEQ.forEach((l, i) => {
+      setTimeout(() => {
+        addLine(l, i === SEND_SEQ.length - 1 ? C.green : 'rgba(232,232,240,0.5)');
+        if (i === SEND_SEQ.length - 1) {
+          setBurst(true); setTimeout(() => setBurst(false), 2000);
+          setTimeout(() => {
+            addLine('', '');
+            addLine(`MESSAGE FROM ${form.name.toUpperCase()} — RECEIVED.`, C.green);
+            addLine('Response ETA: < 24 hours', C.blue);
+            setPhase('sent');
+          }, 400);
         }
-      };
-
-      [
-        { text: 'Encrypting payload (AES-256)...', type: 'info' as const, delay: 400 },
-        { text: 'Routing through quantum relay...', type: 'info' as const, delay: 800 },
-        { text: 'Handshake verified.', type: 'info' as const, delay: 1200 },
-        { text: 'Transmitting to shivamsuhana649@gmail.com...', type: 'info' as const, delay: 1800 },
-        { text: '', type: 'system' as const, delay: 2200 },
-        { text: '✓ TRANSMISSION SUCCESSFUL', type: 'success' as const, delay: 2400 },
-        { text: `  From: ${name} <${email}>`, type: 'info' as const, delay: 2600 },
-        { text: '  Status: DELIVERED ✓', type: 'success' as const, delay: 2800 },
-        { text: '', type: 'system' as const, delay: 3000 },
-        { text: `> Thank you, ${name}. I'll respond within 24 hours.`, type: 'system' as const, delay: 3200 },
-      ].forEach(({ text, type, delay }) => { setTimeout(() => addLine(text, type), delay); });
-      
-      // Actually send at the 1.5s mark
-      setTimeout(sendMessage, 1500);
-      
-      let prog = 0;
-      const iv = setInterval(() => { prog += 2; setSendProgress(prog); if (prog >= 100) { clearInterval(iv); setTimeout(() => setStep('sent'), 500); } }, 50);
-    }
-  }, [step, name, email, message, addLine]);
-
-  const lineColor: Record<string, string> = {
-    system: 'rgba(232,232,240,0.75)', input: '#00D4FF', success: '#39FF14', error: '#FF3366', info: 'rgba(232,232,240,0.55)',
-  };
+      }, i * 380 + 200);
+    });
+  }, [form, addLine]);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#050510', overflow: 'hidden', zIndex: 50 }}>
-      <MatrixRain />
-      <SectionAmbientBG color="#FF3366" particleCount={35} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)' }} />
+    <div style={{ position: 'fixed', inset: 0, background: C.void, overflow: 'hidden', zIndex: 50, fontFamily: 'var(--font-mono)', color: C.white }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        input::placeholder,textarea::placeholder{color:rgba(232,232,240,0.25);}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes pulseRing{0%{transform:scale(1);opacity:0.7}100%{transform:scale(2.2);opacity:0}}
+        @keyframes fadeIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:none}}
+        ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.25)}
+      `}} />
+
+      {/* CRT + grid */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(0,212,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%)' }} />
 
-      {/* Process bar */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(3,3,6,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,51,102,0.08)', padding: '12px 40px', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'var(--font-mono)' }}>
-        <button onClick={() => navigateTo('desktop')} style={{
-          background: 'none', border: '1px solid rgba(0,212,255,.15)', padding: '5px 14px',
-          fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: '#00D4FF',
-          cursor: 'pointer', transition: 'all .2s', borderRadius: 2,
-        }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.5)'; e.currentTarget.style.background = 'rgba(0,212,255,.06)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.15)'; e.currentTarget.style.background = 'none'; }}
-        >← DESKTOP</button>
-        <div style={{ width: 1, height: 14, background: 'rgba(255,51,102,.12)' }} />
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF3366', boxShadow: '0 0 8px #FF3366' }} />
-        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.55)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,.55)' }}>/</span>
-        <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#FF3366', textShadow: '0 0 8px rgba(255,51,102,.3)' }}>CONTACT.net</span>
-        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.4)' }}>
-          {step === 'sent' ? '✓ TRANSMITTED' : step === 'sending' ? 'TRANSMITTING...' : 'CHANNEL OPEN'}
+      {/* Header */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: 'rgba(3,3,6,0.9)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(0,212,255,0.1)',
+        padding: '13px clamp(16px,3vw,40px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        opacity: headerIn ? 1 : 0, transition: 'opacity 0.8s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <button onClick={() => navigateTo('desktop')} style={{
+            background: 'none', border: '1px solid rgba(0,212,255,0.2)', padding: '5px 14px',
+            fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: C.blue,
+            cursor: 'pointer', transition: 'all 0.2s', borderRadius: 2,
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.5)'; e.currentTarget.style.background = 'rgba(0,212,255,0.06)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.2)'; e.currentTarget.style.background = 'none'; }}
+          >← DESKTOP</button>
+          <div style={{ width: 1, height: 14, background: 'rgba(0,212,255,0.15)' }} />
+          <div style={{ position: 'relative' }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, boxShadow: `0 0 8px ${C.green}` }} />
+            <div style={{ position: 'absolute', inset: -3, borderRadius: '50%', border: `1px solid ${C.green}`, animation: 'pulseRing 2s ease infinite' }} />
+          </div>
+          <span style={{ fontSize: '9px', letterSpacing: '3px', color: 'rgba(232,232,240,0.45)' }}>VOID_OS</span>
+          <span style={{ color: 'rgba(232,232,240,0.2)' }}>/</span>
+          <span style={{ fontSize: '9px', letterSpacing: '2px', color: C.blue, textShadow: `0 0 8px ${C.blue}40` }}>CONTACT.net</span>
+        </div>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}` }} />
+            <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: C.green }}>AVAILABLE</span>
+          </div>
+          <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.3)', letterSpacing: '1.5px' }}>
+            {clock.toLocaleTimeString('en-US', { hour12: false })} UTC+5:30
+          </span>
         </div>
       </div>
 
-      {/* Main layout — split */}
-      <div style={{
-        position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', height: '100vh', padding: '60px 20px 20px',
-      }}>
-        <div id="contact-split" style={{
-          maxWidth: 900, width: '100%',
-          display: 'grid', gridTemplateColumns: '280px 1fr', gap: 40, alignItems: 'center',
-        }}>
-          <style dangerouslySetInnerHTML={{ __html: '@media(max-width:768px){#contact-split{grid-template-columns:1fr!important;gap:20px!important;}}' }} />
+      {/* Body grid — Terminal LEFT, Form RIGHT */}
+      <div id="contact-grid" style={{ display: 'grid', gridTemplateColumns: '1fr clamp(280px,35%,400px)', height: '100%', paddingTop: 50, overflow: 'hidden' }}>
+        <style dangerouslySetInnerHTML={{ __html: '@media(max-width:768px){#contact-grid{grid-template-columns:1fr!important;}}' }} />
 
-          {/* LEFT — Radar + Info */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-            {/* Radar */}
-            <div style={{
-              padding: 16, border: '1px solid rgba(0,212,255,.15)', background: 'rgba(0,0,0,.2)',
-              position: 'relative',
-            }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,.4)', marginBottom: 8, textAlign: 'center' }}>SIGNAL DETECTION</div>
-              <RadarCanvas />
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.55)', marginTop: 8, textAlign: 'center' }}>VISITOR DETECTED — SECTOR 7G</div>
-            </div>
+        {/* LEFT — Terminal */}
+        <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(0,212,255,0.08)', overflow: 'hidden', position: 'relative' }}>
+          <Burst active={burst} />
 
-            {/* Quick stats */}
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {[
-                { label: 'STATUS', value: 'AVAILABLE', color: '#39FF14' },
-                { label: 'RESPONSE', value: '< 24 HRS', color: '#FFB800' },
-                { label: 'CHANNEL', value: 'ENCRYPTED', color: '#00D4FF' },
-              ].map(s => (
-                <div key={s.label} style={{
-                  display: 'flex', justifyContent: 'space-between', padding: '8px 12px',
-                  border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.015)',
-                  fontFamily: 'var(--font-mono)', fontSize: '8px',
-                }}>
-                  <span style={{ color: 'rgba(232,232,240,.6)', letterSpacing: '1.5px' }}>{s.label}</span>
-                  <span style={{ color: s.color, textShadow: `0 0 6px ${s.color}44` }}>{s.value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Social links */}
-            <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-              {[
-                { label: 'EMAIL', href: `mailto:${OWNER.email}` },
-                { label: 'GITHUB', href: OWNER.github },
-                { label: 'LINKEDIN', href: OWNER.linkedin },
-              ].map((link, i) => (
-                <a key={i} href={link.href} target="_blank" rel="noopener noreferrer" style={{
-                  flex: 1, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '7px',
-                  letterSpacing: '1.5px', color: 'rgba(232,232,240,.65)', padding: '8px 6px',
-                  border: '1px solid rgba(255,255,255,.05)', transition: 'all .2s', textDecoration: 'none',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.3)'; e.currentTarget.style.color = '#00D4FF'; e.currentTarget.style.background = 'rgba(0,212,255,.04)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.05)'; e.currentTarget.style.color = 'rgba(232,232,240,.65)'; e.currentTarget.style.background = 'transparent'; }}
-                >{link.label}</a>
+          {/* Tab bar */}
+          <div style={{ padding: '10px 18px', borderBottom: '1px solid rgba(0,212,255,0.08)', background: 'rgba(0,212,255,0.015)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {['#FF3B5C', '#FFB800', '#39FF14'].map((c, i) => (
+              <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c, opacity: 0.65 }} />
+            ))}
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px', color: 'rgba(232,232,240,0.35)', marginLeft: 6 }}>
+              VOID_SHELL — CONTACT.net v2045.1
+            </span>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 14 }}>
+              {['ENC: AES-256', 'PROTO: VOID/3', 'LAYER: 7'].map(s => (
+                <span key={s} style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1px' }}>{s}</span>
               ))}
             </div>
           </div>
 
-          {/* RIGHT — Terminal */}
-          <div>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#FF3366', textShadow: '0 0 10px rgba(255,51,102,.3)', marginBottom: 8 }}>05 // CONTACT.net</div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px,3vw,36px)', color: '#E8E8F0', marginBottom: 4 }}>
-                Send a <span style={{ color: '#00D4FF', textShadow: '0 0 15px rgba(0,212,255,.3)' }}>Transmission</span>
-              </h2>
-            </div>
+          {/* Terminal output */}
+          <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {lines.map((l, i) => (
+              <TLine key={l.id} text={l.text} color={l.color} prompt={l.prompt} isNew={i === lines.length - 1} />
+            ))}
 
-            {/* Terminal */}
-            <div style={{
-              background: 'rgba(3,3,6,0.95)', border: '1px solid rgba(0,212,255,0.12)',
-              overflow: 'hidden', backdropFilter: 'blur(20px)',
-              boxShadow: '0 0 30px rgba(0,212,255,0.03), inset 0 0 30px rgba(0,0,0,0.3)',
-            }}>
-              {/* Title bar */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-                background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.08)',
-              }}>
-                <div style={{ display: 'flex', gap: 5 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF3366' }} />
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFB800' }} />
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#39FF14' }} />
-                </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.65)', letterSpacing: '1px', flex: 1 }}>CONTACT.net — Secure Terminal</span>
-                {/* Signal bars + availability dot */}
-                <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', marginRight: 8 }}>
-                  {[6, 9, 12, 15, 12].map((h, i) => (
-                    <div key={i} style={{ width: 2, height: h, background: i < 4 ? 'rgba(57,255,20,0.4)' : 'rgba(255,255,255,0.1)', borderRadius: 1 }} />
-                  ))}
-                </div>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 6px rgba(57,255,20,0.5)' }} />
-                </div>
+            {/* Name prompt */}
+            {phase === 'namePrompt' && !nameSubmitted && (
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 6 }}>
+                <span style={{ color: C.blue, fontSize: '12px' }}>{'>'}</span>
+                <span style={{ color: 'rgba(232,232,240,0.5)', fontSize: '12px', whiteSpace: 'nowrap' }}>WHO ARE YOU?</span>
+                <input ref={nameRef} value={nameInput} onChange={e => setNameInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && submitName()}
+                  style={{ background: 'none', border: 'none', fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, outline: 'none', flex: 1, caretColor: C.blue }}
+                  autoFocus placeholder="Type your name and press Enter..." />
+                <span style={{ color: C.blue, fontSize: '12px', animation: 'blink 0.85s step-end infinite' }}>█</span>
               </div>
+            )}
 
-              {/* Output */}
-              <div ref={scrollRef} style={{ padding: 16, fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.9, maxHeight: 300, overflowY: 'auto' }}>
-                {terminalLines.map((line, i) => (
-                  <div key={i} style={{ color: lineColor[line.type] || 'rgba(232,232,240,.65)', animation: 'fadeIn 0.15s ease', fontWeight: line.type === 'success' ? 600 : 400 }}>
-                    {line.text || '\u00A0'}
-                  </div>
+            {/* Analyzing dots */}
+            {phase === 'analyzing' && (
+              <div style={{ display: 'flex', gap: 5, padding: '6px 0 4px 20px' }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: C.blue, animation: `blink 1s step-end infinite ${i * 0.28}s` }} />
                 ))}
-                {step === 'sending' && sendProgress < 100 && (
-                  <div style={{ marginTop: 8 }}>
-                    <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 1, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${sendProgress}%`, background: 'linear-gradient(90deg, #00D4FF, #39FF14)', transition: 'width 0.05s', boxShadow: '0 0 8px rgba(0,212,255,0.4)' }} />
-                    </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.65)', marginTop: 4 }}>TRANSMITTING... {sendProgress}%</div>
-                  </div>
-                )}
               </div>
+            )}
 
-              {/* Input */}
-              {step !== 'sending' && step !== 'sent' && (
-                <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#39FF14' }}>❯</span>
-                  {step === 'message' ? (
-                    <textarea
-                      ref={textareaRef} value={message} onChange={e => setMessage(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-                      placeholder="Type your message..." rows={2}
-                      style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#E8E8F0', caretColor: '#00D4FF', resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }}
-                    />
-                  ) : (
-                    <input
-                      ref={inputRef} value={step === 'name' ? name : email}
-                      onChange={e => step === 'name' ? setName(e.target.value) : setEmail(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-                      placeholder={step === 'name' ? 'Your name...' : 'your@email.com'}
-                      style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#E8E8F0', caretColor: '#00D4FF', background: 'transparent', border: 'none', outline: 'none' }}
-                    />
-                  )}
-                  <button onClick={handleSubmit} style={{
-                    fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#00D4FF', cursor: 'pointer', padding: '6px 14px',
-                    border: '1px solid rgba(0,212,255,0.15)', background: 'transparent', transition: 'all 0.2s', letterSpacing: '1px',
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,212,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(0,212,255,0.3)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(0,212,255,0.15)'; }}
-                  >ENTER</button>
-                </div>
-              )}
+            {/* Idle cursor */}
+            {['form', 'sent'].includes(phase) && (
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4, opacity: 0.3 }}>
+                <span style={{ color: C.blue, fontSize: '12px' }}>{'>'}</span>
+                <span style={{ color: C.blue, fontSize: '12px', animation: 'blink 1.1s step-end infinite' }}>█</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT — Form + info panels */}
+        <div style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: 'clamp(16px,2.5vw,28px)', gap: 14, background: 'rgba(0,212,255,0.01)' }}>
+
+          {/* Transmission Form */}
+          <div style={{
+            border: '1px solid rgba(0,212,255,0.12)', background: 'rgba(255,255,255,0.02)',
+            padding: 'clamp(14px,2vw,24px)',
+            opacity: ['form', 'sending', 'sent'].includes(phase) ? 1 : 0.2,
+            transition: 'opacity 0.9s ease',
+          }}>
+            <div style={{ fontSize: '8px', letterSpacing: '3px', color: C.blue, marginBottom: 14, textShadow: `0 0 8px ${C.blue}30` }}>
+              TRANSMISSION_FORM.net
             </div>
+
+            {phase === 'sent' ? (
+              <div style={{ textAlign: 'center', padding: '28px 0' }}>
+                <div style={{ fontSize: '2.2rem', marginBottom: 12 }}>✓</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '16px', color: C.green, marginBottom: 8 }}>SIGNAL RECEIVED</div>
+                <div style={{ fontSize: '11px', color: 'rgba(232,232,240,0.5)', lineHeight: 1.8 }}>
+                  Transmission from {form.name} confirmed.<br />Response ETA: {'< 24 hours'}
+                </div>
+              </div>
+            ) : (
+              <>
+                <Field label="NAME.string" value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))}
+                  focused={focused === 'name'} onFocus={() => setFocused('name')} onBlur={() => setFocused(null)}
+                  placeholder="Your name..." disabled={phase !== 'form'} />
+                <Field label="EMAIL.string" value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))}
+                  focused={focused === 'email'} onFocus={() => setFocused('email')} onBlur={() => setFocused(null)}
+                  placeholder="your@email.com" disabled={phase !== 'form'} />
+                <Field label="SUBJECT.string" value={form.subject} onChange={v => setForm(f => ({ ...f, subject: v }))}
+                  focused={focused === 'subject'} onFocus={() => setFocused('subject')} onBlur={() => setFocused(null)}
+                  placeholder="What's this about..." disabled={phase !== 'form'} />
+                <Field label="MESSAGE.string" value={form.message} onChange={v => setForm(f => ({ ...f, message: v }))}
+                  focused={focused === 'message'} onFocus={() => setFocused('message')} onBlur={() => setFocused(null)}
+                  placeholder="Your transmission..." multiline disabled={phase !== 'form'} />
+
+                <button onClick={handleSend} disabled={phase !== 'form'} style={{
+                  width: '100%', padding: '13px',
+                  background: phase === 'form' ? 'rgba(0,212,255,0.08)' : 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${phase === 'form' ? C.blue + '66' : 'rgba(255,255,255,0.06)'}`,
+                  color: phase === 'form' ? C.blue : 'rgba(232,232,240,0.2)',
+                  fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '2.5px',
+                  cursor: phase === 'form' ? 'pointer' : 'default', transition: 'all 0.2s',
+                }}
+                  onMouseEnter={e => { if (phase === 'form') { e.currentTarget.style.background = 'rgba(0,212,255,0.15)'; e.currentTarget.style.boxShadow = `0 0 20px rgba(0,212,255,0.15)`; } }}
+                  onMouseLeave={e => { e.currentTarget.style.background = phase === 'form' ? 'rgba(0,212,255,0.08)' : 'rgba(255,255,255,0.02)'; e.currentTarget.style.boxShadow = 'none'; }}
+                >{phase === 'sending' ? 'TRANSMITTING...' : 'SEND TRANSMISSION →'}</button>
+              </>
+            )}
+          </div>
+
+          {/* Radar + Status */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 8 }}>SIGNAL DETECTION</div>
+              <RadarCanvas />
+              <div style={{ fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.45)', marginTop: 8 }}>VISITOR DETECTED</div>
+            </div>
+
+            <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>AVAILABILITY</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.green, boxShadow: `0 0 10px ${C.green}` }} />
+                <span style={{ fontSize: '9px', color: C.green, letterSpacing: '1px' }}>AVAILABLE</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'rgba(232,232,240,0.45)', lineHeight: 2 }}>
+                Response: <span style={{ color: C.white }}>{'< 24hrs'}</span><br />
+                Timezone: <span style={{ color: C.white }}>UTC+5:30</span><br />
+                Location: <span style={{ color: C.white }}>{OWNER.location}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Social links */}
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
+            <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>SIGNAL CHANNELS</div>
+            {[
+              { label: 'EMAIL', value: OWNER.email, href: `mailto:${OWNER.email}`, color: C.green },
+              { label: 'GITHUB', value: '@shivamsuhana', href: OWNER.github, color: C.white },
+              { label: 'LINKEDIN', value: '/in/shivamsuhana', href: OWNER.linkedin, color: C.blue },
+            ].map(link => (
+              <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                textDecoration: 'none', transition: 'all 0.2s',
+              }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '6px'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '0'; }}
+              >
+                <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.4)' }}>{link.label}</span>
+                <span style={{ fontSize: '10px', color: link.color, letterSpacing: '0.5px' }}>{link.value}</span>
+              </a>
+            ))}
+          </div>
+
+          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.15)', letterSpacing: '1.5px', lineHeight: 2, paddingTop: 2 }}>
+            CONTACT.net — SECURE CHANNEL<br />ALL TRANSMISSIONS ENCRYPTED<br />VOID OS v3.0.1
           </div>
         </div>
       </div>

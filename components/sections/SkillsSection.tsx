@@ -639,17 +639,17 @@ export default function SkillsSection() {
         </div>
       </div>
 
-      {/* Left sidebar */}
+      {/* Right sidebar */}
       <div id="skills-sidebar" style={{
-        position: 'absolute', top: 50, left: 0, bottom: 0,
+        position: 'absolute', top: 50, right: 0, bottom: 0,
         width: 'clamp(200px, 22%, 280px)',
         padding: 'clamp(16px, 2vw, 28px)',
         background: 'rgba(5,5,16,0.65)', backdropFilter: 'blur(16px)',
-        borderRight: '1px solid rgba(0,212,255,0.08)',
+        borderLeft: '1px solid rgba(0,212,255,0.08)',
         display: 'flex', flexDirection: 'column', gap: 16,
         zIndex: 10, overflowY: 'auto',
         opacity: entered ? 1 : 0,
-        transform: entered ? 'translateX(0)' : 'translateX(-30px)',
+        transform: entered ? 'translateX(0)' : 'translateX(30px)',
         transition: 'opacity 0.8s ease, transform 0.8s cubic-bezier(0.16,1,0.3,1)',
       }}>
         <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 768px) { #skills-sidebar { display: none !important; } }' }} />
@@ -686,7 +686,7 @@ export default function SkillsSection() {
 
       {/* Graph canvas area */}
       <div style={{
-        position: 'absolute', top: 50, left: 'clamp(200px, 22%, 280px)', right: 0, bottom: 0, zIndex: 5,
+        position: 'absolute', top: 50, left: 0, right: 'clamp(200px, 22%, 280px)', bottom: 0, zIndex: 5,
       }}>
         <ForceGraph onSelect={onSelect} selected={selected} filter={filter} />
 

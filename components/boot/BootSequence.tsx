@@ -330,20 +330,22 @@ function NameReveal({ onReady }: { onReady: () => void }) {
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
     }}>
       <div ref={lineRef} style={{
-        width: '60px', height: '1px', marginBottom: '24px',
-        background: 'linear-gradient(90deg, transparent, #00D4FF, transparent)',
+        width: '80px', height: '2px', marginBottom: '28px',
+        background: 'linear-gradient(90deg, transparent, #00D4FF, #7B2FFF, transparent)',
         transformOrigin: 'center',
+        boxShadow: '0 0 12px rgba(0,212,255,0.3)',
       }} />
 
       {/* Name with holographic shimmer overlay */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
         <h1 ref={nameRef} style={{
           fontFamily: "'Syne', sans-serif", fontWeight: 800,
-          fontSize: 'clamp(36px, 6vw, 72px)', letterSpacing: '6px',
-          background: 'linear-gradient(135deg, #E8E8F0 0%, #00D4FF 50%, #7B2FFF 100%)',
+          fontSize: 'clamp(42px, 8vw, 80px)', letterSpacing: '8px',
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #E8E8F0 20%, #00D4FF 50%, #7B2FFF 80%, #FF3366 100%)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text', marginBottom: '12px', lineHeight: 1.1,
+          backgroundClip: 'text', marginBottom: '16px', lineHeight: 1.1,
           textAlign: 'center', opacity: 0,
+          filter: 'drop-shadow(0 0 20px rgba(0,212,255,0.3)) drop-shadow(0 0 40px rgba(123,47,255,0.15))',
         }} />
         {/* Holographic shimmer sweep */}
         <div ref={shimmerRef} style={{
@@ -384,6 +386,14 @@ function NameReveal({ onReady }: { onReady: () => void }) {
         boxShadow: '0 0 15px rgba(0,212,255,0.05), inset 0 0 15px rgba(0,212,255,0.03)',
       }}>
         PRESS ANY KEY TO ENTER VOID OS
+      </div>
+
+      {/* Subtitle hint */}
+      <div style={{
+        marginTop: '16px', fontFamily: "'JetBrains Mono', monospace",
+        fontSize: '8px', color: 'rgba(232,232,240,0.2)', letterSpacing: '3px',
+      }}>
+        v3.0.1 • QUANTUM RENDERING ENGINE
       </div>
     </div>
   );
