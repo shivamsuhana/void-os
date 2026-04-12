@@ -262,7 +262,7 @@ function SuccessPopup({ name, onBack }: { name: string; onBack: () => void }) {
           }}
             onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}22`; e.currentTarget.style.boxShadow = `0 0 30px ${C.blue}30`; }}
             onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}10`; e.currentTarget.style.boxShadow = `0 0 20px ${C.blue}15`; }}
-          >← BACK TO DESKTOP</button>
+          >← SEND ANOTHER</button>
         </div>
       </div>
     </div>
@@ -650,7 +650,7 @@ export default function ContactSection() {
         </div>
       </div>
 
-      {showSuccess && <SuccessPopup name={form.name} onBack={() => navigateTo('desktop')} />}
+      {showSuccess && <SuccessPopup name={form.name} onBack={() => { setShowSuccess(false); setStep('name'); setLines([]); setForm({ name: '', email: '', subject: '', message: '' }); setInput(''); setSendProgress(0); setTimeout(() => { addLine('VOID OS CONTACT TERMINAL v3.0.1', C.cyan); addLine('Secure channel established.', 'rgba(232,232,240,0.5)'); addLine('', ''); addLine('> IDENTIFY YOURSELF — Enter your name:', C.amber); }, 100); }} />}
     </div>
   );
 }
