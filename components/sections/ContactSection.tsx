@@ -13,33 +13,97 @@ const C = {
 };
 
 /* ═══════════════════════════════════════════
-   BOOT SEQUENCE LINES
+   SOUND ENGINE — Alien 2045 sound effects
    ═══════════════════════════════════════════ */
-const BOOT_SEQ = [
-  { text: 'CONTACT.net v2045.1 — INITIALIZING...', color: C.blue, delay: 0 },
-  { text: 'Establishing secure channel...', color: 'rgba(232,232,240,0.5)', delay: 280 },
-  { text: 'Encrypting transmission route (AES-256)...', color: 'rgba(232,232,240,0.5)', delay: 560 },
-  { text: `Signal locked. Target: UTC+5:30`, color: C.green, delay: 840 },
-  { text: 'Status: AVAILABLE FOR NEW PROJECTS', color: C.green, delay: 1100 },
-  { text: '────────────────────────────────────────', color: 'rgba(232,232,240,0.1)', delay: 1350 },
-  { text: 'READY. Begin transmission.', color: C.white, delay: 1600 },
-];
+function playSound(type: 'key' | 'send' | 'success' | 'error') {
+  try {
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
 
-const ANALYZE = [
-  'Scanning identity signature...',
-  'Cross-referencing signal origin...',
-  'Verifying transmission protocol...',
-  'Identity confirmed. Proceeding.',
-];
+    if (type === 'key') {
+      // Subtle keypress tick
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2800 + Math.random() * 400, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.04);
+      gain.gain.setValueAtTime(0.03, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.05);
+    }
 
-const SEND_SEQ = [
-  'Compressing payload...',
-  'Routing through secure nodes...',
-  'Establishing handshake...',
-  'Transmitting to shivamsuhana649@gmail.com...',
-  'Awaiting confirmation...',
-  '✓ SIGNAL RECEIVED',
-];
+    if (type === 'send') {
+      // Deep transmission whoosh — multi-layered
+      for (let i = 0; i < 4; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const pan = ctx.createStereoPanner();
+        osc.type = i < 2 ? 'sawtooth' : 'sine';
+        osc.frequency.setValueAtTime(200 + i * 300, now + i * 0.15);
+        osc.frequency.exponentialRampToValueAtTime(80 + i * 100, now + 0.8 + i * 0.15);
+        gain.gain.setValueAtTime(0.06, now + i * 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2 + i * 0.15);
+        pan.pan.setValueAtTime(-0.5 + i * 0.33, now);
+        osc.connect(gain).connect(pan).connect(ctx.destination);
+        osc.start(now + i * 0.15); osc.stop(now + 1.5 + i * 0.15);
+      }
+      // White noise burst
+      const bufferSize = ctx.sampleRate * 1.2;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.02;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const nGain = ctx.createGain();
+      nGain.gain.setValueAtTime(0.08, now);
+      nGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass'; filter.frequency.value = 1500; filter.Q.value = 3;
+      noise.connect(filter).connect(nGain).connect(ctx.destination);
+      noise.start(now); noise.stop(now + 1.2);
+    }
+
+    if (type === 'success') {
+      // Triumphant ascending chord
+      [440, 554, 659, 880, 1100].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq * 0.5, now + i * 0.08);
+        osc.frequency.exponentialRampToValueAtTime(freq, now + 0.3 + i * 0.08);
+        gain.gain.setValueAtTime(0.08, now + i * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5 + i * 0.08);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + i * 0.08); osc.stop(now + 1.6);
+      });
+      // Shimmer
+      const osc2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(4000, now + 0.5);
+      osc2.frequency.exponentialRampToValueAtTime(8000, now + 1.2);
+      g2.gain.setValueAtTime(0.015, now + 0.5);
+      g2.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+      osc2.connect(g2).connect(ctx.destination);
+      osc2.start(now + 0.5); osc2.stop(now + 1.5);
+    }
+
+    if (type === 'error') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.setValueAtTime(150, now + 0.1);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.2);
+    }
+
+    setTimeout(() => ctx.close(), 3000);
+  } catch { /* Audio not supported */ }
+}
 
 /* ═══════════════════════════════════════════
    RADAR CANVAS
@@ -50,58 +114,49 @@ function RadarCanvas() {
   useEffect(() => {
     const c = ref.current; if (!c) return;
     const ctx = c.getContext('2d')!;
-    const size = 160;
+    const size = 140;
     c.width = size; c.height = size;
     let t = 0;
     let frame: number;
 
     const draw = () => {
-      t += 0.015;
+      t += 0.018;
       const cx = size / 2, cy = size / 2, r = size / 2 - 8;
       ctx.clearRect(0, 0, size, size);
 
       // Rings
       [0.3, 0.6, 0.9].forEach(s => {
         ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0,212,255,0.12)'; ctx.lineWidth = 0.5; ctx.stroke();
+        ctx.strokeStyle = 'rgba(0,212,255,0.15)'; ctx.lineWidth = 0.5; ctx.stroke();
       });
 
-      // Cross lines
-      ctx.strokeStyle = 'rgba(0,212,255,0.08)'; ctx.lineWidth = 0.5;
+      // Cross
+      ctx.strokeStyle = 'rgba(0,212,255,0.1)'; ctx.lineWidth = 0.5;
       ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
 
       // Sweep
       const sweepAngle = t % (Math.PI * 2);
-      {
-        // Fallback sweep line
-        const sx = cx + Math.cos(sweepAngle) * r;
-        const sy = cy + Math.sin(sweepAngle) * r;
-        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(sx, sy);
-        ctx.strokeStyle = 'rgba(0,212,255,0.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+      const sx = cx + Math.cos(sweepAngle) * r;
+      const sy = cy + Math.sin(sweepAngle) * r;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(sx, sy);
+      ctx.strokeStyle = 'rgba(0,212,255,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
 
-        // Sweep glow
-        const g = ctx.createRadialGradient(sx * 0.5 + cx * 0.5, sy * 0.5 + cy * 0.5, 0, cx, cy, r);
-        g.addColorStop(0, 'rgba(0,212,255,0.08)');
-        g.addColorStop(1, 'transparent');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, sweepAngle - 0.4, sweepAngle);
-        ctx.closePath(); ctx.fill();
-      }
+      // Sweep trail
+      const g = ctx.createRadialGradient(sx * 0.5 + cx * 0.5, sy * 0.5 + cy * 0.5, 0, cx, cy, r);
+      g.addColorStop(0, 'rgba(0,212,255,0.1)');
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, sweepAngle - 0.5, sweepAngle);
+      ctx.closePath(); ctx.fill();
 
       // Blips
-      const blips = [
-        { angle: t * 0.3 + 1, dist: 0.45 },
-        { angle: t * 0.2 + 3, dist: 0.7 },
-        { angle: t * 0.15 + 5, dist: 0.55 },
-      ];
-      blips.forEach(b => {
-        const bx = cx + Math.cos(b.angle) * r * b.dist;
-        const by = cy + Math.sin(b.angle) * r * b.dist;
-        const angleDiff = ((sweepAngle - b.angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-        const alpha = angleDiff < 1 ? (1 - angleDiff) * 0.8 : 0.1;
+      [{ a: t * 0.3 + 1, d: 0.45 }, { a: t * 0.2 + 3, d: 0.7 }, { a: t * 0.15 + 5, d: 0.55 }].forEach(b => {
+        const bx = cx + Math.cos(b.a) * r * b.d;
+        const by = cy + Math.sin(b.a) * r * b.d;
+        const diff = ((sweepAngle - b.a) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const alpha = diff < 1 ? (1 - diff) * 0.8 : 0.1;
         ctx.beginPath(); ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(0,212,255,${alpha})`; ctx.fill();
         if (alpha > 0.3) {
@@ -110,10 +165,9 @@ function RadarCanvas() {
         }
       });
 
-      // Center dot
+      // Center
       ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(0,212,255,${0.5 + Math.sin(t * 3) * 0.3})`;
-      ctx.fill();
+      ctx.fillStyle = `rgba(0,212,255,${0.5 + Math.sin(t * 3) * 0.3})`; ctx.fill();
 
       frame = requestAnimationFrame(draw);
     };
@@ -121,75 +175,94 @@ function RadarCanvas() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  return <canvas ref={ref} style={{ width: 160, height: 160, display: 'block' }} />;
+  return <canvas ref={ref} style={{ width: 140, height: 140, display: 'block' }} />;
 }
 
 /* ═══════════════════════════════════════════
-   PARTICLE BURST
+   SUCCESS POPUP — Alien tech achievement
    ═══════════════════════════════════════════ */
-function Burst({ active }: { active: boolean }) {
-  const ref = useRef<HTMLCanvasElement>(null);
+function SuccessPopup({ name, onBack }: { name: string; onBack: () => void }) {
+  const [vis, setVis] = useState(false);
+  const [ring1, setRing1] = useState(false);
+  const [ring2, setRing2] = useState(false);
+  const [textIn, setTextIn] = useState(false);
 
   useEffect(() => {
-    if (!active) return;
-    const c = ref.current; if (!c) return;
-    const ctx = c.getContext('2d')!;
-    c.width = c.offsetWidth; c.height = c.offsetHeight;
-    const cx = c.width / 2, cy = c.height / 2;
-    const colors = [C.green, C.blue, C.white, C.purple];
-    const pts = Array.from({ length: 80 }, () => {
-      const a = Math.random() * Math.PI * 2, s = 2 + Math.random() * 6;
-      return { x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s, alpha: 1, size: Math.random() * 3 + 1, color: colors[Math.floor(Math.random() * 4)] };
-    });
-    let frame: number;
-    const draw = () => {
-      ctx.clearRect(0, 0, c.width, c.height);
-      let alive = false;
-      pts.forEach(p => {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.alpha -= 0.022; p.vx *= 0.97;
-        if (p.alpha <= 0) return; alive = true;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill();
-      });
-      ctx.globalAlpha = 1;
-      if (alive) frame = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => cancelAnimationFrame(frame);
-  }, [active]);
+    setTimeout(() => setVis(true), 50);
+    setTimeout(() => setRing1(true), 200);
+    setTimeout(() => setRing2(true), 400);
+    setTimeout(() => setTextIn(true), 600);
+  }, []);
 
-  return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 20 }} />;
-}
-
-/* ═══════════════════════════════════════════
-   FORM FIELD
-   ═══════════════════════════════════════════ */
-function Field({ label, value, onChange, multiline, placeholder, focused, onFocus, onBlur, disabled }: {
-  label: string; value: string; onChange: (v: string) => void;
-  multiline?: boolean; placeholder: string;
-  focused: boolean; onFocus: () => void; onBlur: () => void; disabled: boolean;
-}) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      background: vis ? 'rgba(0,0,0,0.85)' : 'transparent',
+      backdropFilter: vis ? 'blur(20px)' : 'none',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
+      opacity: vis ? 1 : 0,
+    }}>
       <div style={{
-        display: 'flex', gap: 10, alignItems: 'flex-start',
-        padding: '10px 14px',
-        border: `1px solid ${focused ? C.blue : 'rgba(0,212,255,0.12)'}`,
-        background: focused ? 'rgba(0,212,255,0.04)' : 'rgba(255,255,255,0.02)',
-        transition: 'border-color 0.2s, background 0.2s',
-        boxShadow: focused ? '0 0 20px rgba(0,212,255,0.08)' : 'none',
+        textAlign: 'center', maxWidth: 420,
+        transform: vis ? 'scale(1)' : 'scale(0.8)',
+        transition: 'transform 0.6s cubic-bezier(0.16,1,0.3,1)',
       }}>
-        <span style={{ color: C.blue, fontSize: '12px', flexShrink: 0, paddingTop: multiline ? 2 : 0 }}>{'>'}</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 4 }}>{label}</div>
-          {multiline
-            ? <textarea value={value} onChange={e => onChange(e.target.value)} onFocus={onFocus} onBlur={onBlur}
-                disabled={disabled} placeholder={placeholder} rows={3}
-                style={{ background: 'none', border: 'none', outline: 'none', fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, width: '100%', resize: 'none', lineHeight: 1.7, caretColor: C.blue }} />
-            : <input type="text" value={value} onChange={e => onChange(e.target.value)} onFocus={onFocus} onBlur={onBlur}
-                disabled={disabled} placeholder={placeholder}
-                style={{ background: 'none', border: 'none', outline: 'none', fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, width: '100%', caretColor: C.blue }} />
-          }
+        {/* Concentric rings */}
+        <div style={{ position: 'relative', width: 120, height: 120, margin: '0 auto 30px' }}>
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: '50%',
+            border: `2px solid ${C.green}`,
+            transform: ring1 ? 'scale(1)' : 'scale(0)',
+            opacity: ring1 ? 0.3 : 0,
+            transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
+            boxShadow: `0 0 30px ${C.green}40`,
+          }} />
+          <div style={{
+            position: 'absolute', inset: 15, borderRadius: '50%',
+            border: `2px solid ${C.blue}`,
+            transform: ring2 ? 'scale(1)' : 'scale(0)',
+            opacity: ring2 ? 0.5 : 0,
+            transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s',
+            boxShadow: `0 0 20px ${C.blue}40`,
+          }} />
+          <div style={{
+            position: 'absolute', inset: 30, borderRadius: '50%',
+            background: `radial-gradient(circle, ${C.green}33, transparent)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transform: textIn ? 'scale(1)' : 'scale(0)',
+            transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1) 0.3s',
+          }}>
+            <span style={{ fontSize: '36px', filter: `drop-shadow(0 0 20px ${C.green})` }}>✓</span>
+          </div>
+        </div>
+
+        {/* Text */}
+        <div style={{
+          opacity: textIn ? 1 : 0,
+          transform: textIn ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'all 0.5s ease 0.4s',
+        }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '22px', color: C.green, marginBottom: 8, textShadow: `0 0 20px ${C.green}60`, letterSpacing: '2px' }}>
+            TRANSMISSION COMPLETE
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(232,232,240,0.6)', lineHeight: 2, marginBottom: 6 }}>
+            Signal from <span style={{ color: C.blue, fontWeight: 600 }}>{name.toUpperCase()}</span> received.
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(232,232,240,0.4)', marginBottom: 30, letterSpacing: '1px' }}>
+            Response ETA: {'< 24 hours'} · Delivered to {OWNER.email}
+          </div>
+
+          <button onClick={onBack} style={{
+            fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '2.5px',
+            color: C.blue, padding: '12px 30px', cursor: 'pointer',
+            border: `1px solid ${C.blue}55`, background: `${C.blue}10`,
+            transition: 'all 0.2s',
+            boxShadow: `0 0 20px ${C.blue}15`,
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}22`; e.currentTarget.style.boxShadow = `0 0 30px ${C.blue}30`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}10`; e.currentTarget.style.boxShadow = `0 0 20px ${C.blue}15`; }}
+          >← BACK TO DESKTOP</button>
         </div>
       </div>
     </div>
@@ -197,36 +270,24 @@ function Field({ label, value, onChange, multiline, placeholder, focused, onFocu
 }
 
 /* ═══════════════════════════════════════════
-   TERMINAL LINE
+   CONTACT SECTION — All-in-terminal flow
    ═══════════════════════════════════════════ */
-function TLine({ text, color, prompt, isNew }: { text: string; color: string; prompt: boolean; isNew: boolean }) {
-  return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 2, animation: isNew ? 'fadeIn 0.15s ease' : 'none' }}>
-      <span style={{ color: prompt ? C.blue : 'rgba(232,232,240,0.15)', flexShrink: 0, fontSize: '12px', userSelect: 'none' }}>
-        {prompt ? '>' : '  '}
-      </span>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', lineHeight: 1.75, color: color || 'rgba(232,232,240,0.55)', wordBreak: 'break-word' }}>{text}</span>
-    </div>
-  );
-}
+type TStep = 'booting' | 'name' | 'email' | 'subject' | 'message' | 'confirm' | 'sending' | 'sent';
+type LineData = { text: string; color: string; prompt: boolean; id: number };
 
-/* ═══════════════════════════════════════════
-   CONTACT SECTION — Main
-   ═══════════════════════════════════════════ */
 export default function ContactSection() {
   const { navigateTo } = useVoidStore();
-  type LineData = { text: string; color: string; prompt: boolean; id: number };
   const [lines, setLines] = useState<LineData[]>([]);
-  const [phase, setPhase] = useState<'booting' | 'namePrompt' | 'analyzing' | 'form' | 'sending' | 'sent'>('booting');
+  const [step, setStep] = useState<TStep>('booting');
+  const [input, setInput] = useState('');
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
-  const [focused, setFocused] = useState<string | null>(null);
-  const [nameInput, setNameInput] = useState('');
-  const [nameSubmitted, setNameSubmitted] = useState(false);
-  const [burst, setBurst] = useState(false);
   const [headerIn, setHeaderIn] = useState(false);
   const [clock, setClock] = useState(new Date());
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [sendProgress, setSendProgress] = useState(0);
   const termRef = useRef<HTMLDivElement>(null);
-  const nameRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const addLine = useCallback((text: string, color: string, prompt = false) => {
     setLines(p => [...p, { text, color, prompt, id: Date.now() + Math.random() }]);
@@ -236,66 +297,149 @@ export default function ContactSection() {
   // Boot sequence
   useEffect(() => {
     setTimeout(() => setHeaderIn(true), 100);
-    BOOT_SEQ.forEach(({ text, color, delay }) => setTimeout(() => addLine(text, color), delay + 300));
-    setTimeout(() => { setPhase('namePrompt'); setTimeout(() => nameRef.current?.focus(), 80); }, 2100);
+    const bootLines = [
+      { text: 'CONTACT.net v2045.1 — INITIALIZING...', color: C.blue, delay: 0 },
+      { text: 'Establishing secure channel...', color: 'rgba(232,232,240,0.5)', delay: 280 },
+      { text: 'Encrypting transmission route (AES-256)...', color: 'rgba(232,232,240,0.5)', delay: 560 },
+      { text: `Signal locked. Timezone: UTC+5:30`, color: C.green, delay: 840 },
+      { text: 'Status: AVAILABLE FOR NEW PROJECTS', color: C.green, delay: 1100 },
+      { text: '────────────────────────────────────────', color: 'rgba(232,232,240,0.1)', delay: 1350 },
+      { text: 'READY. Begin transmission.', color: C.white, delay: 1600 },
+      { text: '', color: '', delay: 1700 },
+      { text: '> IDENTIFY YOURSELF — Enter your name:', color: C.amber, delay: 1900 },
+    ];
+    bootLines.forEach(({ text, color, delay }) => setTimeout(() => addLine(text, color), delay + 300));
+    setTimeout(() => { setStep('name'); setTimeout(() => inputRef.current?.focus(), 80); }, 2400);
     const ti = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(ti);
   }, [addLine]);
 
-  const submitName = useCallback(() => {
-    if (!nameInput.trim() || nameSubmitted) return;
-    setNameSubmitted(true);
-    addLine(nameInput, C.white, true);
-    setPhase('analyzing');
-    addLine('', '');
-    ANALYZE.forEach((l, i) => {
+  // Focus management
+  useEffect(() => {
+    if (step === 'message') textareaRef.current?.focus();
+    else if (!['booting', 'sending', 'sent', 'confirm'].includes(step)) inputRef.current?.focus();
+  }, [step]);
+
+  const handleSubmit = useCallback(() => {
+    if (!input.trim() && step !== 'confirm') return;
+
+    playSound('key');
+
+    if (step === 'name') {
+      addLine(`  ${input}`, C.blue, true);
+      setForm(f => ({ ...f, name: input.trim() }));
+      setInput('');
+      // Analyze
+      addLine('', '');
+      const analyze = ['Scanning identity...', 'Verifying protocol...', 'Identity confirmed.'];
+      analyze.forEach((l, i) => {
+        setTimeout(() => addLine(l, i === analyze.length - 1 ? C.green : 'rgba(232,232,240,0.45)'), i * 300 + 200);
+      });
       setTimeout(() => {
-        addLine(l, i === ANALYZE.length - 1 ? C.green : 'rgba(232,232,240,0.5)');
-        if (i === ANALYZE.length - 1) setTimeout(() => {
-          addLine('', '');
-          addLine(`Welcome, ${nameInput.trim()}. Fill the transmission form.`, C.blue);
-          addLine('────────────────────────────────────────', 'rgba(232,232,240,0.1)');
-          setForm(f => ({ ...f, name: nameInput.trim() }));
-          setPhase('form');
-        }, 300);
-      }, i * 300 + 200);
-    });
-  }, [nameInput, nameSubmitted, addLine]);
+        addLine('', '');
+        addLine(`> Hello, ${input.trim()}. Your email address:`, C.amber);
+        setStep('email');
+      }, 1200);
+    }
 
-  const handleSend = useCallback(async () => {
-    if (!form.email || !form.message) { addLine('ERROR: Email and message required.', C.red); return; }
-    setPhase('sending');
-    addLine('', ''); addLine('INITIATING TRANSMISSION...', C.amber);
-
-    // Actually send via API
-    setTimeout(async () => {
-      try {
-        const res = await fetch('/api/contact', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: form.name, email: form.email, message: `${form.subject ? `[${form.subject}] ` : ''}${form.message}` }),
-        });
-        const data = await res.json();
-        if (data.fallback && data.mailto) window.open(data.mailto, '_blank');
-      } catch {
-        window.open(`mailto:shivamsuhana649@gmail.com?subject=VOID OS: ${encodeURIComponent(form.name)}&body=${encodeURIComponent(`From: ${form.name} (${form.email})\n\n${form.message}`)}`, '_blank');
+    else if (step === 'email') {
+      if (!input.includes('@') || !input.includes('.')) {
+        playSound('error');
+        addLine('  ERROR: Invalid email format. Try again.', C.red);
+        return;
       }
-    }, 1500);
+      addLine(`  ${input}`, C.blue, true);
+      setForm(f => ({ ...f, email: input.trim() }));
+      setInput('');
+      addLine('', '');
+      addLine('> Subject of transmission:', C.amber);
+      setStep('subject');
+    }
 
-    SEND_SEQ.forEach((l, i) => {
-      setTimeout(() => {
-        addLine(l, i === SEND_SEQ.length - 1 ? C.green : 'rgba(232,232,240,0.5)');
-        if (i === SEND_SEQ.length - 1) {
-          setBurst(true); setTimeout(() => setBurst(false), 2000);
-          setTimeout(() => {
-            addLine('', '');
-            addLine(`MESSAGE FROM ${form.name.toUpperCase()} — RECEIVED.`, C.green);
-            addLine('Response ETA: < 24 hours', C.blue);
-            setPhase('sent');
-          }, 400);
-        }
-      }, i * 380 + 200);
-    });
-  }, [form, addLine]);
+    else if (step === 'subject') {
+      addLine(`  ${input}`, C.blue, true);
+      setForm(f => ({ ...f, subject: input.trim() }));
+      setInput('');
+      addLine('', '');
+      addLine('> Type your message (Shift+Enter for new line, Enter to submit):', C.amber);
+      setStep('message');
+    }
+
+    else if (step === 'message') {
+      addLine(`  "${input.slice(0, 80)}${input.length > 80 ? '...' : ''}"`, C.blue, true);
+      setForm(f => ({ ...f, message: input.trim() }));
+      setInput('');
+      addLine('', '');
+      addLine('────────────────────────────────────────', 'rgba(232,232,240,0.1)');
+      addLine('> CONFIRM TRANSMISSION? [Y/N]', C.amber);
+      setStep('confirm');
+    }
+
+    else if (step === 'confirm') {
+      const val = input.trim().toLowerCase();
+      if (val === 'y' || val === 'yes' || val === '') {
+        addLine('  Y', C.green, true);
+        setInput('');
+        setStep('sending');
+        addLine('', '');
+        addLine('INITIATING QUANTUM TRANSMISSION...', C.amber);
+
+        playSound('send');
+
+        // Progress bar
+        let prog = 0;
+        const iv = setInterval(() => { prog += 1.5; setSendProgress(Math.min(prog, 100)); if (prog >= 100) clearInterval(iv); }, 50);
+
+        // Send sequence
+        const seq = [
+          'Compressing payload...',
+          'Routing through quantum nodes...',
+          'Establishing handshake...',
+          `Transmitting to ${OWNER.email}...`,
+          'Awaiting confirmation...',
+        ];
+        seq.forEach((l, i) => {
+          setTimeout(() => addLine(l, 'rgba(232,232,240,0.5)'), i * 400 + 300);
+        });
+
+        // Actually send
+        setTimeout(async () => {
+          try {
+            const res = await fetch('/api/contact', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: form.name, email: form.email, message: `${form.subject ? `[${form.subject}] ` : ''}${form.message || input.trim()}` }),
+            });
+            const data = await res.json();
+            if (data.fallback && data.mailto) window.open(data.mailto, '_blank');
+          } catch {
+            window.open(`mailto:${OWNER.email}?subject=VOID OS: ${encodeURIComponent(form.name)}&body=${encodeURIComponent(`From: ${form.name} (${form.email})\n\n${form.message || input.trim()}`)}`, '_blank');
+          }
+        }, 1500);
+
+        // Success
+        setTimeout(() => {
+          addLine('', '');
+          addLine('✓ TRANSMISSION SUCCESSFUL', C.green);
+          addLine(`  Delivered to: ${OWNER.email}`, C.blue);
+          addLine('  Status: RECEIVED ✓', C.green);
+          playSound('success');
+          setStep('sent');
+          setTimeout(() => setShowSuccess(true), 600);
+        }, seq.length * 400 + 600);
+
+      } else {
+        addLine('  N — Transmission cancelled.', C.red);
+        setInput('');
+        addLine('', '');
+        addLine('> IDENTIFY YOURSELF — Enter your name:', C.amber);
+        setForm({ name: '', email: '', subject: '', message: '' });
+        setStep('name');
+      }
+    }
+  }, [step, input, form, addLine]);
+
+  const promptLabels: Record<string, string> = { name: 'NAME', email: 'EMAIL', subject: 'SUBJECT', message: 'MESSAGE', confirm: 'Y/N' };
+  const promptLabel = promptLabels[step] || '';
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: C.void, overflow: 'hidden', zIndex: 50, fontFamily: 'var(--font-mono)', color: C.white }}>
@@ -304,13 +448,14 @@ export default function ContactSection() {
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
         @keyframes pulseRing{0%{transform:scale(1);opacity:0.7}100%{transform:scale(2.2);opacity:0}}
         @keyframes fadeIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:none}}
+        @keyframes glow{0%,100%{box-shadow:0 0 10px rgba(0,212,255,0.15)}50%{box-shadow:0 0 25px rgba(0,212,255,0.3)}}
         ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.25)}
       `}} />
 
-      {/* CRT + grid */}
+      {/* BG layers */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(0,212,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)' }} />
 
       {/* Header */}
       <div style={{
@@ -342,151 +487,149 @@ export default function ContactSection() {
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}` }} />
-            <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: C.green }}>AVAILABLE</span>
+            <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: C.green }}>ONLINE</span>
           </div>
           <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.3)', letterSpacing: '1.5px' }}>
-            {clock.toLocaleTimeString('en-US', { hour12: false })} UTC+5:30
+            {clock.toLocaleTimeString('en-US', { hour12: false })}
           </span>
         </div>
       </div>
 
-      {/* Body grid — Terminal LEFT, Form RIGHT */}
-      <div id="contact-grid" style={{ display: 'grid', gridTemplateColumns: '1fr clamp(280px,35%,400px)', height: '100%', paddingTop: 50, overflow: 'hidden' }}>
-        <style dangerouslySetInnerHTML={{ __html: '@media(max-width:768px){#contact-grid{grid-template-columns:1fr!important;}}' }} />
+      {/* BODY: Terminal LEFT + Data Preview RIGHT */}
+      <div id="contact-grid" style={{ display: 'grid', gridTemplateColumns: '1fr clamp(240px,28%,320px)', height: '100%', paddingTop: 50, overflow: 'hidden' }}>
+        <style dangerouslySetInnerHTML={{ __html: '@media(max-width:768px){#contact-grid{grid-template-columns:1fr!important;} #contact-right{display:none!important;}}' }} />
 
         {/* LEFT — Terminal */}
         <div style={{ display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(0,212,255,0.08)', overflow: 'hidden', position: 'relative' }}>
-          <Burst active={burst} />
 
           {/* Tab bar */}
           <div style={{ padding: '10px 18px', borderBottom: '1px solid rgba(0,212,255,0.08)', background: 'rgba(0,212,255,0.015)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             {['#FF3B5C', '#FFB800', '#39FF14'].map((c, i) => (
               <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: c, opacity: 0.65 }} />
             ))}
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px', color: 'rgba(232,232,240,0.35)', marginLeft: 6 }}>
-              VOID_SHELL — CONTACT.net v2045.1
+            <span style={{ fontSize: '9px', letterSpacing: '2px', color: 'rgba(232,232,240,0.35)', marginLeft: 6 }}>
+              VOID_SHELL — CONTACT.net
             </span>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 14 }}>
-              {['ENC: AES-256', 'PROTO: VOID/3', 'LAYER: 7'].map(s => (
+              {['AES-256', 'VOID/3'].map(s => (
                 <span key={s} style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1px' }}>{s}</span>
               ))}
             </div>
           </div>
 
           {/* Terminal output */}
-          <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+          <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '18px 22px' }}>
             {lines.map((l, i) => (
-              <TLine key={l.id} text={l.text} color={l.color} prompt={l.prompt} isNew={i === lines.length - 1} />
+              <div key={l.id} style={{
+                display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 2,
+                animation: i === lines.length - 1 ? 'fadeIn 0.15s ease' : 'none',
+              }}>
+                <span style={{ color: l.prompt ? C.blue : 'rgba(232,232,240,0.15)', flexShrink: 0, fontSize: '12px', userSelect: 'none' }}>
+                  {l.prompt ? '>' : '  '}
+                </span>
+                <span style={{ fontSize: '12px', lineHeight: 1.75, color: l.color || 'rgba(232,232,240,0.55)', wordBreak: 'break-word', fontWeight: l.color === C.green ? 600 : 400 }}>{l.text || '\u00A0'}</span>
+              </div>
             ))}
 
-            {/* Name prompt */}
-            {phase === 'namePrompt' && !nameSubmitted && (
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 6 }}>
-                <span style={{ color: C.blue, fontSize: '12px' }}>{'>'}</span>
-                <span style={{ color: 'rgba(232,232,240,0.5)', fontSize: '12px', whiteSpace: 'nowrap' }}>WHO ARE YOU?</span>
-                <input ref={nameRef} value={nameInput} onChange={e => setNameInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && submitName()}
-                  style={{ background: 'none', border: 'none', fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, outline: 'none', flex: 1, caretColor: C.blue }}
-                  autoFocus placeholder="Type your name and press Enter..." />
-                <span style={{ color: C.blue, fontSize: '12px', animation: 'blink 0.85s step-end infinite' }}>█</span>
-              </div>
-            )}
-
-            {/* Analyzing dots */}
-            {phase === 'analyzing' && (
-              <div style={{ display: 'flex', gap: 5, padding: '6px 0 4px 20px' }}>
-                {[0, 1, 2].map(i => (
-                  <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: C.blue, animation: `blink 1s step-end infinite ${i * 0.28}s` }} />
-                ))}
-              </div>
-            )}
-
-            {/* Idle cursor */}
-            {['form', 'sent'].includes(phase) && (
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4, opacity: 0.3 }}>
-                <span style={{ color: C.blue, fontSize: '12px' }}>{'>'}</span>
-                <span style={{ color: C.blue, fontSize: '12px', animation: 'blink 1.1s step-end infinite' }}>█</span>
+            {/* Sending progress */}
+            {step === 'sending' && sendProgress < 100 && (
+              <div style={{ marginTop: 8, marginLeft: 20 }}>
+                <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden', maxWidth: 300 }}>
+                  <div style={{ height: '100%', width: `${sendProgress}%`, background: `linear-gradient(90deg, ${C.blue}, ${C.green})`, transition: 'width 0.05s', boxShadow: `0 0 10px ${C.blue}60` }} />
+                </div>
+                <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.5)', marginTop: 4, letterSpacing: '1px' }}>TRANSMITTING... {Math.floor(sendProgress)}%</div>
               </div>
             )}
           </div>
+
+          {/* Input area */}
+          {!['booting', 'sending', 'sent'].includes(step) && (
+            <div style={{
+              padding: '14px 22px', borderTop: '1px solid rgba(0,212,255,0.1)',
+              background: 'rgba(0,212,255,0.01)',
+              display: 'flex', alignItems: 'center', gap: 10,
+              animation: 'glow 3s ease infinite',
+            }}>
+              <span style={{ color: C.green, fontSize: '10px', letterSpacing: '1px', flexShrink: 0 }}>{promptLabel}</span>
+              <span style={{ color: C.blue, fontSize: '13px' }}>❯</span>
+              {step === 'message' ? (
+                <textarea
+                  ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
+                  placeholder="Type your message..."
+                  rows={2}
+                  style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, caretColor: C.blue, resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }}
+                />
+              ) : (
+                <input
+                  ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
+                  placeholder={step === 'confirm' ? 'Y or N...' : `Enter your ${promptLabel.toLowerCase()}...`}
+                  style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '12px', color: C.white, caretColor: C.blue, background: 'transparent', border: 'none', outline: 'none' }}
+                />
+              )}
+              <button onClick={handleSubmit} style={{
+                fontFamily: 'var(--font-mono)', fontSize: '9px', color: C.blue, cursor: 'pointer', padding: '6px 14px',
+                border: `1px solid ${C.blue}30`, background: `${C.blue}08`, transition: 'all 0.2s', letterSpacing: '1px',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}18`; e.currentTarget.style.borderColor = `${C.blue}55`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}08`; e.currentTarget.style.borderColor = `${C.blue}30`; }}
+              >ENTER</button>
+            </div>
+          )}
         </div>
 
-        {/* RIGHT — Form + info panels */}
-        <div style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: 'clamp(16px,2.5vw,28px)', gap: 14, background: 'rgba(0,212,255,0.01)' }}>
+        {/* RIGHT — Live data preview */}
+        <div id="contact-right" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: 'clamp(14px,2vw,24px)', gap: 14, background: 'rgba(0,212,255,0.008)' }}>
 
-          {/* Transmission Form */}
-          <div style={{
-            border: '1px solid rgba(0,212,255,0.12)', background: 'rgba(255,255,255,0.02)',
-            padding: 'clamp(14px,2vw,24px)',
-            opacity: ['form', 'sending', 'sent'].includes(phase) ? 1 : 0.2,
-            transition: 'opacity 0.9s ease',
-          }}>
-            <div style={{ fontSize: '8px', letterSpacing: '3px', color: C.blue, marginBottom: 14, textShadow: `0 0 8px ${C.blue}30` }}>
-              TRANSMISSION_FORM.net
-            </div>
-
-            {phase === 'sent' ? (
-              <div style={{ textAlign: 'center', padding: '28px 0' }}>
-                <div style={{ fontSize: '2.2rem', marginBottom: 12 }}>✓</div>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '16px', color: C.green, marginBottom: 8 }}>SIGNAL RECEIVED</div>
-                <div style={{ fontSize: '11px', color: 'rgba(232,232,240,0.5)', lineHeight: 1.8 }}>
-                  Transmission from {form.name} confirmed.<br />Response ETA: {'< 24 hours'}
-                </div>
-              </div>
-            ) : (
-              <>
-                <Field label="NAME.string" value={form.name} onChange={v => setForm(f => ({ ...f, name: v }))}
-                  focused={focused === 'name'} onFocus={() => setFocused('name')} onBlur={() => setFocused(null)}
-                  placeholder="Your name..." disabled={phase !== 'form'} />
-                <Field label="EMAIL.string" value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))}
-                  focused={focused === 'email'} onFocus={() => setFocused('email')} onBlur={() => setFocused(null)}
-                  placeholder="your@email.com" disabled={phase !== 'form'} />
-                <Field label="SUBJECT.string" value={form.subject} onChange={v => setForm(f => ({ ...f, subject: v }))}
-                  focused={focused === 'subject'} onFocus={() => setFocused('subject')} onBlur={() => setFocused(null)}
-                  placeholder="What's this about..." disabled={phase !== 'form'} />
-                <Field label="MESSAGE.string" value={form.message} onChange={v => setForm(f => ({ ...f, message: v }))}
-                  focused={focused === 'message'} onFocus={() => setFocused('message')} onBlur={() => setFocused(null)}
-                  placeholder="Your transmission..." multiline disabled={phase !== 'form'} />
-
-                <button onClick={handleSend} disabled={phase !== 'form'} style={{
-                  width: '100%', padding: '13px',
-                  background: phase === 'form' ? 'rgba(0,212,255,0.08)' : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${phase === 'form' ? C.blue + '66' : 'rgba(255,255,255,0.06)'}`,
-                  color: phase === 'form' ? C.blue : 'rgba(232,232,240,0.2)',
-                  fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '2.5px',
-                  cursor: phase === 'form' ? 'pointer' : 'default', transition: 'all 0.2s',
-                }}
-                  onMouseEnter={e => { if (phase === 'form') { e.currentTarget.style.background = 'rgba(0,212,255,0.15)'; e.currentTarget.style.boxShadow = `0 0 20px rgba(0,212,255,0.15)`; } }}
-                  onMouseLeave={e => { e.currentTarget.style.background = phase === 'form' ? 'rgba(0,212,255,0.08)' : 'rgba(255,255,255,0.02)'; e.currentTarget.style.boxShadow = 'none'; }}
-                >{phase === 'sending' ? 'TRANSMITTING...' : 'SEND TRANSMISSION →'}</button>
-              </>
-            )}
+          {/* Radar */}
+          <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.015)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 8 }}>SIGNAL DETECTION</div>
+            <RadarCanvas />
+            <div style={{ fontSize: '7px', letterSpacing: '1.5px', color: C.green, marginTop: 8 }}>VISITOR DETECTED · SECTOR 7G</div>
           </div>
 
-          {/* Radar + Status */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 8 }}>SIGNAL DETECTION</div>
-              <RadarCanvas />
-              <div style={{ fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.45)', marginTop: 8 }}>VISITOR DETECTED</div>
-            </div>
+          {/* Live form data preview */}
+          <div style={{ padding: 16, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.015)' }}>
+            <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: C.purple, marginBottom: 12, textShadow: `0 0 8px ${C.purple}40` }}>TRANSMISSION DATA</div>
+            {[
+              { label: 'SENDER', value: form.name, step: 'name' },
+              { label: 'EMAIL', value: form.email, step: 'email' },
+              { label: 'SUBJECT', value: form.subject, step: 'subject' },
+              { label: 'MESSAGE', value: form.message ? `"${form.message.slice(0, 50)}${form.message.length > 50 ? '...' : ''}"` : '', step: 'message' },
+            ].map(field => (
+              <div key={field.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{field.label}</span>
+                <span style={{
+                  fontSize: '10px', color: field.value ? C.blue : 'rgba(232,232,240,0.15)',
+                  maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  textShadow: field.value ? `0 0 8px ${C.blue}30` : 'none',
+                  transition: 'all 0.3s ease',
+                }}>
+                  {field.value || (step === field.step ? '▍' : '—')}
+                </span>
+              </div>
+            ))}
+          </div>
 
-            <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
-              <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>AVAILABILITY</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.green, boxShadow: `0 0 10px ${C.green}` }} />
-                <span style={{ fontSize: '9px', color: C.green, letterSpacing: '1px' }}>AVAILABLE</span>
+          {/* Status info */}
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.015)' }}>
+            <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>CONNECTION STATUS</div>
+            {[
+              { label: 'STATUS', value: 'AVAILABLE', color: C.green },
+              { label: 'RESPONSE', value: '< 24 HRS', color: C.amber },
+              { label: 'CHANNEL', value: 'ENCRYPTED', color: C.blue },
+              { label: 'PROTOCOL', value: 'VOID/3', color: C.purple },
+            ].map(s => (
+              <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{s.label}</span>
+                <span style={{ fontSize: '9px', color: s.color, textShadow: `0 0 6px ${s.color}40` }}>{s.value}</span>
               </div>
-              <div style={{ fontSize: '10px', color: 'rgba(232,232,240,0.45)', lineHeight: 2 }}>
-                Response: <span style={{ color: C.white }}>{'< 24hrs'}</span><br />
-                Timezone: <span style={{ color: C.white }}>UTC+5:30</span><br />
-                Location: <span style={{ color: C.white }}>{OWNER.location}</span>
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* Social links */}
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
+          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.1)', background: 'rgba(255,255,255,0.015)' }}>
             <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>SIGNAL CHANNELS</div>
             {[
               { label: 'EMAIL', value: OWNER.email, href: `mailto:${OWNER.email}`, color: C.green },
@@ -495,23 +638,26 @@ export default function ContactSection() {
             ].map(link => (
               <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '7px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.03)',
                 textDecoration: 'none', transition: 'all 0.2s',
               }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '6px'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '0'; }}
               >
-                <span style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.4)' }}>{link.label}</span>
-                <span style={{ fontSize: '10px', color: link.color, letterSpacing: '0.5px' }}>{link.value}</span>
+                <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{link.label}</span>
+                <span style={{ fontSize: '9px', color: link.color }}>{link.value}</span>
               </a>
             ))}
           </div>
 
-          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.15)', letterSpacing: '1.5px', lineHeight: 2, paddingTop: 2 }}>
-            CONTACT.net — SECURE CHANNEL<br />ALL TRANSMISSIONS ENCRYPTED<br />VOID OS v3.0.1
+          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.15)', letterSpacing: '1.5px', lineHeight: 2 }}>
+            SECURE CHANNEL · AES-256<br />VOID OS v3.0.1
           </div>
         </div>
       </div>
+
+      {/* Success popup */}
+      {showSuccess && <SuccessPopup name={form.name} onBack={() => navigateTo('desktop')} />}
     </div>
   );
 }

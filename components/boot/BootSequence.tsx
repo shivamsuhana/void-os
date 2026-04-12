@@ -66,7 +66,7 @@ function FloatingParticles() {
 }
 
 /* ============================================
-   BIOS SCREEN — Enhanced with glow pulses
+   BIOS SCREEN — Enhanced with header, diagnostics grid
    ============================================ */
 function BiosScreen({ onComplete }: { onComplete: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,12 +75,12 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
   const glowRef = useRef<HTMLDivElement>(null);
 
   const DIAG_LINES = [
-    { text: 'VOID BIOS v3.0.1', status: '', color: '#00D4FF' },
     { text: 'Quantum Core............', status: '[OK]', color: '#39FF14' },
     { text: 'Neural Stack............', status: '[OK]', color: '#39FF14' },
     { text: 'Memory Fabric...........', status: '64 TB', color: '#FFB800' },
     { text: 'GPU Mesh................', status: '[OK]', color: '#39FF14' },
     { text: 'Holographic Engine......', status: '[OK]', color: '#39FF14' },
+    { text: 'Sound Reactor...........', status: '[OK]', color: '#39FF14' },
     { text: 'AI Subsystem............', status: 'ACTIVE', color: '#00D4FF' },
     { text: 'Consciousness Layer.....', status: '[OK]', color: '#39FF14' },
     { text: 'Identity Module.........', status: 'LOADING', color: '#00D4FF' },
@@ -94,47 +94,43 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
       onComplete: () => { setTimeout(onComplete, 200); },
     });
 
-    // Create line elements with glow on status
     DIAG_LINES.forEach((line, i) => {
       const el = document.createElement('div');
-      el.style.cssText = 'display:flex;justify-content:space-between;font-size:11px;line-height:2.2;opacity:0;transform:translateY(5px)';
-      const statusGlow = line.status === '[OK]' ? `text-shadow: 0 0 12px ${line.color}80` : line.status === 'ACTIVE' ? `text-shadow: 0 0 12px ${line.color}80` : '';
+      el.style.cssText = 'display:flex;justify-content:space-between;font-size:11px;line-height:2.4;opacity:0;transform:translateY(5px);padding:0 4px';
+      const statusGlow = ['[OK]', 'ACTIVE'].includes(line.status) ? `text-shadow: 0 0 12px ${line.color}80` : '';
       el.innerHTML = `<span style="color:rgba(232,232,240,0.75)">${line.text}</span><span style="color:${line.color};font-weight:600;${statusGlow}">${line.status}</span>`;
       container.appendChild(el);
 
       tl.to(el, {
-        opacity: 1, y: 0, duration: 0.15, ease: 'power2.out',
-      }, 0.3 + i * 0.22);
+        opacity: 1, y: 0, duration: 0.12, ease: 'power2.out',
+      }, 0.3 + i * 0.18);
 
-      // Flash glow on [OK] status
       if (line.status === '[OK]') {
         const statusSpan = el.querySelector('span:last-child') as HTMLElement;
         if (statusSpan) {
           tl.fromTo(statusSpan,
-            { textShadow: `0 0 20px ${line.color}` },
-            { textShadow: `0 0 8px ${line.color}60`, duration: 0.4, ease: 'power2.out' },
-            0.3 + i * 0.22 + 0.1
+            { textShadow: `0 0 25px ${line.color}` },
+            { textShadow: `0 0 8px ${line.color}60`, duration: 0.3, ease: 'power2.out' },
+            0.3 + i * 0.18 + 0.08
           );
         }
       }
     });
 
-    // Progress bar with glow trail
     tl.to(progressRef.current, {
-      scaleX: 1, duration: 1.2, ease: 'power1.inOut',
+      scaleX: 1, duration: 1.0, ease: 'power1.inOut',
       transformOrigin: 'left center',
     }, 0.3);
 
-    // Progress bar glow
     if (glowRef.current) {
       tl.to(glowRef.current, {
-        scaleX: 1, duration: 1.2, ease: 'power1.inOut',
+        scaleX: 1, duration: 1.0, ease: 'power1.inOut',
         transformOrigin: 'left center',
       }, 0.3);
     }
 
     tl.to({ val: 0 }, {
-      val: 100, duration: 1.2,
+      val: 100, duration: 1.0,
       onUpdate: function () {
         if (progressTextRef.current) {
           progressTextRef.current.textContent = `${Math.round(this.targets()[0].val)}%`;
@@ -148,35 +144,60 @@ function BiosScreen({ onComplete }: { onComplete: () => void }) {
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 10,
-      display: 'flex', flexDirection: 'column', justifyContent: 'center',
-      padding: '0 15%', paddingBottom: '10vh', fontFamily: "'JetBrains Mono', monospace",
+      display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+      fontFamily: "'JetBrains Mono', monospace",
     }}>
-      <div ref={containerRef} style={{ marginBottom: '30px' }} />
-
-      <div style={{ maxWidth: '300px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'rgba(232,232,240,0.6)', marginBottom: '6px', letterSpacing: '1px' }}>
-          <span>INITIALIZING VOID OS</span>
-          <span ref={progressTextRef}>0%</span>
+      <div style={{ width: 'min(450px, 85vw)' }}>
+        {/* BIOS Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 4px' }}>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#00D4FF', textShadow: '0 0 15px rgba(0,212,255,0.4)', letterSpacing: '3px' }}>VOID BIOS v3.0.1</div>
+            <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.35)', letterSpacing: '2px', marginTop: 4 }}>QUANTUM RENDERING ENGINE</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '8px', color: '#39FF14', letterSpacing: '1.5px', textShadow: '0 0 8px rgba(57,255,20,0.3)' }}>SYS: ONLINE</div>
+            <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.3)', marginTop: 2 }}>BUILD 2045.04.12</div>
+          </div>
         </div>
-        <div style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden', position: 'relative' }}>
-          <div ref={progressRef} style={{
-            height: '100%', borderRadius: '1px',
-            background: 'linear-gradient(90deg, #00D4FF, #7B2FFF)',
-            transform: 'scaleX(0)', transformOrigin: 'left center',
-            position: 'relative', zIndex: 2,
-          }} />
-          {/* Glow trail behind progress bar */}
-          <div ref={glowRef} style={{
-            position: 'absolute', top: '-3px', left: 0, right: 0, height: '8px',
-            background: 'linear-gradient(90deg, rgba(0,212,255,0.3), rgba(123,47,255,0.3))',
-            filter: 'blur(4px)', borderRadius: '4px',
-            transform: 'scaleX(0)', transformOrigin: 'left center',
-          }} />
+        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.2), transparent)', marginBottom: 12 }} />
+
+        {/* Diagnostics box */}
+        <div ref={containerRef} style={{ marginBottom: 20, padding: '8px 12px', border: '1px solid rgba(0,212,255,0.08)', background: 'rgba(0,212,255,0.02)' }} />
+
+        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)', marginBottom: 16 }} />
+
+        {/* Progress bar */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'rgba(232,232,240,0.6)', marginBottom: '6px', letterSpacing: '1.5px' }}>
+            <span>INITIALIZING VOID OS</span>
+            <span ref={progressTextRef}>0%</span>
+          </div>
+          <div style={{ height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden', position: 'relative' }}>
+            <div ref={progressRef} style={{
+              height: '100%', borderRadius: '2px',
+              background: 'linear-gradient(90deg, #00D4FF, #7B2FFF, #FF3366)',
+              transform: 'scaleX(0)', transformOrigin: 'left center',
+              position: 'relative', zIndex: 2,
+            }} />
+            <div ref={glowRef} style={{
+              position: 'absolute', top: '-4px', left: 0, right: 0, height: '12px',
+              background: 'linear-gradient(90deg, rgba(0,212,255,0.3), rgba(123,47,255,0.3), rgba(255,51,102,0.2))',
+              filter: 'blur(6px)', borderRadius: '6px',
+              transform: 'scaleX(0)', transformOrigin: 'left center',
+            }} />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'space-between', padding: '0 4px' }}>
+          <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1.5px' }}>CORES: 8 · THREADS: 16</span>
+          <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1.5px' }}>FREQ: 4.8 GHz</span>
         </div>
       </div>
     </div>
   );
 }
+
 
 /* ============================================
    GLITCH TRANSITION — GSAP tearbar animation
