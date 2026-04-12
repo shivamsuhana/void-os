@@ -650,7 +650,7 @@ export default function ContactSection() {
         </div>
       </div>
 
-      {showSuccess && <SuccessPopup name={form.name} onBack={() => { setShowSuccess(false); setStep('name'); setLines([]); setForm({ name: '', email: '', subject: '', message: '' }); setInput(''); setSendProgress(0); setTimeout(() => { addLine('VOID OS CONTACT TERMINAL v3.0.1', C.cyan); addLine('Secure channel established.', 'rgba(232,232,240,0.5)'); addLine('', ''); addLine('> IDENTIFY YOURSELF — Enter your name:', C.amber); }, 100); }} />}
+      {showSuccess && <SuccessPopup name={form.name} onBack={() => { setShowSuccess(false); setStep('name'); setLines([]); setForm({ name: '', email: '', subject: '', message: '' }); setInput(''); setSendProgress(0); setTimeout(() => { addLine('VOID OS CONTACT TERMINAL v3.0.1', C.blue); addLine('Secure channel established.', 'rgba(232,232,240,0.5)'); addLine('', ''); addLine('> IDENTIFY YOURSELF — Enter your name:', C.amber); }, 100); }} />}
     </div>
   );
 }
