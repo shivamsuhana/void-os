@@ -382,9 +382,13 @@ export default function WorkSection() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const selectedProjectRef = useRef(selectedProject);
+  useEffect(() => { selectedProjectRef.current = selectedProject; }, [selectedProject]);
+
   // Scroll/wheel control
   useEffect(() => {
     const handler = (e: WheelEvent) => {
+      if (selectedProjectRef.current) return; // Disable tunnel scroll when modal is open
       e.preventDefault();
       setScrollProgress(prev => Math.max(0, Math.min(1, prev + e.deltaY * 0.0006)));
     };
@@ -398,7 +402,10 @@ export default function WorkSection() {
   const lastY = useRef(0);
   useEffect(() => {
     // Mouse
-    const handleDown = (e: MouseEvent) => { isDragging.current = true; lastY.current = e.clientY; };
+    const handleDown = (e: MouseEvent) => { 
+      if (selectedProjectRef.current) return;
+      isDragging.current = true; lastY.current = e.clientY; 
+    };
     const handleMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
       const delta = lastY.current - e.clientY;
@@ -408,7 +415,10 @@ export default function WorkSection() {
     const handleUp = () => { isDragging.current = false; };
     
     // Touch
-    const handleTouchStart = (e: TouchEvent) => { isDragging.current = true; lastY.current = e.touches[0].clientY; };
+    const handleTouchStart = (e: TouchEvent) => { 
+      if (selectedProjectRef.current) return;
+      isDragging.current = true; lastY.current = e.touches[0].clientY; 
+    };
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging.current) return;
       const delta = lastY.current - e.touches[0].clientY;
