@@ -14,7 +14,7 @@ function RadarCanvas() {
   useEffect(() => {
     const c = ref.current; if (!c) return;
     const ctx = c.getContext('2d')!;
-    const SIZE = 260; c.width = SIZE; c.height = SIZE;
+    const SIZE = 320; c.width = SIZE; c.height = SIZE;
     const cx = SIZE / 2, cy = SIZE / 2, R = SIZE * 0.42;
     let t = 0, frame: number;
 
@@ -84,6 +84,28 @@ function RadarCanvas() {
       cg.addColorStop(0, 'rgba(0,212,255,0.15)'); cg.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2);
       ctx.fillStyle = cg; ctx.fill();
+
+      // Cardinal direction labels
+      ctx.font = '8px monospace';
+      ctx.fillStyle = 'rgba(0,212,255,0.25)';
+      ctx.textAlign = 'center';
+      ctx.fillText('N', cx, cy - R - 6);
+      ctx.fillText('S', cx, cy + R + 12);
+      ctx.fillText('E', cx + R + 10, cy + 3);
+      ctx.fillText('W', cx - R - 10, cy + 3);
+
+      // Diagonal tick marks (every 45°)
+      for (let a = 0; a < 8; a++) {
+        const ang = (a / 8) * Math.PI * 2 - Math.PI / 2;
+        const inner = R * 0.92;
+        const outer = R * 1.0;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(ang) * inner, cy + Math.sin(ang) * inner);
+        ctx.lineTo(cx + Math.cos(ang) * outer, cy + Math.sin(ang) * outer);
+        ctx.strokeStyle = 'rgba(0,212,255,0.12)';
+        ctx.lineWidth = a % 2 === 0 ? 1.5 : 0.5;
+        ctx.stroke();
+      }
 
       frame = requestAnimationFrame(draw);
     };
