@@ -164,6 +164,15 @@ export default function TimelineSection() {
   const pathRef = useRef<SVGPathElement>(null);
   const signalRef = useRef<HTMLDivElement>(null);
 
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize(); // initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Scroll-based signal propagation
   useEffect(() => {
     const container = containerRef.current;
@@ -242,8 +251,9 @@ export default function TimelineSection() {
         <div style={{ position: 'relative' }}>
           {/* Central pathway line */}
           <div style={{
-            position: 'absolute', left: '50%', top: 0, bottom: 0, width: 2,
+            position: 'absolute', left: isMobile ? '20px' : '50%', top: 0, bottom: 0, width: 2,
             transform: 'translateX(-50%)',
+            transition: 'left 0.3s ease',
             background: 'rgba(57,255,20,0.06)',
           }}>
             {/* Progress fill */}
@@ -278,37 +288,45 @@ export default function TimelineSection() {
                 ref={el => { nodeRefs.current[i] = el; }}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 40px 1fr',
+                  gridTemplateColumns: isMobile ? '40px 1fr' : '1fr 40px 1fr',
                   alignItems: 'start',
                   marginBottom: i < TIMELINE.length - 1 ? 40 : 0,
                   minHeight: 140,
                 }}
               >
-                {/* Left side */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 20 }}>
-                  {isLeft && <TimelineCard entry={entry} index={i} active={active} side="left" />}
-                </div>
+                {isMobile ? (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 20 }}>
+                      <TimelineNode entry={entry} index={i} active={active} />
+                    </div>
+                    <div style={{ paddingLeft: 10 }}>
+                      <TimelineCard entry={entry} index={i} active={active} side="right" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Left side */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 20 }}>
+                      {isLeft && <TimelineCard entry={entry} index={i} active={active} side="left" />}
+                    </div>
 
-                {/* Center node */}
-                <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 20 }}>
-                  <TimelineNode entry={entry} index={i} active={active} />
-                </div>
+                    {/* Center node */}
+                    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 20 }}>
+                      <TimelineNode entry={entry} index={i} active={active} />
+                    </div>
 
-                {/* Right side */}
-                <div style={{ paddingLeft: 20 }}>
-                  {!isLeft && <TimelineCard entry={entry} index={i} active={active} side="right" />}
-                </div>
+                    {/* Right side */}
+                    <div style={{ paddingLeft: 20 }}>
+                      {!isLeft && <TimelineCard entry={entry} index={i} active={active} side="right" />}
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}
 
           <style dangerouslySetInnerHTML={{ __html: `
             @keyframes nodePulse{0%{transform:scale(1);opacity:0.3;}50%{transform:scale(1.6);opacity:0;}100%{transform:scale(1);opacity:0.3;}}
-            @media(max-width:768px){
-              [style*="grid-template-columns: 1fr 40px 1fr"]{grid-template-columns:20px 1fr!important;}
-              [style*="padding-right: 20px"]{padding-right:0!important;display:block!important;justify-content:flex-start!important;}
-              [style*="padding-left: 20px"]{padding-left:12px!important;}
-            }
           ` }} />
         </div>
 
