@@ -334,7 +334,7 @@ export default function ContactSection() {
         gap: 0,
       }}>
         <style dangerouslySetInnerHTML={{ __html: '@media(max-width:900px){#contact-right{display:none!important;}}' }} />
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 18, alignItems: 'stretch' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 18, alignItems: 'stretch', justifyContent: 'center' }}>
 
           {/* Terminal card */}
           <div style={{
