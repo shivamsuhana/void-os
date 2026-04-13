@@ -34,23 +34,46 @@ export default function ResumePage() {
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           .resume-no-print { display: none !important; }
-          body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
+
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          body, html {
+            background: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
           .resume-outer {
-            background: white !important;
+            background: #ffffff !important;
             padding: 0 !important;
             min-height: auto !important;
           }
+
           .resume-paper {
             margin: 0 !important;
-            padding: 0 !important;
+            padding: 32px 44px !important;
             max-width: 100% !important;
             box-shadow: none !important;
-            background: none !important;
+            background: #ffffff !important;
+            color: #1a1a1a !important;
+            width: 100% !important;
+          }
+
+          h1, h2, h3, p, span, li, td, th {
+            color: inherit !important;
+          }
+
+          hr {
+            border-color: #1a1a1a !important;
           }
         }
+
         @page {
-          margin: 0.5in;
-          size: A4;
+          margin: 0.6in 0.5in;
+          size: A4 portrait;
         }
       ` }} />
 
