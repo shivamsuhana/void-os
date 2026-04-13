@@ -33,7 +33,7 @@ const SECTIONS_TO_TRACK: Section[] = ['about', 'work', 'skills', 'timeline', 'co
 export default function AchievementSystem() {
   const { activeSection, bootComplete, easterEggsFound } = useVoidStore();
   const [unlocked, setUnlocked] = useState<string[]>([]);
-  const [visitedSections, setVisitedSections] = useState<Set<string>>(new Set());
+  const [visitedSections, setVisitedSections] = useState<string[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [newBadge, setNewBadge] = useState<Achievement | null>(null);
   const [paletteUses, setPaletteUses] = useState(0);
@@ -45,7 +45,7 @@ export default function AchievementSystem() {
       const saved = localStorage.getItem('void_achievements');
       if (saved) setUnlocked(JSON.parse(saved));
       const savedVisits = localStorage.getItem('void_visited');
-      if (savedVisits) setVisitedSections(new Set(JSON.parse(savedVisits)));
+      if (savedVisits) setVisitedSections(JSON.parse(savedVisits));
       const savedPalette = localStorage.getItem('void_palette_uses');
       if (savedPalette) setPaletteUses(parseInt(savedPalette));
     } catch { /* ignore */ }
@@ -75,15 +75,14 @@ export default function AchievementSystem() {
 
   // Track section visits
   useEffect(() => {
-    if (SECTIONS_TO_TRACK.includes(activeSection)) {
+    if (SECTIONS_TO_TRACK.includes(activeSection) && !visitedSections.includes(activeSection)) {
       setVisitedSections(prev => {
-        const next = new Set(prev);
-        next.add(activeSection);
-        localStorage.setItem('void_visited', JSON.stringify([...next]));
+        const next = [...prev, activeSection];
+        localStorage.setItem('void_visited', JSON.stringify(next));
         return next;
       });
     }
-  }, [activeSection]);
+  }, [activeSection, visitedSections]);
 
   // Track ⌘K usage  
   useEffect(() => {
@@ -109,11 +108,17 @@ export default function AchievementSystem() {
     // Contact visited
     if (activeSection === 'contact') unlock('first_contact');
     // All sections visited
-    if (SECTIONS_TO_TRACK.every(s => visitedSections.has(s))) unlock('cartographer');
+    // All sections visited
+    if (SECTIONS_TO_TRACK.every(s => visitedSections.includes(s))) unlock('cartographer');
     // Konami code
     if (easterEggsFound.includes('konami')) unlock('konami_master');
     // Command palette 3 times
     if (paletteUses >= 3) unlock('command_line');
+    // Deep diver — track project clicks from localStorage
+    try {
+      const clicks = parseInt(localStorage.getItem('void_project_clicks') || '0');
+      if (clicks >= 3) unlock('deep_diver');
+    } catch { /* ignore */ }
     // All achievements unlocked → void master
     const nonMaster = ACHIEVEMENTS.filter(a => a.id !== 'void_master').map(a => a.id);
     if (nonMaster.every(id => unlocked.includes(id))) unlock('void_master');
@@ -147,7 +152,7 @@ export default function AchievementSystem() {
       <button
         onClick={() => setPanelOpen(prev => !prev)}
         style={{
-          position: 'fixed', bottom: 20, left: 20, zIndex: 9999,
+          position: 'fixed', bottom: 44, left: 20, zIndex: 9999,
           width: 40, height: 40, borderRadius: 8,
           background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
           backdropFilter: 'blur(8px)', cursor: 'pointer',
@@ -174,7 +179,7 @@ export default function AchievementSystem() {
       {/* Achievement panel */}
       {panelOpen && (
         <div style={{
-          position: 'fixed', bottom: 70, left: 20, zIndex: 9999,
+          position: 'fixed', bottom: 94, left: 20, zIndex: 9999,
           width: 300, background: 'rgba(8,8,20,0.97)',
           border: '1px solid rgba(255,184,0,0.12)',
           boxShadow: '0 0 40px rgba(0,0,0,0.4)',
