@@ -9,9 +9,10 @@ import SectionAmbientBG from '@/components/global/SectionAmbientBG';
 import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 /* ═══════════════════════════════════════════
-   HEX GRID BACKGROUND
+   DEEP SPACE PERSPECTIVE BACKGROUND
+   Converging grid, nebula, twinkling stars
    ═══════════════════════════════════════════ */
-function HexGridBG() {
+function DeepSpaceBG() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current; if (!c) return;
@@ -19,28 +20,53 @@ function HexGridBG() {
     let W = c.width = window.innerWidth, H = c.height = window.innerHeight;
     const resize = () => { W = c.width = window.innerWidth; H = c.height = window.innerHeight; };
     window.addEventListener('resize', resize);
-    const particles: { x: number; y: number; vx: number; vy: number; size: number; alpha: number }[] = [];
-    for (let i = 0; i < 50; i++) particles.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3, size: Math.random() * 2 + .5, alpha: Math.random() * .3 + .05 });
+
+    const stars = Array.from({ length: 100 }, () => ({
+      x: Math.random(), y: Math.random(), r: Math.random() * 1.2 + 0.3,
+      s: Math.random() * 0.003 + 0.001, a: Math.random(),
+    }));
+
     let t = 0, frame: number;
     const draw = () => {
-      t += .005;
-      ctx.fillStyle = 'rgba(3,3,6,.15)'; ctx.fillRect(0, 0, W, H);
-      const hexR = 40;
-      ctx.strokeStyle = `rgba(0,212,255,${.035 + Math.sin(t) * .015})`; ctx.lineWidth = .5;
-      for (let gy = -1; gy < H / (hexR * Math.sqrt(3)) + 1; gy++) {
-        for (let gx = -1; gx < W / (hexR * 1.5) + 1; gx++) {
-          const cx2 = gx * hexR * 1.5, cy2 = gy * hexR * Math.sqrt(3) + (gx % 2 ? hexR * Math.sqrt(3) / 2 : 0);
-          ctx.beginPath();
-          for (let a = 0; a < 6; a++) { const ang = Math.PI / 3 * a + Math.PI / 6, px = cx2 + hexR * .4 * Math.cos(ang), py = cy2 + hexR * .4 * Math.sin(ang); a === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py); }
-          ctx.closePath(); ctx.stroke();
-        }
+      t += 0.006;
+      ctx.fillStyle = '#030306'; ctx.fillRect(0, 0, W, H);
+
+      const horizon = H * 0.5, vp = W / 2;
+
+      // Bottom perspective grid
+      ctx.strokeStyle = 'rgba(0,212,255,0.04)'; ctx.lineWidth = 1;
+      for (let i = -12; i <= 12; i++) {
+        const dx = (i / 12) * W * 0.8;
+        ctx.beginPath(); ctx.moveTo(vp + dx, horizon); ctx.lineTo(vp + dx * 4, H + 200); ctx.stroke();
       }
-      for (const p of particles) {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0; if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0,212,255,${p.alpha * (.7 + .3 * Math.sin(t * 3 + p.x * .01))})`; ctx.fill();
+      for (let i = 0; i < 8; i++) {
+        const pct = (i / 8) ** 1.4;
+        const y = horizon + (H - horizon + 200) * pct;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
+
+      // Top ceiling perspective grid
+      ctx.strokeStyle = 'rgba(0,212,255,0.02)';
+      for (let i = -6; i <= 6; i++) {
+        const dx = (i / 6) * W * 0.5;
+        ctx.beginPath(); ctx.moveTo(vp + dx, horizon); ctx.lineTo(vp + dx * 3, -200); ctx.stroke();
+      }
+
+      // Stars
+      stars.forEach(s => {
+        s.a += s.s;
+        const alpha = (Math.sin(s.a) + 1) * 0.35 + 0.1;
+        ctx.beginPath(); ctx.arc(s.x * W, s.y * H * 0.9, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(232,232,240,${alpha})`; ctx.fill();
+      });
+
+      // Nebula glow
+      const neb = ctx.createRadialGradient(vp, horizon, 0, vp, horizon, W * 0.5);
+      neb.addColorStop(0, `rgba(0,212,255,${0.03 + Math.sin(t * 0.5) * 0.015})`);
+      neb.addColorStop(0.5, `rgba(123,47,255,${0.015})`);
+      neb.addColorStop(1, 'transparent');
+      ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
+
       frame = requestAnimationFrame(draw);
     }; draw();
     return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); };
@@ -61,9 +87,9 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
     const rect = card.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}20, ${color}08 50%, rgba(8,8,20,.85))`;
-    card.style.borderColor = `${color}88`;
-    card.style.boxShadow = `0 0 30px ${color}18, inset 0 0 40px ${color}08, 0 4px 20px rgba(0,0,0,.3)`;
+    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}22, ${color}0a 50%, rgba(6,4,18,.92))`;
+    card.style.borderColor = `${color}66`;
+    card.style.boxShadow = `0 0 40px ${color}15, inset 0 0 50px ${color}08, 0 8px 32px rgba(0,0,0,.4)`;
   }, [color]);
 
   return (
@@ -71,29 +97,38 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
       ref={cardRef}
       style={{
         position: 'relative',
-        background: `linear-gradient(135deg, rgba(8,8,20,.9), rgba(8,8,20,.7))`,
-        border: `1px solid ${color}25`,
+        background: `linear-gradient(160deg, rgba(8,6,22,.95), rgba(4,3,14,.9))`,
+        border: `1px solid ${color}20`,
         transition: 'border-color .3s, background .5s, box-shadow .3s, transform .3s',
         overflow: 'hidden',
         ...style
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px) scale(1.01)';
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = `${color}25`;
-        el.style.background = `linear-gradient(135deg, rgba(8,8,20,.9), rgba(8,8,20,.7))`;
+        el.style.borderColor = `${color}20`;
+        el.style.background = `linear-gradient(160deg, rgba(8,6,22,.95), rgba(4,3,14,.9))`;
         el.style.boxShadow = 'none';
-        el.style.transform = 'translateY(0)';
+        el.style.transform = 'translateY(0) scale(1)';
       }}
       {...props}
     >
       {/* Scanline overlay */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.008) 2px, rgba(255,255,255,.008) 4px)', zIndex: 1 }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.006) 2px, rgba(255,255,255,.006) 4px)', zIndex: 1 }} />
       {/* Top edge glow line */}
-      <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: `linear-gradient(90deg, transparent, ${color}40, transparent)`, pointerEvents: 'none', zIndex: 1 }} />
+      <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: `linear-gradient(90deg, transparent, ${color}55, transparent)`, pointerEvents: 'none', zIndex: 1 }} />
+      {/* Corner accents */}
+      {[
+        { top: 4, left: 4, borderTop: `1px solid ${color}50`, borderLeft: `1px solid ${color}50` },
+        { top: 4, right: 4, borderTop: `1px solid ${color}50`, borderRight: `1px solid ${color}50` },
+        { bottom: 4, left: 4, borderBottom: `1px solid ${color}50`, borderLeft: `1px solid ${color}50` },
+        { bottom: 4, right: 4, borderBottom: `1px solid ${color}50`, borderRight: `1px solid ${color}50` },
+      ].map((s, i) => (
+        <div key={i} style={{ position: 'absolute', width: 8, height: 8, pointerEvents: 'none', zIndex: 3, ...s } as React.CSSProperties} />
+      ))}
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 2 }}>{children}</div>
     </div>
@@ -560,14 +595,10 @@ export default function AboutSection() {
 
   return (
     <OSWindowFrame name="ABOUT" ext=".exe" color="#00D4FF">
-    <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
-      <SectionAmbientBG color="#00D4FF" particleCount={40} />
+    <div style={{ position: 'relative', background: '#030306', overflowY: 'auto', height: '100%' }}>
+      <DeepSpaceBG />
       {/* CRT scanlines */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)' }} />
-      {/* Vignette */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)' }} />
-      {/* Holographic grid overlay — CSS, no canvas */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.04, backgroundImage: 'linear-gradient(rgba(0,212,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,1) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
       {/* Animated horizontal scan line */}
       <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'about-scan 4s linear infinite' }} />
       {/* Bottom perspective grid */}
