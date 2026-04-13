@@ -396,10 +396,10 @@ export default function LabSection() {
     return () => { tl.kill(); };
   }, [labUnlocked]);
 
-  const TABS: Array<{ id: LabTab; label: string; icon: string }> = [
-    { id: 'music', label: 'AUDIO.viz', icon: '♫' },
-    { id: 'particles', label: 'FORCE.exp', icon: '◎' },
-    { id: 'terminal', label: 'ROOT.sh', icon: '▸' },
+  const TABS: Array<{ id: LabTab; label: string; icon: string; status: string; statusColor: string }> = [
+    { id: 'music', label: 'AUDIO.viz', icon: '♫', status: 'STABLE', statusColor: '#39FF14' },
+    { id: 'particles', label: 'FORCE.exp', icon: '◎', status: 'BETA', statusColor: '#FFB800' },
+    { id: 'terminal', label: 'ROOT.sh', icon: '▸', status: 'ALPHA', statusColor: '#FF3366' },
   ];
 
   if (!labUnlocked) {
@@ -418,6 +418,11 @@ export default function LabSection() {
     <OSWindowFrame name="LAB" ext=".beta" color="#39FF14">
     <div style={{ position: 'relative', background: 'var(--void)', overflow: 'auto', height: '100%' }}>
       <SectionAmbientBG color="#7B2FFF" particleCount={70} />
+      {/* Holographic grid */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.025, backgroundImage: 'linear-gradient(rgba(57,255,20,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(57,255,20,0.8) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
+      {/* Scan line */}
+      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(57,255,20,0.1), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'labScan 4s linear infinite' }} />
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes labScan{0%{top:-2px}100%{top:100vh}}' }} />
 
       {/* CLASSIFIED watermark */}
       <div style={{
@@ -437,16 +442,19 @@ export default function LabSection() {
         <div ref={headerRef} style={{ marginBottom: '36px', opacity: 0 }}>
           <div className="section-label">06 // LAB.beta</div>
           <h2 style={{
-            fontFamily: 'var(--font-display)', fontWeight: 800,
-            fontSize: 'clamp(28px, 4vw, 42px)', marginBottom: '8px',
+            fontFamily: 'var(--font-display)', fontWeight: 900,
+            fontSize: 'clamp(32px, 5vw, 48px)', marginBottom: '10px',
           }}>
             The <span className="glow-text-green">Experiments</span>
           </h2>
           <p style={{
-            fontSize: '13px', color: 'var(--text-dim)', maxWidth: '420px', lineHeight: 1.8,
+            fontSize: '14px', color: 'var(--text-dim)', maxWidth: '420px', lineHeight: 1.8,
           }}>
             Playground for creative coding, generative art, and things that glow.
           </p>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(57,255,20,0.4)', letterSpacing: '1px', marginTop: 8 }}>
+            {TABS.length} EXPERIMENTS LOADED
+          </div>
         </div>
 
         {/* Tabs */}
@@ -466,6 +474,7 @@ export default function LabSection() {
               }}
             >
               {tab.icon} {tab.label}
+              <span style={{ fontSize: '6px', letterSpacing: '1px', padding: '1px 5px', border: `1px solid ${tab.statusColor}33`, color: tab.statusColor, marginLeft: 4, opacity: 0.7 }}>{tab.status}</span>
             </button>
           ))}
         </div>
