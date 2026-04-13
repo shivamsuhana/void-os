@@ -10,7 +10,7 @@ import { useRef, useEffect } from 'react';
    - Speed-reactive connections
    - Pulsing cursor glow
    ═══════════════════════════════════════════ */
-export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 90 }: {
+export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60 }: {
   color?: string;
   particleCount?: number;
 }) {
@@ -88,39 +88,43 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 90
       phase: Math.random() * Math.PI * 2,
     }));
 
-    // Data rain columns — matrix-style falling characters
-    const DATA_CHARS = '01アイウエオカキクケコ<>/{}[]|=+-*&^%$#@!';
-    const rainCols = Math.floor(W / 50);
+    // Data rain columns — matrix-style falling characters (lightweight)
+    const DATA_CHARS = '01<>/{}|=+-*';
+    const rainCols = Math.floor(W / 120);
     const rainDrops = Array.from({ length: rainCols }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
-      speed: 0.3 + Math.random() * 0.8,
+      speed: 0.2 + Math.random() * 0.4,
       char: DATA_CHARS[Math.floor(Math.random() * DATA_CHARS.length)],
-      alpha: 0.03 + Math.random() * 0.04,
+      alpha: 0.02 + Math.random() * 0.03,
       tickCounter: 0,
     }));
 
     let t = 0;
     let frame: number;
+    let frameCount = 0;
 
     const draw = () => {
       t += 0.005;
+      frameCount++;
       ctx.clearRect(0, 0, W, H);
 
-      // Data rain
-      ctx.font = '10px var(--font-mono)';
-      for (const drop of rainDrops) {
-        drop.y += drop.speed;
-        drop.tickCounter++;
-        if (drop.tickCounter % 8 === 0) {
-          drop.char = DATA_CHARS[Math.floor(Math.random() * DATA_CHARS.length)];
+      // Data rain — only update every 3rd frame for perf
+      if (frameCount % 3 === 0) {
+        ctx.font = '9px monospace';
+        for (const drop of rainDrops) {
+          drop.y += drop.speed * 3;
+          drop.tickCounter++;
+          if (drop.tickCounter % 12 === 0) {
+            drop.char = DATA_CHARS[Math.floor(Math.random() * DATA_CHARS.length)];
+          }
+          if (drop.y > H) {
+            drop.y = -10;
+            drop.x = Math.random() * W;
+          }
+          ctx.fillStyle = `rgba(${r},${g},${b},${drop.alpha})`;
+          ctx.fillText(drop.char, drop.x, drop.y);
         }
-        if (drop.y > H) {
-          drop.y = -10;
-          drop.x = Math.random() * W;
-        }
-        ctx.fillStyle = `rgba(${r},${g},${b},${drop.alpha})`;
-        ctx.fillText(drop.char, drop.x, drop.y);
       }
 
       const mx = mouseRef.current.x;
