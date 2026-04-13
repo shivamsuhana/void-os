@@ -49,7 +49,8 @@ function HexGridBG() {
 }
 
 /* ═══════════════════════════════════════════
-   GLOW CARD — Premium with mouse-tracking gradient
+   GLOW CARD v2 — Holographic glass panel
+   Animated border, scanlines, mouse-tracking glow
    ═══════════════════════════════════════════ */
 function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...props }: { children: React.ReactNode; color?: string; style?: React.CSSProperties; className?: string; [k: string]: unknown }) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -60,34 +61,42 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
     const rect = card.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}12, ${color}04 50%, rgba(255,255,255,.02))`;
-    card.style.borderColor = `${color}55`;
-    card.style.boxShadow = `0 0 20px ${color}10, inset 0 0 30px ${color}05`;
+    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}20, ${color}08 50%, rgba(8,8,20,.85))`;
+    card.style.borderColor = `${color}88`;
+    card.style.boxShadow = `0 0 30px ${color}18, inset 0 0 40px ${color}08, 0 4px 20px rgba(0,0,0,.3)`;
   }, [color]);
 
   return (
     <div
       ref={cardRef}
       style={{
-        position: 'relative', background: 'rgba(255,255,255,.06)',
-        border: `1px solid ${color}18`,
+        position: 'relative',
+        background: `linear-gradient(135deg, rgba(8,8,20,.9), rgba(8,8,20,.7))`,
+        border: `1px solid ${color}25`,
         transition: 'border-color .3s, background .5s, box-shadow .3s, transform .3s',
-        backdropFilter: 'blur(4px)',
+        overflow: 'hidden',
         ...style
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = `${color}18`;
-        el.style.background = 'rgba(255,255,255,.06)';
+        el.style.borderColor = `${color}25`;
+        el.style.background = `linear-gradient(135deg, rgba(8,8,20,.9), rgba(8,8,20,.7))`;
         el.style.boxShadow = 'none';
         el.style.transform = 'translateY(0)';
       }}
       {...props}
-    >{children}</div>
+    >
+      {/* Scanline overlay */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.008) 2px, rgba(255,255,255,.008) 4px)', zIndex: 1 }} />
+      {/* Top edge glow line */}
+      <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: `linear-gradient(90deg, transparent, ${color}40, transparent)`, pointerEvents: 'none', zIndex: 1 }} />
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 2 }}>{children}</div>
+    </div>
   );
 }
 
@@ -513,8 +522,18 @@ export default function AboutSection() {
     <OSWindowFrame name="ABOUT" ext=".exe" color="#00D4FF">
     <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
       <SectionAmbientBG color="#00D4FF" particleCount={40} />
+      {/* CRT scanlines */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)' }} />
+      {/* Vignette */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)' }} />
+      {/* Holographic grid overlay — CSS, no canvas */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.04, backgroundImage: 'linear-gradient(rgba(0,212,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,1) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
+      {/* Animated horizontal scan line */}
+      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'about-scan 4s linear infinite' }} />
+      {/* Bottom perspective grid */}
+      <div style={{ position: 'fixed', bottom: 34, left: 0, right: 0, height: '20vh', pointerEvents: 'none', zIndex: 0, opacity: 0.03, background: 'linear-gradient(to bottom, transparent, rgba(0,212,255,0.1))', backgroundImage: 'linear-gradient(transparent 50%, rgba(0,212,255,0.5) 50%)', backgroundSize: '100% 8px', maskImage: 'linear-gradient(to bottom, transparent, black)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black)' }} />
+      {/* Animated scan keyframe */}
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes about-scan{0%{top:-2px}100%{top:100vh}}' }} />
 
       {/* ─── HERO SPLIT ─── */}
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -656,12 +675,12 @@ export default function AboutSection() {
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>SYSTEM_METRICS</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10, marginBottom: 40 }}>
               {OWNER.stats.map((s, i) => (
-                <GlowCard key={i} style={{ padding: '18px 14px', textAlign: 'center', cursor: 'default', transition: 'transform .3s' }}
-                  onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; }}
-                  onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
+                <GlowCard key={i} style={{ padding: '22px 16px', textAlign: 'center', cursor: 'default', transition: 'transform .3s' }}
+                  onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px) scale(1.03)'; }}
+                  onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0) scale(1)'; }}
                 >
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: 800, color: '#00D4FF', textShadow: '0 0 15px rgba(0,212,255,.4)', marginBottom: 6 }}>{s.value}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,.55)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>{s.label}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: 800, color: '#00D4FF', textShadow: '0 0 20px rgba(0,212,255,.5), 0 0 40px rgba(0,212,255,.2)', marginBottom: 8, letterSpacing: '-1px' }}>{s.value}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.6)', letterSpacing: '2px', textTransform: 'uppercase' }}>{s.label}</div>
                 </GlowCard>
               ))}
             </div>
@@ -677,13 +696,13 @@ export default function AboutSection() {
                 { icon: '◉', label: 'LEARN BY BUILDING', desc: "Textbooks are step 1. Building is the real education.", color: '#7B2FFF' },
                 { icon: '⬡', label: 'PUSH LIMITS', desc: "If it's been done before, push it further.", color: '#FFB800' },
               ]).map(({ icon, label, desc, color }) => (
-                <GlowCard key={label} color={color} style={{ padding: 20, cursor: 'default', transition: 'transform .3s' }}
-                  onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; }}
-                  onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
+                <GlowCard key={label} color={color} style={{ padding: '22px 24px', cursor: 'default', transition: 'transform .3s', borderLeft: `2px solid ${color}66` }}
+                  onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px) scale(1.02)'; }}
+                  onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0) scale(1)'; }}
                 >
-                  <div style={{ fontSize: '22px', color, textShadow: `0 0 12px ${color}66`, marginBottom: 10 }}>{icon}</div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px', marginBottom: 6, letterSpacing: '1px', color: '#E8E8F0' }}>{label}</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: 1.7, color: 'rgba(232,232,240,.6)' }}>{desc}</div>
+                  <div style={{ fontSize: '28px', color, textShadow: `0 0 16px ${color}88, 0 0 32px ${color}44`, marginBottom: 12 }}>{icon}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px', marginBottom: 8, letterSpacing: '1.5px', color: '#E8E8F0', textShadow: '0 0 8px rgba(232,232,240,.1)' }}>{label}</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: 1.8, color: 'rgba(232,232,240,.55)' }}>{desc}</div>
                 </GlowCard>
               ))}
             </div>
