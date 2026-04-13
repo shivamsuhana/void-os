@@ -53,7 +53,7 @@ export default function OSWindowFrame({ name, ext, color, children }: OSWindowFr
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 10,
+        zIndex: 50,
         display: 'flex',
         flexDirection: 'column',
         opacity: 0,
@@ -71,7 +71,7 @@ export default function OSWindowFrame({ name, ext, color, children }: OSWindowFr
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderBottom: `1px solid ${color}22`,
-          zIndex: 20,
+          zIndex: 9998,
           gap: 10,
           // Top edge light — makes it feel like a physical window
           boxShadow: `inset 0 1px 0 ${color}15, 0 1px 8px rgba(0,0,0,0.4)`,
@@ -181,7 +181,7 @@ export default function OSWindowFrame({ name, ext, color, children }: OSWindowFr
         left: 0, top: 36, bottom: 0,
         width: 1,
         background: `linear-gradient(180deg, ${color}40 0%, ${color}08 40%, transparent 100%)`,
-        zIndex: 15,
+        zIndex: 9997,
         pointerEvents: 'none',
       }} />
 
