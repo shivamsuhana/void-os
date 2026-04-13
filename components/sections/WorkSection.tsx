@@ -65,7 +65,7 @@ function ProjectCard3D({ project, position, index, onSelect }: {
 
   return (
     <group ref={groupRef} position={position}>
-      {/* ── CLICKABLE HITBOX — the ONLY mesh that receives pointer events ── */}
+      {/* ── CLICKABLE HITBOX — glass material ── */}
       <mesh
         onClick={(e) => { e.stopPropagation(); onSelect(project); }}
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
@@ -73,11 +73,12 @@ function ProjectCard3D({ project, position, index, onSelect }: {
       >
         <planeGeometry args={[2.6, 1.6]} />
         <meshStandardMaterial
-          color={hovered ? project.color : '#10102a'}
+          color={hovered ? '#1a1a3a' : '#0a0a1e'}
           emissive={project.color}
-          emissiveIntensity={hovered ? 0.3 : 0.08}
-          transparent opacity={0.9} side={THREE.DoubleSide}
-          roughness={0.3} metalness={0.6}
+          emissiveIntensity={hovered ? 0.15 : 0.03}
+          transparent opacity={hovered ? 0.7 : 0.45}
+          side={THREE.DoubleSide}
+          roughness={0.15} metalness={0.85}
         />
       </mesh>
 
@@ -85,25 +86,37 @@ function ProjectCard3D({ project, position, index, onSelect }: {
 
       {/* Top accent glow bar */}
       <mesh position={[0, 0.8, 0.005]} raycast={noRaycast}>
-        <planeGeometry args={[2.6, 0.025]} />
+        <planeGeometry args={[2.6, 0.02]} />
         <meshBasicMaterial color={project.color} transparent opacity={hovered ? 1 : 0.5} />
       </mesh>
 
       {/* Bottom accent */}
       <mesh position={[0, -0.8, 0.005]} raycast={noRaycast}>
-        <planeGeometry args={[2.6, 0.012]} />
-        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.5 : 0.15} />
+        <planeGeometry args={[2.6, 0.01]} />
+        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.6 : 0.15} />
       </mesh>
 
-      {/* Wireframe edge — BEHIND the card */}
+      {/* Left accent edge */}
+      <mesh position={[-1.3, 0, 0.005]} raycast={noRaycast}>
+        <planeGeometry args={[0.008, 1.6]} />
+        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.8 : 0.2} />
+      </mesh>
+
+      {/* Scanning line — sweeps horizontally on hover */}
+      <mesh position={[0, Math.sin(Date.now() * 0.002) * 0.7, 0.008]} raycast={noRaycast}>
+        <planeGeometry args={[2.6, 0.015]} />
+        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.2 : 0} />
+      </mesh>
+
+      {/* Wireframe edge — glass border */}
       <mesh position={[0, 0, -0.02]} userData={{ isEdge: true }} raycast={noRaycast}>
         <planeGeometry args={[2.7, 1.7]} />
-        <meshBasicMaterial color={project.color} wireframe transparent opacity={0.15} />
+        <meshBasicMaterial color={project.color} wireframe transparent opacity={hovered ? 0.3 : 0.1} />
       </mesh>
 
       {/* Glow backdrop — BEHIND everything */}
       <mesh position={[0, 0, -0.08]} userData={{ isGlow: true }} raycast={noRaycast}>
-        <planeGeometry args={[3.0, 1.9]} />
+        <planeGeometry args={[3.2, 2.0]} />
         <meshBasicMaterial color={project.color} transparent opacity={0.015} side={THREE.BackSide} />
       </mesh>
 
@@ -117,32 +130,46 @@ function ProjectCard3D({ project, position, index, onSelect }: {
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           gap: '6px', minWidth: '200px', textAlign: 'center', padding: '14px',
+          position: 'relative',
         }}>
+          {/* Corner brackets */}
+          {[{top:-4,left:-8},{top:-4,right:-8},{bottom:-4,left:-8},{bottom:-4,right:-8}].map((pos,pi)=>(
+            <div key={pi} style={{
+              position:'absolute',width:8,height:8,
+              borderTop: pos.top!==undefined ? `1px solid ${project.color}55` : undefined,
+              borderBottom: pos.bottom!==undefined ? `1px solid ${project.color}55` : undefined,
+              borderLeft: pos.left!==undefined ? `1px solid ${project.color}55` : undefined,
+              borderRight: pos.right!==undefined ? `1px solid ${project.color}55` : undefined,
+              ...pos,
+            } as React.CSSProperties} />
+          ))}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '2px', color: project.color, opacity: 0.7 }}>{project.year}</span>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '2px', color: project.color, opacity: 0.8 }}>{project.year}</span>
             {project.featured && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '6px', letterSpacing: '1px', color: '#39FF14', padding: '1px 4px', border: '1px solid rgba(57,255,20,0.3)' }}>★</span>}
           </div>
           <div style={{
             fontFamily: "'Syne', sans-serif", fontSize: hovered ? '16px' : '14px',
-            fontWeight: 700, color: hovered ? '#EEEEF5' : 'rgba(232,232,240,0.8)',
-            transition: 'all 0.3s', textShadow: hovered ? `0 0 20px ${project.color}50` : 'none',
+            fontWeight: 800, color: '#EEEEF5',
+            transition: 'all 0.3s', textShadow: hovered ? `0 0 25px ${project.color}66, 0 0 50px ${project.color}22` : `0 0 10px ${project.color}22`,
           }}>{project.title}</div>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '0.5px',
-            color: hovered ? 'rgba(232,232,240,0.4)' : 'rgba(232,232,240,0.15)',
+            color: hovered ? 'rgba(232,232,240,0.55)' : 'rgba(232,232,240,0.25)',
             transition: 'color 0.3s', maxWidth: '170px', lineHeight: 1.6,
           }}>{project.description.slice(0, 65)}...</div>
           <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {project.tags.slice(0, 3).map(tag => (
               <span key={tag} style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: '6px', padding: '1px 5px',
-                border: `1px solid ${project.color}30`, borderRadius: '1px',
-                color: hovered ? project.color : 'rgba(232,232,240,0.18)', transition: 'color 0.3s',
+                border: `1px solid ${project.color}${hovered ? '55' : '22'}`,
+                borderLeft: `2px solid ${project.color}${hovered ? '88' : '33'}`,
+                color: hovered ? project.color : 'rgba(232,232,240,0.25)', transition: 'all 0.3s',
+                background: hovered ? `${project.color}08` : 'transparent',
               }}>{tag}</span>
             ))}
           </div>
           {hovered && (
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '2px', color: project.color, opacity: 0.6, marginTop: '4px' }}>▸ CLICK TO EXPLORE</div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '2px', color: project.color, opacity: 0.7, marginTop: '4px', textShadow: `0 0 8px ${project.color}44` }}>▸ CLICK TO EXPLORE</div>
           )}
         </div>
       </Html>
