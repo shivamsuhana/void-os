@@ -407,7 +407,7 @@ export default function ContactSection() {
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', gap: 12, padding: '44px 10px 10px', zIndex: 2 }}>
 
         {/* ══ LEFT: TERMINAL ══ */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, minWidth: 0, maxWidth: '52%', display: 'flex', flexDirection: 'column' }}>
 
           {/* Terminal header */}
           <div style={{
@@ -442,7 +442,7 @@ export default function ContactSection() {
             <div style={{position:'absolute',inset:0,pointerEvents:'none',background:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.007) 2px,rgba(255,255,255,0.007) 4px)',zIndex:1}} />
 
             {/* Output lines */}
-            <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', minHeight: 0, position: 'relative', zIndex: 2 }}>
+            <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', minHeight: 80, maxHeight: 260, position: 'relative', zIndex: 2 }}>
               {lines.map((l, i) => (
                 <div key={l.id} style={{ display: 'flex', gap: 8, marginBottom: 1, animation: i >= lines.length - 2 ? 'fadeUp 0.2s ease' : 'none' }}>
                   <span style={{ color: l.prompt ? C.pink : 'rgba(255,255,255,0.1)', flexShrink: 0, fontSize: '11px' }}>{l.prompt ? '❯' : ' '}</span>
