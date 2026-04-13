@@ -103,12 +103,12 @@ function SpaceBackground() {
 /* ══════════════════════════════════════════════════
    TRANSMISSION BEAM — central animated circle
    ══════════════════════════════════════════════════ */
-function TransmissionBeam({ active, sending }: { active: boolean; sending: boolean }) {
+function TransmissionBeam({ active, sending, size = 200 }: { active: boolean; sending: boolean; size?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current; if (!c) return;
     const ctx = c.getContext('2d')!;
-    const S = 200; c.width = S; c.height = S;
+    const S = size; c.width = S; c.height = S;
     const cx = S / 2, cy = S / 2;
     let t = 0; let frame: number;
 
@@ -162,7 +162,7 @@ function TransmissionBeam({ active, sending }: { active: boolean; sending: boole
       coreGrad.addColorStop(1, 'transparent');
       ctx.beginPath(); ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
       ctx.fillStyle = coreGrad; ctx.fill();
-      ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(cx, cy, S * 0.03, 0, Math.PI * 2);
       ctx.fillStyle = sending ? C.pink : (active ? 'rgba(255,51,102,0.7)' : 'rgba(255,51,102,0.3)');
       ctx.shadowColor = C.pink; ctx.shadowBlur = sending ? 20 : 8;
       ctx.fill(); ctx.shadowBlur = 0;
@@ -171,7 +171,7 @@ function TransmissionBeam({ active, sending }: { active: boolean; sending: boole
       if (sending) {
         for (let i = 0; i < 8; i++) {
           const a = (i / 8) * Math.PI * 2 + t * 2;
-          const r = 30 + Math.sin(t * 6 + i) * 15;
+          const r = S * 0.15 + Math.sin(t * 6 + i) * S * 0.075;
           const px = cx + Math.cos(a) * r, py = cy + Math.sin(a) * r;
           ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(0,212,255,${0.6 + Math.sin(t * 4 + i) * 0.4})`; ctx.fill();
@@ -182,9 +182,9 @@ function TransmissionBeam({ active, sending }: { active: boolean; sending: boole
     };
     draw();
     return () => cancelAnimationFrame(frame);
-  }, [active, sending]);
+  }, [active, sending, size]);
 
-  return <canvas ref={ref} style={{ width: 200, height: 200, display: 'block' }} />;
+  return <canvas ref={ref} style={{ width: size, height: size, display: 'block' }} />;
 }
 
 /* ══════════════════════════════════════════════════
@@ -404,10 +404,10 @@ export default function ContactSection() {
       <div style={{ position: 'absolute', left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg,transparent,rgba(255,51,102,0.18),transparent)', pointerEvents: 'none', zIndex: 61, animation: 'contact-scan 6s linear infinite' }} />
 
       {/* ── MAIN LAYOUT ── */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 14, padding: '56px 18px 16px', zIndex: 2 }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', gap: 12, padding: '44px 10px 10px', zIndex: 2 }}>
 
         {/* ══ LEFT: TERMINAL ══ */}
-        <div style={{ width: '100%', maxWidth: 460, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
           {/* Terminal header */}
           <div style={{
@@ -489,54 +489,69 @@ export default function ContactSection() {
           </div>
         </div>
 
-        {/* ══ CENTER: BEAM ══ */}
-        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, width: 180 }}>
-          <div style={{ fontSize: '7px', letterSpacing: '3px', color: 'rgba(255,51,102,0.45)', textAlign: 'center' }}>SIGNAL BEAM</div>
-          <TransmissionBeam active={!['boot'].includes(step)} sending={isSending} />
-          <div style={{ fontSize: '7px', letterSpacing: '2px', color: isSending ? C.amber : step !== 'boot' ? C.green : 'rgba(232,232,240,0.2)', textAlign: 'center', animation: isSending ? 'blink 0.5s infinite' : 'none', transition: 'color 0.4s', textShadow: step !== 'boot' ? `0 0 8px ${isSending ? C.amber : C.green}` : 'none' }}>
-            {isSending ? 'TRANSMITTING...' : step !== 'boot' ? 'CHANNEL OPEN' : 'CONNECTING...'}
-          </div>
-          <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 20 }}>
-            {[4,6,10,14,10,6,4].map((h, i) => (
-              <div key={i} style={{ width: 4, height: h, background: step !== 'boot' ? `rgba(255,51,102,${0.35 + i * 0.05})` : 'rgba(255,255,255,0.07)', borderRadius: 1, transition: 'all 0.5s', boxShadow: step !== 'boot' ? `0 0 4px rgba(255,51,102,0.35)` : 'none' }} />
-            ))}
-          </div>
-        </div>
+        {/* ══ RIGHT: SCANNER + CHANNELS ══ */}
+        <div style={{ width: 218, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-        {/* ══ RIGHT: SIGNAL CHANNELS ONLY ══ */}
-        <div style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: 14, border: '1px solid rgba(57,255,20,0.14)', background: 'linear-gradient(135deg,rgba(8,6,22,0.95),rgba(4,3,14,0.9))', position: 'relative', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(57,255,20,0.45),transparent)' }} />
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.004) 2px,rgba(255,255,255,0.004) 4px)' }} />
+          {/* SCANNER PANEL — top */}
+          <div style={{ padding: '12px 12px 10px', border: '1px solid rgba(255,51,102,0.2)', background: 'linear-gradient(135deg,rgba(10,6,22,0.97),rgba(4,3,14,0.95))', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(255,51,102,0.6),transparent)' }} />
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.005) 2px,rgba(255,255,255,0.005) 4px)' }} />
             {/* Corner accents */}
-            {[{top:5,left:5,borderTop:'1px solid rgba(57,255,20,0.4)',borderLeft:'1px solid rgba(57,255,20,0.4)'},{top:5,right:5,borderTop:'1px solid rgba(57,255,20,0.4)',borderRight:'1px solid rgba(57,255,20,0.4)'},{bottom:5,left:5,borderBottom:'1px solid rgba(57,255,20,0.4)',borderLeft:'1px solid rgba(57,255,20,0.4)'},{bottom:5,right:5,borderBottom:'1px solid rgba(57,255,20,0.4)',borderRight:'1px solid rgba(57,255,20,0.4)'}].map((s,i)=>(
+            {[{top:4,left:4,borderTop:'1px solid rgba(255,51,102,0.5)',borderLeft:'1px solid rgba(255,51,102,0.5)'},{top:4,right:4,borderTop:'1px solid rgba(255,51,102,0.5)',borderRight:'1px solid rgba(255,51,102,0.5)'},{bottom:4,left:4,borderBottom:'1px solid rgba(255,51,102,0.5)',borderLeft:'1px solid rgba(255,51,102,0.5)'},{bottom:4,right:4,borderBottom:'1px solid rgba(255,51,102,0.5)',borderRight:'1px solid rgba(255,51,102,0.5)'}].map((s,i)=>(
               <div key={i} style={{position:'absolute',width:8,height:8,pointerEvents:'none',zIndex:5,...s}} />
             ))}
 
-            {/* Header */}
-            <div style={{ fontSize: '7px', letterSpacing: '3px', color: C.green, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, position: 'relative', zIndex: 2 }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, animation: 'blink 2.5s infinite' }} />
+            <div style={{ fontSize: '7px', letterSpacing: '3px', color: 'rgba(255,51,102,0.6)', position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: C.pink, boxShadow: `0 0 5px ${C.pink}`, animation: 'blink 1.5s infinite' }} />
+              SIGNAL SCANNER
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <TransmissionBeam active={!['boot'].includes(step)} sending={isSending} size={130} />
+            </div>
+
+            <div style={{ fontSize: '7px', letterSpacing: '2px', color: isSending ? C.amber : step !== 'boot' ? C.green : 'rgba(232,232,240,0.2)', textAlign: 'center', animation: isSending ? 'blink 0.5s infinite' : 'none', transition: 'color 0.4s', textShadow: step !== 'boot' ? `0 0 8px ${isSending ? C.amber : C.green}60` : 'none', position: 'relative', zIndex: 2 }}>
+              {isSending ? '◉ TRANSMITTING...' : step !== 'boot' ? '◉ CHANNEL OPEN' : '○ CONNECTING...'}
+            </div>
+
+            {/* Signal strength bars */}
+            <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 18, position: 'relative', zIndex: 2 }}>
+              {[3,5,8,12,8,5,3].map((h, i) => (
+                <div key={i} style={{ width: 4, height: h, background: step !== 'boot' ? `rgba(255,51,102,${0.3 + i * 0.06})` : 'rgba(255,255,255,0.06)', borderRadius: 1, transition: 'all 0.5s', boxShadow: step !== 'boot' ? `0 0 4px rgba(255,51,102,0.3)` : 'none' }} />
+              ))}
+            </div>
+          </div>
+
+          {/* SIGNAL CHANNELS — below scanner */}
+          <div style={{ flex: 1, padding: '12px 10px', border: '1px solid rgba(57,255,20,0.14)', background: 'linear-gradient(135deg,rgba(8,6,22,0.95),rgba(4,3,14,0.9))', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(57,255,20,0.45),transparent)' }} />
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.004) 2px,rgba(255,255,255,0.004) 4px)' }} />
+            {[{top:4,left:4,borderTop:'1px solid rgba(57,255,20,0.4)',borderLeft:'1px solid rgba(57,255,20,0.4)'},{top:4,right:4,borderTop:'1px solid rgba(57,255,20,0.4)',borderRight:'1px solid rgba(57,255,20,0.4)'},{bottom:4,left:4,borderBottom:'1px solid rgba(57,255,20,0.4)',borderLeft:'1px solid rgba(57,255,20,0.4)'},{bottom:4,right:4,borderBottom:'1px solid rgba(57,255,20,0.4)',borderRight:'1px solid rgba(57,255,20,0.4)'}].map((s,i)=>(
+              <div key={i} style={{position:'absolute',width:8,height:8,pointerEvents:'none',zIndex:5,...s}} />
+            ))}
+
+            <div style={{ fontSize: '7px', letterSpacing: '3px', color: C.green, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5, position: 'relative', zIndex: 2 }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: C.green, boxShadow: `0 0 5px ${C.green}`, animation: 'blink 2.5s infinite' }} />
               SIGNAL CHANNELS
             </div>
 
-            {/* Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', zIndex: 2 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative', zIndex: 2 }}>
               <SocialNode icon="⬡" label="GITHUB" handle="@shivamsuhana" href={OWNER.github} color="#E8E8F0" index={0} />
               <SocialNode icon="◈" label="LINKEDIN" handle="in/shivamsuhana" href={OWNER.linkedin} color={C.cyan} index={1} />
               <SocialNode icon="◎" label="LEETCODE" handle="/shivamsuhana" href="https://leetcode.com/shivamsuhana" color={C.amber} index={2} />
               <SocialNode icon="✦" label="EMAIL" handle={OWNER.email} href={`mailto:${OWNER.email}`} color={C.green} index={3} />
             </div>
 
-            {/* Status strip at bottom */}
-            <div style={{ marginTop: 'auto', paddingTop: 16, position: 'relative', zIndex: 2 }}>
-              <div style={{ borderTop: '1px solid rgba(57,255,20,0.08)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {/* Status strip */}
+            <div style={{ marginTop: 'auto', paddingTop: 10, position: 'relative', zIndex: 2 }}>
+              <div style={{ borderTop: '1px solid rgba(57,255,20,0.07)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {[
                   { k: 'STATUS', v: 'AVAILABLE', c: C.green },
                   { k: 'RESPONSE', v: '< 24 HRS', c: C.amber },
-                  { k: 'TIMEZONE', v: 'UTC+5:30', c: 'rgba(232,232,240,0.5)' },
+                  { k: 'TIMEZONE', v: 'UTC+5:30', c: 'rgba(232,232,240,0.45)' },
                 ].map(({ k, v, c }) => (
-                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.3)', letterSpacing: '0.5px' }}>{k}</span>
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.28)', letterSpacing: '0.5px' }}>{k}</span>
                     <span style={{ fontSize: '8px', color: c, fontWeight: 600, textShadow: `0 0 6px ${c}40` }}>{v}</span>
                   </div>
                 ))}
