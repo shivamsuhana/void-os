@@ -10,87 +10,241 @@ import OSWindowFrame from '@/components/global/OSWindowFrame';
 type LabTab = 'music' | 'particles' | 'terminal';
 
 /* ============================================
-   MUSIC VISUALIZER — procedural audio bars
+   VOICE-REACTIVE CIRCULAR SPECTRUM ANALYZER
+   Real microphone input via Web Audio API
+   128 radial bars, center orb, particles, waveform ring
    ============================================ */
 function MusicVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: 0.5, y: 0.5 });
+  const [micState, setMicState] = useState<'idle' | 'listening' | 'denied'>('idle');
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const activateMic = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.75;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+      setMicState('listening');
+    } catch { setMicState('denied'); }
+  }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    return () => { streamRef.current?.getTracks().forEach(t => t.stop()); };
+  }, []);
 
-    const resize = () => {
+  useEffect(() => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const resize = () => { canvas.width = canvas.offsetWidth * 2; canvas.height = canvas.offsetHeight * 2; };
+    resize(); window.addEventListener('resize', resize);
+
+    const BARS = 128;
+    const smoothed = new Float32Array(BARS);
+    const particles: { a: number; r: number; speed: number; life: number; maxLife: number; hue: number; size: number }[] = [];
+    let t = 0; let frame: number;
+
+    const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * 2; canvas.height = rect.height * 2;
-      ctx.scale(2, 2);
+      mouseRef.current = { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height };
     };
-    resize();
-
-    const bars = 48;
-    const barData = new Array(bars).fill(0);
-    let frame: number;
+    canvas.addEventListener('mousemove', onMove);
 
     const animate = () => {
-      const W = canvas.width / 2, H = canvas.height / 2;
-      ctx.clearRect(0, 0, W, H);
+      t += 0.012;
+      const W = canvas.width, H = canvas.height;
+      const cx = W / 2, cy = H / 2;
+      const maxR = Math.min(W, H) * 0.4;
 
-      // Background grid
-      ctx.strokeStyle = 'rgba(0,212,255,0.02)';
-      ctx.lineWidth = 0.5;
-      for (let y = 0; y < H; y += 30) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      // Trail fade
+      ctx.fillStyle = 'rgba(3,3,6,0.12)'; ctx.fillRect(0, 0, W, H);
+
+      // Get frequency data
+      const freqData = new Uint8Array(BARS);
+      const timeData = new Uint8Array(BARS);
+      if (analyserRef.current) {
+        analyserRef.current.getByteFrequencyData(freqData);
+        analyserRef.current.getByteTimeDomainData(timeData);
+      } else {
+        // Procedural fallback
+        for (let i = 0; i < BARS; i++) {
+          const f = i / BARS;
+          freqData[i] = Math.floor(
+            (Math.sin(t * 1.8 + i * 0.15) * 0.3 + Math.sin(t * 3.2 + i * 0.08) * 0.2 + 0.35 +
+             (f < 0.2 ? Math.sin(t * 2.5) * 0.25 : 0) + Math.random() * 0.06) * 255
+          );
+          timeData[i] = 128 + Math.sin(t * 4 + i * 0.2) * 40;
+        }
       }
 
-      const barWidth = W / bars - 1.5;
-      for (let i = 0; i < bars; i++) {
-        const target = Math.sin(Date.now() * 0.002 + i * 0.3) * 0.3 + Math.sin(Date.now() * 0.005 + i * 0.1) * 0.2 + 0.3;
-        barData[i] = barData[i] * 0.85 + target * 0.15 + Math.random() * 0.05;
-
-        const h = barData[i] * (H - 20);
-        const x = i * (barWidth + 1.5);
-        const y = H - h;
-        const hue = 190 + (i / bars) * 80;
-
-        const grad = ctx.createLinearGradient(x, y, x, H);
-        grad.addColorStop(0, `hsla(${hue}, 100%, 60%, 0.85)`);
-        grad.addColorStop(1, `hsla(${hue}, 100%, 40%, 0.1)`);
-        ctx.fillStyle = grad;
-        ctx.fillRect(x, y, barWidth, h);
-
-        // Top cap glow
-        ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.9)`;
-        ctx.fillRect(x, y, barWidth, 1.5);
+      // Smooth the data
+      for (let i = 0; i < BARS; i++) {
+        const target = freqData[i] / 255;
+        smoothed[i] = smoothed[i] * 0.7 + target * 0.3;
       }
 
-      // Reflection
-      ctx.save();
-      ctx.globalAlpha = 0.06;
-      ctx.scale(1, -1);
-      ctx.translate(0, -H * 2);
-      for (let i = 0; i < bars; i++) {
-        const h = barData[i] * (H - 20);
-        const x = i * (barWidth + 1.5);
-        ctx.fillStyle = `hsla(${190 + (i / bars) * 80}, 100%, 50%, 0.3)`;
-        ctx.fillRect(x, H, barWidth, h * 0.3);
+      // Bass / mid / high energy
+      let bass = 0, mid = 0, high = 0;
+      for (let i = 0; i < BARS; i++) {
+        if (i < BARS * 0.15) bass += smoothed[i];
+        else if (i < BARS * 0.5) mid += smoothed[i];
+        else high += smoothed[i];
       }
-      ctx.restore();
+      bass /= BARS * 0.15; mid /= BARS * 0.35; high /= BARS * 0.5;
+
+      // Spawn particles on bass hits
+      if (bass > 0.45 && Math.random() > 0.4 && particles.length < 60) {
+        particles.push({
+          a: Math.random() * Math.PI * 2, r: 0.3 + Math.random() * 0.2,
+          speed: 0.002 + Math.random() * 0.004, life: 1, maxLife: 1,
+          hue: 180 + Math.random() * 140, size: 1 + Math.random() * 2.5,
+        });
+      }
+
+      // ── CONCENTRIC GUIDE RINGS ──
+      [0.25, 0.5, 0.75, 1.0].forEach((s, ri) => {
+        ctx.beginPath(); ctx.arc(cx, cy, maxR * s, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0,212,255,${0.03 + ri * 0.008 + bass * 0.02})`;
+        ctx.lineWidth = 0.6; ctx.stroke();
+      });
+
+      // ── RADIAL SPECTRUM BARS ──
+      for (let i = 0; i < BARS; i++) {
+        const angle = (i / BARS) * Math.PI * 2 - Math.PI / 2;
+        const val = smoothed[i];
+        const innerR = maxR * 0.22;
+        const outerR = innerR + val * maxR * 0.7;
+        const hue = 180 + (i / BARS) * 150;
+
+        const x1 = cx + Math.cos(angle) * innerR, y1 = cy + Math.sin(angle) * innerR;
+        const x2 = cx + Math.cos(angle) * outerR, y2 = cy + Math.sin(angle) * outerR;
+
+        const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+        grad.addColorStop(0, `hsla(${hue},100%,50%,0.05)`);
+        grad.addColorStop(0.4, `hsla(${hue},100%,60%,${0.4 + val * 0.5})`);
+        grad.addColorStop(1, `hsla(${hue},90%,70%,${0.2 + val * 0.6})`);
+
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = Math.max(1.5, (W / BARS) * 0.35);
+        ctx.lineCap = 'round';
+        if (val > 0.5) { ctx.shadowColor = `hsla(${hue},100%,60%,0.6)`; ctx.shadowBlur = 8; }
+        ctx.stroke(); ctx.shadowBlur = 0;
+
+        // Tip glow dot
+        if (val > 0.35) {
+          ctx.beginPath(); ctx.arc(x2, y2, 1.5 + val * 3, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${hue},100%,80%,${val * 0.5})`; ctx.fill();
+        }
+      }
+
+      // ── WAVEFORM RING (time-domain) ──
+      ctx.beginPath();
+      for (let i = 0; i <= BARS; i++) {
+        const angle = (i / BARS) * Math.PI * 2 - Math.PI / 2;
+        const wave = ((timeData[i % BARS] - 128) / 128) * maxR * 0.1;
+        const r = maxR * 0.92 + wave;
+        const x = cx + Math.cos(angle) * r, y = cy + Math.sin(angle) * r;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(123,47,255,${0.12 + bass * 0.2})`;
+      ctx.lineWidth = 1.5; ctx.shadowColor = '#7B2FFF'; ctx.shadowBlur = 6;
+      ctx.stroke(); ctx.shadowBlur = 0;
+
+      // ── ORBITING PARTICLES ──
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.a += p.speed * (1 + bass * 3);
+        p.life -= 0.004;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+        const alpha = p.life / p.maxLife;
+        const px = cx + Math.cos(p.a) * maxR * p.r;
+        const py = cy + Math.sin(p.a) * maxR * p.r;
+        ctx.beginPath(); ctx.arc(px, py, p.size * alpha, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue},100%,65%,${alpha * 0.55})`;
+        ctx.shadowColor = `hsla(${p.hue},100%,65%,0.4)`; ctx.shadowBlur = 5;
+        ctx.fill(); ctx.shadowBlur = 0;
+      }
+
+      // ── CENTER PULSE ORB ──
+      const pulseR = maxR * 0.17 + bass * maxR * 0.08;
+      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, pulseR);
+      coreGrad.addColorStop(0, `rgba(123,47,255,${0.35 + bass * 0.4})`);
+      coreGrad.addColorStop(0.6, `rgba(0,212,255,${0.12 + mid * 0.15})`);
+      coreGrad.addColorStop(1, 'transparent');
+      ctx.beginPath(); ctx.arc(cx, cy, pulseR, 0, Math.PI * 2);
+      ctx.fillStyle = coreGrad; ctx.fill();
+
+      // Core dot
+      ctx.beginPath(); ctx.arc(cx, cy, 3 + bass * 4, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232,232,240,${0.5 + bass * 0.4})`;
+      ctx.shadowColor = '#7B2FFF'; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0;
+
+      // ── EXPANDING BEAT RINGS ──
+      if (bass > 0.5) {
+        const ringPhase = (t * 2.5) % 1;
+        const ringR = maxR * (0.2 + ringPhase * 0.8);
+        ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(123,47,255,${(1 - ringPhase) * 0.12})`;
+        ctx.lineWidth = 1.5; ctx.stroke();
+      }
+
+      // ── ROTATING DASH RING ──
+      const segs = 32;
+      for (let i = 0; i < segs; i++) {
+        const a1 = (i / segs) * Math.PI * 2 + t * (micState === 'listening' ? 1.2 : 0.3);
+        const a2 = a1 + (Math.PI * 2 / segs) * 0.35;
+        ctx.beginPath(); ctx.arc(cx, cy, maxR * 0.97, a1, a2);
+        ctx.strokeStyle = `rgba(0,212,255,${0.06 + high * 0.12})`;
+        ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      // ── MOUSE REACTIVE GLOW ──
+      const mx = mouseRef.current.x * W, my = mouseRef.current.y * H;
+      const mouseGrad = ctx.createRadialGradient(mx, my, 0, mx, my, maxR * 0.35);
+      mouseGrad.addColorStop(0, 'rgba(0,212,255,0.04)');
+      mouseGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = mouseGrad; ctx.fillRect(0, 0, W, H);
 
       frame = requestAnimationFrame(animate);
     };
     animate();
-    return () => cancelAnimationFrame(frame);
-  }, []);
+    return () => { cancelAnimationFrame(frame); canvas.removeEventListener('mousemove', onMove); window.removeEventListener('resize', resize); };
+  }, [micState]);
 
   return (
     <div>
-      <canvas ref={canvasRef} style={{ width: '100%', height: '280px', display: 'block', borderRadius: '2px' }} />
-      <div style={{
-        fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)',
-        marginTop: '10px', textAlign: 'center', letterSpacing: '1px',
-      }}>
-        ♫ PROCEDURAL AUDIO VISUALIZATION · DEMO MODE
+      <canvas ref={canvasRef} style={{ width: '100%', height: '360px', display: 'block', cursor: 'crosshair' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '0 4px' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--text-muted)', letterSpacing: '1.5px' }}>
+          ♫ {micState === 'listening' ? 'LIVE MICROPHONE · 128 BANDS' : 'PROCEDURAL MODE · 128 BANDS'}
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {micState === 'listening' && (
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#FF3366', animation: 'glowPulse 1s infinite', boxShadow: '0 0 8px #FF3366' }} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#FF3366', letterSpacing: '1px' }}>REC</span>
+            </div>
+          )}
+          <button onClick={activateMic} disabled={micState === 'listening'} style={{
+            fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px',
+            padding: '5px 12px', cursor: micState === 'listening' ? 'default' : 'pointer',
+            background: micState === 'listening' ? 'rgba(57,255,20,0.08)' : 'rgba(255,51,102,0.08)',
+            border: `1px solid ${micState === 'listening' ? 'rgba(57,255,20,0.25)' : 'rgba(255,51,102,0.25)'}`,
+            color: micState === 'listening' ? '#39FF14' : '#FF3366',
+            transition: 'all 0.3s',
+          }}>
+            {micState === 'idle' ? '🎙 ACTIVATE MIC' : micState === 'listening' ? '● LISTENING' : '✕ MIC DENIED'}
+          </button>
+        </div>
       </div>
     </div>
   );

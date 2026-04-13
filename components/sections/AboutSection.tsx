@@ -71,29 +71,33 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
       ref={cardRef}
       style={{
         position: 'relative',
-        background: `linear-gradient(135deg, rgba(8,8,20,.9), rgba(8,8,20,.7))`,
-        border: `1px solid ${color}25`,
+        background: `linear-gradient(160deg, rgba(8,6,22,.95), rgba(4,3,14,.9))`,
+        border: `1px solid ${color}20`,
         transition: 'border-color .3s, background .5s, box-shadow .3s, transform .3s',
         overflow: 'hidden',
         ...style
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px) scale(1.01)';
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = `${color}25`;
-        el.style.background = `linear-gradient(135deg, rgba(8,8,20,.9), rgba(8,8,20,.7))`;
+        el.style.borderColor = `${color}20`;
+        el.style.background = `linear-gradient(160deg, rgba(8,6,22,.95), rgba(4,3,14,.9))`;
         el.style.boxShadow = 'none';
-        el.style.transform = 'translateY(0)';
+        el.style.transform = 'translateY(0) scale(1)';
       }}
       {...props}
     >
       {/* Scanline overlay */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.008) 2px, rgba(255,255,255,.008) 4px)', zIndex: 1 }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.006) 2px, rgba(255,255,255,.006) 4px)', zIndex: 1 }} />
       {/* Top edge glow line */}
-      <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: `linear-gradient(90deg, transparent, ${color}40, transparent)`, pointerEvents: 'none', zIndex: 1 }} />
+      <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: `linear-gradient(90deg, transparent, ${color}55, transparent)`, pointerEvents: 'none', zIndex: 1 }} />
+      {/* Corner accents */}
+      {[{top:4,left:4,bT:`1px solid ${color}50`,bL:`1px solid ${color}50`},{top:4,right:4,bT:`1px solid ${color}50`,bR:`1px solid ${color}50`},{bottom:4,left:4,bB:`1px solid ${color}50`,bL:`1px solid ${color}50`},{bottom:4,right:4,bB:`1px solid ${color}50`,bR:`1px solid ${color}50`}].map((s,i)=>(
+        <div key={i} style={{position:'absolute',width:8,height:8,pointerEvents:'none',zIndex:3,top:s.top,bottom:s.bottom,left:s.left,right:s.right,borderTop:s.bT,borderBottom:s.bB,borderLeft:s.bL,borderRight:s.bR} as React.CSSProperties} />
+      ))}
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 2 }}>{children}</div>
     </div>
@@ -375,58 +379,58 @@ function Globe() {
 }
 
 /* ═══════════════════════════════════════════
-   PROFICIENCY BAR
+   ARC GAUGE — Circular SVG proficiency indicator
+   Animated stroke-dasharray on scroll, glow on hover
    ═══════════════════════════════════════════ */
-function ProfBar({ label, value, color, delay, go }: { label: string; value: number; color: string; delay: number; go: boolean }) {
-  const [w, setW] = useState(0);
+function ArcGauge({ label, value, color, delay, go }: { label: string; value: number; color: string; delay: number; go: boolean }) {
+  const [animValue, setAnimValue] = useState(0);
   const [hov, setHov] = useState(false);
   const [displayVal, setDisplayVal] = useState(0);
-  
-  useEffect(() => { if (go) setTimeout(() => setW(value), delay); }, [go, value, delay]);
-  
-  // Animate the percentage counter
+  const R = 38, STROKE = 4;
+  const C = 2 * Math.PI * R;
+  const offset = C - (animValue / 100) * C;
+
+  useEffect(() => { if (go) setTimeout(() => setAnimValue(value), delay); }, [go, value, delay]);
   useEffect(() => {
-    if (w === 0) return;
-    let start = 0;
+    if (animValue === 0) return;
+    let cur = 0;
     const step = () => {
-      start += Math.ceil(value / 30);
-      if (start >= value) { setDisplayVal(value); return; }
-      setDisplayVal(start);
-      requestAnimationFrame(step);
+      cur += Math.ceil(value / 25);
+      if (cur >= value) { setDisplayVal(value); return; }
+      setDisplayVal(cur); requestAnimationFrame(step);
     };
     setTimeout(step, delay);
-  }, [w, value, delay]);
+  }, [animValue, value, delay]);
 
   return (
-    <div 
-      style={{ marginBottom: 14, cursor: 'default' }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
+    <div
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'default', transition: 'transform 0.3s', transform: hov ? 'scale(1.08)' : 'scale(1)' }}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, transition: 'all 0.2s' }}>
-        <span style={{ 
-          fontFamily: 'var(--font-mono)', fontSize: hov ? '10px' : '9px', letterSpacing: '1.5px', 
-          color: hov ? color : 'rgba(232,232,240,.65)',
-          textShadow: hov ? `0 0 10px ${color}50` : 'none',
-          transition: 'all 0.3s',
-        }}>{label}</span>
-        <span style={{ 
-          fontFamily: 'var(--font-mono)', fontSize: hov ? '11px' : '9px', fontWeight: hov ? 700 : 400,
-          color, textShadow: `0 0 ${hov ? 12 : 6}px ${color}66`,
-          transition: 'all 0.3s',
-        }}>{displayVal}%</span>
-      </div>
-      <div style={{ 
-        height: hov ? 6 : 2, background: 'rgba(255,255,255,.06)', borderRadius: 3,
-        transition: 'height 0.3s cubic-bezier(.16,1,.3,1)',
-      }}>
-        <div style={{ 
-          height: '100%', width: `${w}%`, borderRadius: 3,
-          background: `linear-gradient(90deg, ${color}66, ${color})`, 
-          boxShadow: hov ? `0 0 16px ${color}88, 0 0 30px ${color}33` : `0 0 8px ${color}44`,
-          transition: 'width 1.2s cubic-bezier(.16,1,.3,1), box-shadow 0.3s',
-        }} />
-      </div>
+      <svg width={96} height={96} viewBox="0 0 96 96">
+        {/* Track */}
+        <circle cx={48} cy={48} r={R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={STROKE} />
+        {/* Outer glow ring on hover */}
+        {hov && <circle cx={48} cy={48} r={R + 6} fill="none" stroke={`${color}20`} strokeWidth={1} style={{ filter: `drop-shadow(0 0 6px ${color})` }} />}
+        {/* Arc */}
+        <circle
+          cx={48} cy={48} r={R} fill="none" stroke={color} strokeWidth={STROKE}
+          strokeDasharray={`${C}`} strokeDashoffset={offset}
+          strokeLinecap="round" transform="rotate(-90 48 48)"
+          style={{ transition: 'stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1)', filter: hov ? `drop-shadow(0 0 8px ${color})` : `drop-shadow(0 0 3px ${color}88)` }}
+        />
+        {/* Center value */}
+        <text x={48} y={46} textAnchor="middle" dominantBaseline="middle" fill={color}
+          style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 700, filter: `drop-shadow(0 0 6px ${color}88)` }}>
+          {displayVal}
+        </text>
+        <text x={48} y={60} textAnchor="middle" fill="rgba(232,232,240,0.35)"
+          style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1px' }}>%</text>
+      </svg>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px',
+        color: hov ? color : 'rgba(232,232,240,.5)', textShadow: hov ? `0 0 8px ${color}50` : 'none',
+        transition: 'all 0.3s', textAlign: 'center', lineHeight: 1.3,
+      }}>{label}</span>
     </div>
   );
 }
@@ -628,12 +632,14 @@ export default function AboutSection() {
             {/* Proficiency */}
             <div ref={statsRef} style={{ marginBottom: 48 }}>
               <Reveal delay={350}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>PROFICIENCY_MATRIX.sys</div>
-                <ProfBar label="JAVA / DSA / OOP" value={85} color="#00D4FF" delay={100} go={statsGo} />
-                <ProfBar label="BACKEND / PHP / DATABASES" value={68} color="#7B2FFF" delay={200} go={statsGo} />
-                <ProfBar label="FRONTEND / REACT / UI" value={50} color="#39FF14" delay={300} go={statsGo} />
-                <ProfBar label="THREE.JS / WEBGL / GSAP" value={35} color="#FFB800" delay={400} go={statsGo} />
-                <ProfBar label="GIT / TOOLS / DEPLOYMENT" value={62} color="#00D4FF" delay={500} go={statsGo} />
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>PROFICIENCY_MATRIX.sys</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center' }}>
+                  <ArcGauge label="JAVA / DSA" value={85} color="#00D4FF" delay={100} go={statsGo} />
+                  <ArcGauge label="BACKEND" value={68} color="#7B2FFF" delay={200} go={statsGo} />
+                  <ArcGauge label="FRONTEND" value={50} color="#39FF14" delay={300} go={statsGo} />
+                  <ArcGauge label="3D / WEBGL" value={35} color="#FFB800" delay={400} go={statsGo} />
+                  <ArcGauge label="DEVOPS" value={62} color="#00D4FF" delay={500} go={statsGo} />
+                </div>
               </Reveal>
             </div>
 

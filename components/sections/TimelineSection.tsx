@@ -119,11 +119,15 @@ function HoloCard({ entry, active, index }: { entry: TimelineEntry; active: bool
       }}
     >
       {/* Scanline overlay */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,.006) 3px, rgba(255,255,255,.006) 6px)', zIndex: 0 }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,.005) 3px, rgba(255,255,255,.005) 6px)', zIndex: 0 }} />
       {/* Top glow line */}
       <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: `linear-gradient(90deg, transparent, ${entry.color}${hov ? '66' : '22'}, transparent)`, transition: 'all 0.3s', zIndex: 1 }} />
       {/* Left accent glow */}
       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 30, background: `linear-gradient(90deg, rgba(${rgb},${hov ? 0.08 : 0.02}), transparent)`, pointerEvents: 'none', transition: 'all 0.3s', zIndex: 0 }} />
+      {/* Corner bracket accents */}
+      {[{top:5,left:5,bT:`1px solid ${entry.color}44`,bL:`1px solid ${entry.color}44`},{top:5,right:5,bT:`1px solid ${entry.color}44`,bR:`1px solid ${entry.color}44`},{bottom:5,left:5,bB:`1px solid ${entry.color}44`,bL:`1px solid ${entry.color}44`},{bottom:5,right:5,bB:`1px solid ${entry.color}44`,bR:`1px solid ${entry.color}44`}].map((s,ci)=>(
+        <div key={ci} style={{position:'absolute',width:8,height:8,pointerEvents:'none',zIndex:3,top:s.top,bottom:s.bottom,left:s.left,right:s.right,borderTop:s.bT,borderBottom:s.bB,borderLeft:s.bL,borderRight:s.bR} as React.CSSProperties} />
+      ))}
 
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 2 }}>
@@ -376,7 +380,7 @@ export default function TimelineSection() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   zIndex: 5,
                 }}>
-                  {/* Pulse ring */}
+                  {/* Outer pulse ring */}
                   {active && (
                     <div style={{
                       position: 'absolute',
@@ -385,6 +389,16 @@ export default function TimelineSection() {
                       borderRadius: '50%',
                       border: `1px solid ${entry.color}55`,
                       animation: 'nodePulse 2s ease-in-out infinite',
+                    }} />
+                  )}
+                  {/* Inner pulse ring (milestones only) */}
+                  {active && entry.isMilestone && (
+                    <div style={{
+                      position: 'absolute',
+                      width: 36, height: 36,
+                      borderRadius: '50%',
+                      border: `1px solid ${entry.color}33`,
+                      animation: 'nodePulse 2.5s ease-in-out infinite 0.4s',
                     }} />
                   )}
                   {/* Core dot */}

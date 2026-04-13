@@ -461,12 +461,34 @@ export default function WorkSection() {
       <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
         {/* Header */}
         <div style={{ position: 'absolute', top: 80, left: 40 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 10px rgba(123,47,255,.3)', marginBottom: 8 }}>02 // WORK.db</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 3vw, 36px)', marginBottom: 6, color: '#E8E8F0' }}>
-            Project <span style={{ color: '#7B2FFF', textShadow: '0 0 15px rgba(123,47,255,.3)' }}>Tunnel</span>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 10px rgba(123,47,255,.3)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+            02 // WORK.db
+            <span style={{ fontSize: '7px', padding: '2px 8px', border: '1px solid rgba(123,47,255,0.25)', color: 'rgba(123,47,255,0.7)', letterSpacing: '1.5px' }}>{PROJECTS.length} PROJECTS</span>
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 'clamp(28px, 4vw, 42px)', marginBottom: 6, color: '#E8E8F0' }}>
+            Project <span style={{ color: '#7B2FFF', textShadow: '0 0 20px rgba(123,47,255,.4), 0 0 40px rgba(123,47,255,.15)' }}>Tunnel</span>
           </h2>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.65)', letterSpacing: '1px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
         </div>
+
+        {/* Center crosshair */}
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}>
+          <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, rgba(123,47,255,0.15), transparent)', position: 'absolute', top: 0, left: -20 }} />
+          <div style={{ width: 1, height: 40, background: 'linear-gradient(180deg, transparent, rgba(123,47,255,0.15), transparent)', position: 'absolute', left: 0, top: -20 }} />
+          <div style={{ width: 8, height: 8, border: '1px solid rgba(123,47,255,0.2)', position: 'absolute', top: -4, left: -4 }} />
+        </div>
+
+        {/* Corner HUD brackets */}
+        {[{ top: 14, left: 14 }, { top: 14, right: 14 }, { bottom: 14, left: 14 }, { bottom: 14, right: 14 }].map((pos, i) => (
+          <div key={i} style={{
+            position: 'absolute', width: 20, height: 20, pointerEvents: 'none',
+            borderTop: (pos.top !== undefined) ? '1px solid rgba(123,47,255,0.25)' : undefined,
+            borderBottom: (pos.bottom !== undefined) ? '1px solid rgba(123,47,255,0.25)' : undefined,
+            borderLeft: (pos.left !== undefined && (pos.top !== undefined || pos.bottom !== undefined)) ? '1px solid rgba(123,47,255,0.25)' : undefined,
+            borderRight: (pos.right !== undefined && (pos.top !== undefined || pos.bottom !== undefined)) ? '1px solid rgba(123,47,255,0.25)' : undefined,
+            ...pos,
+          } as React.CSSProperties} />
+        ))}
 
         {/* Vertical progress */}
         <div style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', width: 2, height: 200, background: 'rgba(255,255,255,0.08)' }}>
@@ -477,7 +499,7 @@ export default function WorkSection() {
         </div>
 
         {/* Project indicators — bottom */}
-        <div style={{ position: 'absolute', bottom: 30, left: 40, display: 'flex', gap: 6 }}>
+        <div style={{ position: 'absolute', bottom: 30, left: 40, display: 'flex', gap: 6, alignItems: 'center' }}>
           {PROJECTS.map((p, i) => {
             const isActive = Math.abs(scrollProgress - i / Math.max(PROJECTS.length - 1, 1)) < 0.18;
             return (
@@ -490,6 +512,9 @@ export default function WorkSection() {
               }} onClick={() => setScrollProgress(i / Math.max(PROJECTS.length - 1, 1))} />
             );
           })}
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1px', color: 'rgba(232,232,240,0.25)', marginLeft: 8 }}>
+            DEPTH: {Math.round(scrollProgress * 100)}%
+          </span>
         </div>
       </div>
 
