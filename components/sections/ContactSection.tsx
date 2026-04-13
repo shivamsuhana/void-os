@@ -326,150 +326,161 @@ export default function ContactSection() {
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at 30% 50%, rgba(255,51,102,0.04) 0%, transparent 60%), radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%)' }} />
       <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.15), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'contact-scan 5s linear infinite' }} />
 
-      {/* BODY */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 18, padding: '60px 24px 20px' }}>
+      {/* BODY — full-height two-column flex */}
+      <div style={{
+        position: 'absolute', inset: 0, top: 0,
+        display: 'flex', flexDirection: 'column',
+        padding: '60px 24px 16px',
+        gap: 0,
+      }}>
         <style dangerouslySetInnerHTML={{ __html: '@media(max-width:900px){#contact-right{display:none!important;}}' }} />
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 18, alignItems: 'stretch' }}>
 
-        {/* Terminal card */}
-        <div style={{
-          width: '100%', maxWidth: 560, display: 'flex', flexDirection: 'column',
-          border: '1px solid rgba(255,51,102,0.22)', borderRadius: 4,
-          background: 'linear-gradient(160deg, rgba(10,8,24,0.98), rgba(6,5,18,0.96))',
-          boxShadow: '0 0 80px rgba(255,51,102,0.08), 0 30px 80px rgba(0,0,0,0.6)',
-          overflow: 'hidden', marginTop: 'auto', marginBottom: 'auto', maxHeight: '80vh', position: 'relative',
-        }}>
-          {/* Top neon bar */}
-          <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.6), transparent)', zIndex: 10 }} />
-          {/* Bottom neon bar */}
-          <div style={{ position: 'absolute', bottom: 0, left: '5%', right: '5%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.3), transparent)', zIndex: 10 }} />
-          {/* Scanlines */}
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px)', zIndex: 1 }} />
-          {/* Corner accents */}
-          {[
-            { top: 8, left: 8, borderTop: '1px solid rgba(255,51,102,0.5)', borderLeft: '1px solid rgba(255,51,102,0.5)' },
-            { top: 8, right: 8, borderTop: '1px solid rgba(255,51,102,0.5)', borderRight: '1px solid rgba(255,51,102,0.5)' },
-            { bottom: 8, left: 8, borderBottom: '1px solid rgba(255,51,102,0.5)', borderLeft: '1px solid rgba(255,51,102,0.5)' },
-            { bottom: 8, right: 8, borderBottom: '1px solid rgba(255,51,102,0.5)', borderRight: '1px solid rgba(255,51,102,0.5)' },
-          ].map((s, i) => <div key={i} style={{ position: 'absolute', width: 12, height: 12, pointerEvents: 'none', zIndex: 10, ...s }} />)}
+          {/* Terminal card */}
+          <div style={{
+            flex: '1 1 0', minWidth: 0, maxWidth: 580, display: 'flex', flexDirection: 'column',
+            border: '1px solid rgba(255,51,102,0.22)', borderRadius: 4,
+            background: 'linear-gradient(160deg, rgba(10,8,24,0.98), rgba(6,5,18,0.96))',
+            boxShadow: '0 0 80px rgba(255,51,102,0.08), 0 20px 60px rgba(0,0,0,0.5)',
+            overflow: 'hidden', position: 'relative',
+          }}>
+            {/* Top neon bar */}
+            <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.6), transparent)', zIndex: 10 }} />
+            {/* Bottom neon bar */}
+            <div style={{ position: 'absolute', bottom: 0, left: '5%', right: '5%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.3), transparent)', zIndex: 10 }} />
+            {/* Scanlines */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px)', zIndex: 1 }} />
+            {/* Corner accents */}
+            {[
+              { top: 8, left: 8, borderTop: '1px solid rgba(255,51,102,0.5)', borderLeft: '1px solid rgba(255,51,102,0.5)' },
+              { top: 8, right: 8, borderTop: '1px solid rgba(255,51,102,0.5)', borderRight: '1px solid rgba(255,51,102,0.5)' },
+              { bottom: 8, left: 8, borderBottom: '1px solid rgba(255,51,102,0.5)', borderLeft: '1px solid rgba(255,51,102,0.5)' },
+              { bottom: 8, right: 8, borderBottom: '1px solid rgba(255,51,102,0.5)', borderRight: '1px solid rgba(255,51,102,0.5)' },
+            ].map((s, i) => <div key={i} style={{ position: 'absolute', width: 12, height: 12, pointerEvents: 'none', zIndex: 10, ...s }} />)}
 
-          {/* Tab bar */}
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,51,102,0.12)', background: 'rgba(255,51,102,0.04)', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0, position: 'relative', zIndex: 2 }}>
-            {['#FF3B5C', '#FFB800', '#39FF14'].map((col, i) => (
-              <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: col, boxShadow: `0 0 8px ${col}` }} />
-            ))}
-            <span style={{ fontSize: '10px', letterSpacing: '2px', color: 'rgba(232,232,240,0.5)', marginLeft: 8 }}>CONTACT.net — ENCRYPTED CHANNEL</span>
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, animation: 'social-pulse 2s infinite' }} />
-              <span style={{ fontSize: '8px', color: 'rgba(57,255,20,0.5)', letterSpacing: '1px' }}>LIVE</span>
-            </div>
-          </div>
-
-          {/* Terminal output */}
-          <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', minHeight: 0, position: 'relative', zIndex: 2 }}>
-            {lines.map((l, i) => (
-              <div key={l.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 1, animation: i === lines.length - 1 ? 'fadeIn 0.15s ease' : 'none' }}>
-                <span style={{ color: l.prompt ? C.blue : 'rgba(232,232,240,0.15)', flexShrink: 0, fontSize: '11px', userSelect: 'none' }}>{l.prompt ? '>' : ' '}</span>
-                <span style={{ fontSize: '11px', lineHeight: 1.6, color: l.color || 'rgba(232,232,240,0.7)', wordBreak: 'break-word', fontWeight: l.color === C.green ? 600 : 400 }}>{l.text || '\u00A0'}</span>
+            {/* Tab bar */}
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,51,102,0.12)', background: 'rgba(255,51,102,0.04)', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0, position: 'relative', zIndex: 2 }}>
+              {['#FF3B5C', '#FFB800', '#39FF14'].map((col, i) => (
+                <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: col, boxShadow: `0 0 8px ${col}` }} />
+              ))}
+              <span style={{ fontSize: '10px', letterSpacing: '2px', color: 'rgba(232,232,240,0.5)', marginLeft: 8 }}>CONTACT.net — ENCRYPTED CHANNEL</span>
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, animation: 'social-pulse 2s infinite' }} />
+                <span style={{ fontSize: '8px', color: 'rgba(57,255,20,0.5)', letterSpacing: '1px' }}>LIVE</span>
               </div>
-            ))}
-            {step === 'sending' && sendProgress < 100 && (
-              <div style={{ marginTop: 6, marginLeft: 16 }}>
-                <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', maxWidth: 280, position: 'relative' }}>
-                  <div style={{ height: '100%', width: `${sendProgress}%`, background: `linear-gradient(90deg, ${C.red}, ${C.blue})`, transition: 'width 0.05s', boxShadow: `0 0 10px ${C.red}60` }} />
+            </div>
+
+            {/* Terminal output — scrolls internally */}
+            <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', minHeight: 0, position: 'relative', zIndex: 2 }}>
+              {lines.map((l, i) => (
+                <div key={l.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 1, animation: i === lines.length - 1 ? 'fadeIn 0.15s ease' : 'none' }}>
+                  <span style={{ color: l.prompt ? C.blue : 'rgba(232,232,240,0.15)', flexShrink: 0, fontSize: '11px', userSelect: 'none' }}>{l.prompt ? '>' : ' '}</span>
+                  <span style={{ fontSize: '11px', lineHeight: 1.6, color: l.color || 'rgba(232,232,240,0.7)', wordBreak: 'break-word', fontWeight: l.color === C.green ? 600 : 400 }}>{l.text || '\u00A0'}</span>
                 </div>
-                <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.5)', marginTop: 3, letterSpacing: '1px' }}>TRANSMITTING... {Math.floor(sendProgress)}%</div>
+              ))}
+              {step === 'sending' && sendProgress < 100 && (
+                <div style={{ marginTop: 6, marginLeft: 16 }}>
+                  <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', maxWidth: 280 }}>
+                    <div style={{ height: '100%', width: `${sendProgress}%`, background: `linear-gradient(90deg, ${C.red}, ${C.blue})`, transition: 'width 0.05s', boxShadow: `0 0 10px ${C.red}60` }} />
+                  </div>
+                  <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.5)', marginTop: 3, letterSpacing: '1px' }}>TRANSMITTING... {Math.floor(sendProgress)}%</div>
+                </div>
+              )}
+            </div>
+
+            {/* Input row — fixed at bottom */}
+            {!['booting', 'sending', 'sent'].includes(step) && (
+              <div style={{ borderTop: '1px solid rgba(255,51,102,0.12)', background: 'rgba(255,51,102,0.03)', flexShrink: 0, position: 'relative', zIndex: 2 }}>
+                <div style={{ padding: '6px 16px 0', fontSize: '9px', letterSpacing: '2px', color: C.amber, textShadow: `0 0 8px ${C.amber}30` }}>
+                  {step === 'name' && '> ENTER YOUR NAME'}
+                  {step === 'email' && '> ENTER YOUR EMAIL'}
+                  {step === 'subject' && '> SUBJECT OF TRANSMISSION'}
+                  {step === 'message' && '> YOUR MESSAGE (Shift+Enter ↵ for newline)'}
+                  {step === 'confirm' && '> CONFIRM? [Y / N]'}
+                </div>
+                <div style={{ padding: '6px 16px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: C.red, fontSize: '14px', flexShrink: 0 }}>❯</span>
+                  {step === 'message' ? (
+                    <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
+                      placeholder="Type your message..." rows={3}
+                      style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: C.white, caretColor: C.red, resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }} />
+                  ) : (
+                    <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
+                      placeholder={step === 'confirm' ? 'Y or N...' : 'Type here...'}
+                      style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: C.white, caretColor: C.red, background: 'transparent', border: 'none', outline: 'none' }} />
+                  )}
+                  <button onClick={handleSubmit}
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: C.red, cursor: 'pointer', padding: '5px 12px', border: `1px solid ${C.red}44`, background: `${C.red}10`, transition: 'all 0.2s', borderRadius: 3 }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${C.red}22`; e.currentTarget.style.boxShadow = `0 0 12px ${C.red}40`; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = `${C.red}10`; e.currentTarget.style.boxShadow = 'none'; }}
+                  >ENTER ↵</button>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Input */}
-          {!['booting', 'sending', 'sent'].includes(step) && (
-            <div style={{ borderTop: '1px solid rgba(255,51,102,0.12)', background: 'rgba(255,51,102,0.03)', flexShrink: 0, position: 'relative', zIndex: 2 }}>
-              <div style={{ padding: '6px 16px 0', fontSize: '9px', letterSpacing: '2px', color: C.amber, textShadow: `0 0 8px ${C.amber}30` }}>
-                {step === 'name' && '> ENTER YOUR NAME'}
-                {step === 'email' && '> ENTER YOUR EMAIL'}
-                {step === 'subject' && '> SUBJECT OF TRANSMISSION'}
-                {step === 'message' && '> YOUR MESSAGE (Shift+Enter ↵ for newline)'}
-                {step === 'confirm' && '> CONFIRM? [Y / N]'}
+          {/* RIGHT PANELS — fixed column, scrolls on its own */}
+          <div id="contact-right" style={{
+            width: 255, flexShrink: 0, display: 'flex', flexDirection: 'column',
+            gap: 8, overflowY: 'auto', paddingBottom: 4,
+          }} className="hide-scrollbar">
+
+            {/* Radar */}
+            <div style={{ padding: 14, border: '1px solid rgba(255,51,102,0.2)', background: 'linear-gradient(135deg, rgba(10,8,24,0.96), rgba(6,5,18,0.9))', borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.5), transparent)' }} />
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 4px)' }} />
+              <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: '#FF3366', marginBottom: 10, textShadow: '0 0 10px rgba(255,51,102,0.6)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.red, boxShadow: `0 0 6px ${C.red}`, display: 'inline-block', animation: 'social-pulse 1.5s infinite' }} />
+                SIGNAL DETECTION
               </div>
-              <div style={{ padding: '6px 16px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: C.red, fontSize: '14px', flexShrink: 0 }}>❯</span>
-                {step === 'message' ? (
-                  <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-                    placeholder="Type your message..." rows={3}
-                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: C.white, caretColor: C.red, resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }} />
-                ) : (
-                  <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-                    placeholder={step === 'confirm' ? 'Y or N...' : 'Type here...'}
-                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: C.white, caretColor: C.red, background: 'transparent', border: 'none', outline: 'none' }} />
-                )}
-                <button onClick={handleSubmit}
-                  style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: C.red, cursor: 'pointer', padding: '5px 12px', border: `1px solid ${C.red}44`, background: `${C.red}10`, transition: 'all 0.2s', borderRadius: 3 }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${C.red}22`; e.currentTarget.style.boxShadow = `0 0 12px ${C.red}40`; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${C.red}10`; e.currentTarget.style.boxShadow = 'none'; }}
-                >ENTER ↵</button>
+              <RadarCanvas />
+              <div style={{ fontSize: '8px', color: C.green, marginTop: 10, textShadow: `0 0 10px ${C.green}70`, letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, display: 'inline-block', animation: 'social-pulse 2s infinite' }} />
+                VISITOR DETECTED
               </div>
             </div>
-          )}
-        </div>
 
-        {/* RIGHT PANELS */}
-        <div id="contact-right" style={{ width: 270, flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, marginTop: 'auto', marginBottom: 'auto' }}>
-
-          {/* Radar */}
-          <div style={{ padding: 14, border: '1px solid rgba(255,51,102,0.2)', background: 'linear-gradient(135deg, rgba(10,8,24,0.96), rgba(6,5,18,0.9))', borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.5), transparent)' }} />
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 4px)' }} />
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: '#FF3366', marginBottom: 10, textShadow: '0 0 10px rgba(255,51,102,0.6)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.red, boxShadow: `0 0 6px ${C.red}`, display: 'inline-block', animation: 'social-pulse 1.5s infinite' }} />
-              SIGNAL DETECTION
+            {/* Connection status */}
+            <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'linear-gradient(135deg, rgba(10,8,24,0.96), rgba(6,5,18,0.9))', borderRadius: 4, position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.4), transparent)' }} />
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 4px)' }} />
+              <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: C.blue, marginBottom: 10, textShadow: `0 0 10px ${C.blue}60`, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.blue, boxShadow: `0 0 6px ${C.blue}`, display: 'inline-block' }} />
+                CONNECTION STATUS
+              </div>
+              {[
+                { l: 'STATUS', v: 'AVAILABLE', c: C.green },
+                { l: 'RESPONSE', v: '< 24 HOURS', c: C.amber },
+                { l: 'CHANNEL', v: 'ENCRYPTED', c: C.blue },
+                { l: 'PROTOCOL', v: 'VOID/3', c: C.purple },
+                { l: 'TIMEZONE', v: 'UTC+5:30', c: C.white },
+              ].map(s => (
+                <div key={s.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.4)', letterSpacing: '1px' }}>{s.l}</span>
+                  <span style={{ fontSize: '9px', color: s.c, fontWeight: 600, textShadow: `0 0 8px ${s.c}40` }}>{s.v}</span>
+                </div>
+              ))}
             </div>
-            <RadarCanvas />
-            <div style={{ fontSize: '8px', color: C.green, marginTop: 10, textShadow: `0 0 10px ${C.green}70`, letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, display: 'inline-block', animation: 'social-pulse 2s infinite' }} />
-              VISITOR DETECTED
+
+            {/* SIGNAL CHANNELS */}
+            <div style={{ padding: 14, border: '1px solid rgba(57,255,20,0.15)', background: 'linear-gradient(135deg, rgba(10,8,24,0.96), rgba(6,5,18,0.9))', borderRadius: 4, position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(57,255,20,0.4), transparent)' }} />
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 4px)' }} />
+              <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: C.green, marginBottom: 12, textShadow: `0 0 10px ${C.green}60`, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, display: 'inline-block', animation: 'social-pulse 2.5s infinite' }} />
+                SIGNAL CHANNELS
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <SocialCard icon="⬡" label="GITHUB" handle="@shivamsuhana" href={OWNER.github} color={C.white} description="Source code & projects" />
+                <SocialCard icon="◈" label="LINKEDIN" handle="in/shivamsuhana" href={OWNER.linkedin} color={C.blue} description="Professional network" />
+                <SocialCard icon="◎" label="LEETCODE" handle="/shivamsuhana" href={`https://leetcode.com/shivamsuhana`} color={C.amber} description="Algorithm practice" />
+                <SocialCard icon="✦" label="EMAIL" handle={OWNER.email} href={`mailto:${OWNER.email}`} color={C.green} description="Direct transmission" />
+              </div>
             </div>
           </div>
 
-          {/* Connection status */}
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'linear-gradient(135deg, rgba(10,8,24,0.96), rgba(6,5,18,0.9))', borderRadius: 4, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.4), transparent)' }} />
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 4px)' }} />
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: C.blue, marginBottom: 10, textShadow: `0 0 10px ${C.blue}60`, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.blue, boxShadow: `0 0 6px ${C.blue}`, display: 'inline-block' }} />
-              CONNECTION STATUS
-            </div>
-            {[
-              { l: 'STATUS', v: 'AVAILABLE', c: C.green },
-              { l: 'RESPONSE', v: '< 24 HOURS', c: C.amber },
-              { l: 'CHANNEL', v: 'ENCRYPTED', c: C.blue },
-              { l: 'PROTOCOL', v: 'VOID/3', c: C.purple },
-              { l: 'TIMEZONE', v: 'UTC+5:30', c: C.white },
-            ].map(s => (
-              <div key={s.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.4)', letterSpacing: '1px' }}>{s.l}</span>
-                <span style={{ fontSize: '9px', color: s.c, fontWeight: 600, textShadow: `0 0 8px ${s.c}40` }}>{s.v}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* SIGNAL CHANNELS — Holographic social cards */}
-          <div style={{ padding: 14, border: '1px solid rgba(57,255,20,0.15)', background: 'linear-gradient(135deg, rgba(10,8,24,0.96), rgba(6,5,18,0.9))', borderRadius: 4, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(57,255,20,0.4), transparent)' }} />
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 4px)' }} />
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: C.green, marginBottom: 12, textShadow: `0 0 10px ${C.green}60`, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, display: 'inline-block', animation: 'social-pulse 2.5s infinite' }} />
-              SIGNAL CHANNELS
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <SocialCard icon="⬡" label="GITHUB" handle="@shivamsuhana" href={OWNER.github} color={C.white} description="Source code & projects" />
-              <SocialCard icon="◈" label="LINKEDIN" handle="in/shivamsuhana" href={OWNER.linkedin} color={C.blue} description="Professional network" />
-              <SocialCard icon="◎" label="LEETCODE" handle="/shivamsuhana" href={`https://leetcode.com/shivamsuhana`} color={C.amber} description="Algorithm practice" />
-              <SocialCard icon="✦" label="EMAIL" handle={OWNER.email} href={`mailto:${OWNER.email}`} color={C.green} description="Direct transmission" />
-            </div>
-          </div>
         </div>
       </div>
 
