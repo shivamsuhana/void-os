@@ -91,91 +91,145 @@ function TimelineCard({ entry, index, active, side }: { entry: TimelineEntry; in
   const rgb = `${parseInt(entry.color.slice(1, 3), 16)},${parseInt(entry.color.slice(3, 5), 16)},${parseInt(entry.color.slice(5, 7), 16)}`;
   const [hov, setHov] = useState(false);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    cardRef.current.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(${rgb},0.1), rgba(${rgb},0.03) 60%, rgba(255,255,255,0.05))`;
+  const onMove = (e: React.MouseEvent) => {
+    if (!cardRef.current || !hov) return;
+    const r = cardRef.current.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width - 0.5) * 10;
+    const y = ((e.clientY - r.top) / r.height - 0.5) * -10;
+    cardRef.current.style.transform = `perspective(600px) rotateX(${y}deg) rotateY(${x}deg) scale(1.03)`;
+  };
+  const onLeave = (e: React.MouseEvent) => {
+    setHov(false);
+    if (cardRef.current) cardRef.current.style.transform = active ? 'translateY(0)' : 'translateY(14px)';
+    e.currentTarget.style.background = 'none';
   };
 
   return (
     <div
       ref={cardRef}
       onMouseEnter={() => setHov(true)}
-      onMouseLeave={(e) => {
-        setHov(false);
-        e.currentTarget.style.background = `linear-gradient(135deg, rgba(8,8,20,0.9), rgba(8,8,20,0.7))`;
-        e.currentTarget.style.boxShadow = 'none';
-      }}
-      onMouseMove={handleMouseMove}
+      onMouseLeave={onLeave}
+      onMouseMove={onMove}
       style={{
-        maxWidth: 380, width: '100%',
-        padding: '22px 24px',
-        background: `linear-gradient(135deg, rgba(8,8,20,0.9), rgba(8,8,20,0.7))`,
-        borderTop: `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '44') : 'rgba(255,255,255,0.06)'}`,
-        borderBottom: `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '44') : 'rgba(255,255,255,0.06)'}`,
-        borderLeft: side === 'left'
-          ? `3px solid ${active ? entry.color : entry.color + '44'}`
-          : `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '44') : 'rgba(255,255,255,0.06)'}`,
-        borderRight: side === 'right'
-          ? `3px solid ${active ? entry.color : entry.color + '44'}`
-          : `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '44') : 'rgba(255,255,255,0.06)'}`,
-        borderRadius: '2px',
-        opacity: active ? 1 : 0.3,
-        transform: active ? (hov ? 'translateY(-6px) scale(1.03)' : 'translateY(0)') : 'translateY(14px)',
-        transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
-        position: 'relative', overflow: 'hidden', cursor: 'default',
-        boxShadow: hov
-          ? `0 12px 50px rgba(${rgb},0.2), 0 0 30px rgba(${rgb},0.08), inset 0 0 40px rgba(${rgb},0.04)`
-          : active ? `0 4px 20px rgba(${rgb},0.06)` : 'none',
+        maxWidth: 420, width: '100%',
+        padding: '0',
+        opacity: active ? 1 : 0.25,
+        transform: active ? 'translateY(0)' : 'translateY(14px)',
+        transition: hov ? 'none' : 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
+        position: 'relative', cursor: 'default',
+        transformStyle: 'preserve-3d',
       }}
     >
-      {/* Scanline overlay */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px)', zIndex: 0 }} />
-      {/* Top glow bar */}
-      <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: hov ? 2 : 1, background: `linear-gradient(90deg, transparent, ${entry.color}${hov ? 'aa' : '55'}, transparent)`, opacity: active ? 1 : 0, transition: 'all 0.4s', zIndex: 1 }} />
-      {/* Corner accents */}
-      {active && [
-        { top: 6, left: 6, borderTop: `1px solid ${entry.color}88`, borderLeft: `1px solid ${entry.color}88` },
-        { top: 6, right: 6, borderTop: `1px solid ${entry.color}88`, borderRight: `1px solid ${entry.color}88` },
-        { bottom: 6, left: 6, borderBottom: `1px solid ${entry.color}88`, borderLeft: `1px solid ${entry.color}88` },
-        { bottom: 6, right: 6, borderBottom: `1px solid ${entry.color}88`, borderRight: `1px solid ${entry.color}88` },
-      ].map((s, i) => <div key={i} style={{ position: 'absolute', width: 10, height: 10, pointerEvents: 'none', zIndex: 1, opacity: hov ? 1 : 0.5, transition: 'opacity 0.3s', ...s }} />)}
+      {/* Main card */}
+      <div style={{
+        background: hov
+          ? `linear-gradient(135deg, rgba(${rgb},0.1), rgba(8,8,22,0.97))`
+          : active
+            ? 'linear-gradient(135deg, rgba(8,8,22,0.95), rgba(5,5,16,0.9))'
+            : 'rgba(5,5,16,0.6)',
+        border: `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '33') : 'rgba(255,255,255,0.05)'}`,
+        borderLeft: side === 'left'
+          ? `3px solid ${active ? entry.color : entry.color + '33'}`
+          : undefined,
+        borderRight: side === 'right'
+          ? `3px solid ${active ? entry.color : entry.color + '33'}`
+          : undefined,
+        boxShadow: hov
+          ? `0 20px 60px rgba(${rgb},0.25), 0 0 40px rgba(${rgb},0.1), inset 0 0 60px rgba(${rgb},0.04)`
+          : active ? `0 4px 30px rgba(${rgb},0.1)` : 'none',
+        padding: '18px 20px',
+        transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Scanlines */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.005) 2px, rgba(255,255,255,0.005) 4px)', zIndex: 0 }} />
+        {/* Top glow bar */}
+        {active && <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: hov ? 2 : 1, background: `linear-gradient(90deg, transparent, ${entry.color}${hov ? 'aa' : '66'}, transparent)`, transition: 'all 0.3s' }} />}
+        {/* Corner brackets on hover */}
+        {hov && [
+          { top: 5, left: 5, borderTop: `1px solid ${entry.color}88`, borderLeft: `1px solid ${entry.color}88` },
+          { top: 5, right: 5, borderTop: `1px solid ${entry.color}88`, borderRight: `1px solid ${entry.color}88` },
+          { bottom: 5, left: 5, borderBottom: `1px solid ${entry.color}88`, borderLeft: `1px solid ${entry.color}88` },
+          { bottom: 5, right: 5, borderBottom: `1px solid ${entry.color}88`, borderRight: `1px solid ${entry.color}88` },
+        ].map((s, i) => <div key={i} style={{ position: 'absolute', width: 8, height: 8, pointerEvents: 'none', zIndex: 5, ...s }} />)}
 
-      {/* Content */}
-      <div style={{ position: 'relative', zIndex: 2 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: entry.color, letterSpacing: '2.5px', textShadow: active ? `0 0 10px ${entry.color}60` : 'none' }}>{entry.period}</span>
-          {entry.isMilestone && (
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#39FF14', letterSpacing: '1.5px',
-              padding: '3px 10px', border: '1px solid rgba(57,255,20,0.35)', background: 'rgba(57,255,20,0.08)',
-              textShadow: '0 0 8px rgba(57,255,20,0.5)', boxShadow: '0 0 10px rgba(57,255,20,0.1)',
-            }}>⬡ MILESTONE</span>
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          {/* Header row: period + milestone badge */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, gap: 8 }}>
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '2px',
+              color: entry.color, textShadow: active ? `0 0 12px ${entry.color}80` : 'none',
+              padding: '3px 10px', border: `1px solid ${entry.color}${active ? '55' : '22'}`,
+              background: `rgba(${rgb},${active ? '0.1' : '0.04'})`,
+              transition: 'all 0.3s',
+            }}>{entry.period}</div>
+            {entry.isMilestone && (
+              <div style={{
+                fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#39FF14',
+                letterSpacing: '1.5px', padding: '3px 8px',
+                border: '1px solid rgba(57,255,20,0.35)', background: 'rgba(57,255,20,0.08)',
+                textShadow: '0 0 8px rgba(57,255,20,0.6)', display: 'flex', alignItems: 'center', gap: 4,
+              }}>
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 4px #39FF14', display: 'inline-block', animation: 'nodePulse 2s infinite' }} />
+                MILESTONE
+              </div>
+            )}
+          </div>
+
+          {/* Title */}
+          <h3 style={{
+            fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 800,
+            marginBottom: 3, color: hov ? '#fff' : '#E8E8F0',
+            textShadow: hov ? `0 0 20px ${entry.color}60, 0 0 40px ${entry.color}20` : 'none',
+            transition: 'all 0.3s', letterSpacing: '0.3px', lineHeight: 1.2,
+          }}>{entry.title}</h3>
+
+          {/* Company with accent line */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ width: 20, height: 1, background: entry.color, opacity: active ? 0.6 : 0.2 }} />
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: '10px', color: entry.color,
+              letterSpacing: '1.5px', opacity: hov ? 1 : 0.7,
+              textShadow: hov ? `0 0 10px ${entry.color}60` : 'none', transition: 'all 0.3s',
+            }}>{entry.company}</div>
+          </div>
+
+          {/* Description */}
+          <p style={{
+            fontFamily: 'var(--font-body)', fontSize: '12px',
+            color: `rgba(232,232,240,${hov ? 0.8 : 0.55})`,
+            lineHeight: 1.9, marginBottom: 14, transition: 'color 0.3s',
+          }}>{entry.description}</p>
+
+          {/* Tech chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px 6px' }}>
+            {entry.tags.map((tag, ti) => (
+              <span key={tag} style={{
+                fontFamily: 'var(--font-mono)', fontSize: '8px', padding: '3px 10px',
+                border: `1px solid ${hov ? entry.color + '66' : entry.color + '22'}`,
+                color: hov ? entry.color : `rgba(${rgb},0.6)`,
+                letterSpacing: '0.5px', transition: `all 0.3s ease ${ti * 30}ms`,
+                background: hov ? `rgba(${rgb},0.1)` : 'rgba(255,255,255,0.02)',
+                boxShadow: hov ? `0 0 8px rgba(${rgb},0.2)` : 'none',
+                textShadow: hov ? `0 0 6px ${entry.color}44` : 'none',
+              }}>{tag}</span>
+            ))}
+          </div>
+
+          {/* Signal readout — bottom data strip */}
+          {active && (
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid rgba(${rgb},0.1)`, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: entry.color, boxShadow: `0 0 6px ${entry.color}`, animation: 'nodePulse 2s infinite' }} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: `rgba(${rgb},0.6)`, letterSpacing: '1.5px' }}>NODE_{String(index + 1).padStart(2, '0')} · SIGNAL ACTIVE</span>
+            </div>
           )}
-        </div>
-
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 800, marginBottom: 4, color: hov ? '#fff' : '#E8E8F0', textShadow: hov ? `0 0 20px ${entry.color}50, 0 0 40px ${entry.color}20` : 'none', transition: 'all 0.3s', letterSpacing: '0.5px' }}>{entry.title}</h3>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: entry.color, marginBottom: 12, letterSpacing: '1.5px', opacity: hov ? 1 : 0.6, transition: 'opacity 0.3s', textShadow: hov ? `0 0 8px ${entry.color}50` : 'none' }}>{entry.company}</div>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: `rgba(232,232,240,${hov ? 0.75 : 0.5})`, lineHeight: 1.9, marginBottom: 14, transition: 'color 0.3s' }}>{entry.description}</p>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-          {entry.tags.map(tag => (
-            <span key={tag} style={{
-              fontFamily: 'var(--font-mono)', fontSize: '8px', padding: '3px 10px',
-              border: `1px solid ${hov ? entry.color + '55' : entry.color + '22'}`,
-              color: hov ? entry.color : `rgba(${rgb},0.55)`,
-              letterSpacing: '0.5px', transition: 'all 0.3s',
-              background: hov ? `rgba(${rgb},0.06)` : 'transparent',
-              textShadow: hov ? `0 0 6px ${entry.color}44` : 'none',
-            }}>{tag}</span>
-          ))}
         </div>
       </div>
     </div>
   );
 }
+
 
 
 /* ═══════════════════════════════════════════
