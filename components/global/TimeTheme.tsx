@@ -71,7 +71,7 @@ export default function TimeTheme() {
         pointerEvents: 'none',
         background: 'var(--time-fog, rgba(0,0,0,0))',
         transition: 'background 60s ease',
-        mixBlendMode: 'screen',
+        mixBlendMode: 'normal',
       }}
     />
   );

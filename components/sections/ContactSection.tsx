@@ -411,7 +411,7 @@ export default function ContactSection() {
           try {
             const res = await fetch('/api/contact', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: form.name, email: form.email, message: `[${subjectLine}] ${form.message}` }),
+              body: JSON.stringify({ name: form.name, email: form.email, message: `[${subjectLine}] ${form.message}`, _honeypot: '' }),
             });
             const data = await res.json();
             if (data.fallback) window.location.href = mailtoUrl;

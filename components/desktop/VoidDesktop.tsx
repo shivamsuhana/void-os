@@ -477,6 +477,21 @@ export default function VoidDesktop() {
         <div style={{ fontSize: '7px', color: 'rgba(0,212,255,0.15)', letterSpacing: '1px' }}>
           6 SECTORS · 10 SYSTEMS ACTIVE
         </div>
+        <a
+          href="/resume"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            fontSize: '7px', letterSpacing: '2px', color: 'rgba(0,212,255,0.25)',
+            textDecoration: 'none', padding: '3px 8px', marginTop: 2,
+            border: '1px solid rgba(0,212,255,0.08)', transition: 'all 0.3s',
+            pointerEvents: 'auto', cursor: 'pointer',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.3)'; e.currentTarget.style.color = 'rgba(0,212,255,0.6)'; e.currentTarget.style.background = 'rgba(0,212,255,0.04)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.08)'; e.currentTarget.style.color = 'rgba(0,212,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}
+        >
+          📄 RESUME.pdf
+        </a>
       </div>
     </div>
   );
