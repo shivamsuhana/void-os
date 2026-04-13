@@ -378,58 +378,92 @@ function Globe() {
    PROFICIENCY BAR
    ═══════════════════════════════════════════ */
 function ProfBar({ label, value, color, delay, go }: { label: string; value: number; color: string; delay: number; go: boolean }) {
-  const [w, setW] = useState(0);
+  const [filled, setFilled] = useState(0);
   const [hov, setHov] = useState(false);
   const [displayVal, setDisplayVal] = useState(0);
-  
-  useEffect(() => { if (go) setTimeout(() => setW(value), delay); }, [go, value, delay]);
-  
-  // Animate the percentage counter
+  const segments = 12; // 12 cells = granularity
+  const filledCount = Math.round((filled / 100) * segments);
+
   useEffect(() => {
-    if (w === 0) return;
-    let start = 0;
-    const step = () => {
-      start += Math.ceil(value / 30);
-      if (start >= value) { setDisplayVal(value); return; }
-      setDisplayVal(start);
-      requestAnimationFrame(step);
-    };
-    setTimeout(step, delay);
-  }, [w, value, delay]);
+    if (!go) return;
+    const timeout = setTimeout(() => {
+      let current = 0;
+      const iv = setInterval(() => {
+        current += 3;
+        const clipped = Math.min(current, value);
+        setFilled(clipped);
+        setDisplayVal(clipped);
+        if (current >= value) clearInterval(iv);
+      }, 30);
+      return () => clearInterval(iv);
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [go, value, delay]);
 
   return (
-    <div 
-      style={{ marginBottom: 14, cursor: 'default' }}
+    <div
+      style={{ marginBottom: 16, cursor: 'default' }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, transition: 'all 0.2s' }}>
-        <span style={{ 
-          fontFamily: 'var(--font-mono)', fontSize: hov ? '10px' : '9px', letterSpacing: '1.5px', 
-          color: hov ? color : 'rgba(232,232,240,.65)',
-          textShadow: hov ? `0 0 10px ${color}50` : 'none',
+      {/* Label row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7, transition: 'all 0.2s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 4, height: 4, background: color, boxShadow: `0 0 6px ${color}`, transition: 'all 0.3s', transform: hov ? 'scale(1.5)' : 'scale(1)' }} />
+          <span style={{
+            fontFamily: 'var(--font-mono)', fontSize: hov ? '9.5px' : '8px', letterSpacing: '1.5px',
+            color: hov ? color : 'rgba(232,232,240,.55)',
+            textShadow: hov ? `0 0 12px ${color}60` : 'none',
+            transition: 'all 0.3s',
+          }}>{label}</span>
+        </div>
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: hov ? '11px' : '9px', fontWeight: 700,
+          color, textShadow: `0 0 ${hov ? 16 : 8}px ${color}88`,
           transition: 'all 0.3s',
-        }}>{label}</span>
-        <span style={{ 
-          fontFamily: 'var(--font-mono)', fontSize: hov ? '11px' : '9px', fontWeight: hov ? 700 : 400,
-          color, textShadow: `0 0 ${hov ? 12 : 6}px ${color}66`,
-          transition: 'all 0.3s',
-        }}>{displayVal}%</span>
+        }}>{displayVal}<span style={{ fontSize: '7px', opacity: 0.6 }}>%</span></span>
       </div>
-      <div style={{ 
-        height: hov ? 6 : 2, background: 'rgba(255,255,255,.06)', borderRadius: 3,
-        transition: 'height 0.3s cubic-bezier(.16,1,.3,1)',
-      }}>
-        <div style={{ 
-          height: '100%', width: `${w}%`, borderRadius: 3,
-          background: `linear-gradient(90deg, ${color}66, ${color})`, 
-          boxShadow: hov ? `0 0 16px ${color}88, 0 0 30px ${color}33` : `0 0 8px ${color}44`,
-          transition: 'width 1.2s cubic-bezier(.16,1,.3,1), box-shadow 0.3s',
-        }} />
+
+      {/* Segmented cells */}
+      <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+        {Array.from({ length: segments }).map((_, i) => {
+          const active = i < filledCount;
+          const isLast = i === filledCount - 1;
+          return (
+            <div key={i} style={{
+              flex: 1, height: hov ? 10 : 6,
+              background: active
+                ? `linear-gradient(135deg, ${color}cc, ${color})`
+                : 'rgba(255,255,255,0.04)',
+              border: active ? `1px solid ${color}66` : '1px solid rgba(255,255,255,0.06)',
+              boxShadow: active
+                ? isLast
+                  ? `0 0 8px ${color}, 0 0 16px ${color}66, 0 0 24px ${color}33`
+                  : `0 0 4px ${color}44`
+                : 'none',
+              transition: `height 0.3s cubic-bezier(.16,1,.3,1), background 0.4s ease ${i * 30}ms, box-shadow 0.3s ease ${i * 20}ms`,
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              {/* Inner shimmer on active cells */}
+              {active && hov && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: `linear-gradient(90deg, transparent, ${color}33, transparent)`,
+                  animation: 'prof-shimmer 1.5s ease-in-out infinite',
+                  animationDelay: `${i * 80}ms`,
+                }} />
+              )}
+            </div>
+          );
+        })}
+        {/* Trailing ghost cells */}
+        <div style={{ width: 6, height: hov ? 10 : 6, background: `${color}0a`, border: `1px solid ${color}15`, transition: 'height 0.3s' }} />
       </div>
     </div>
   );
 }
+
 
 /* ═══════════════════════════════════════════
    REVEAL
@@ -532,8 +566,8 @@ export default function AboutSection() {
       <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'about-scan 4s linear infinite' }} />
       {/* Bottom perspective grid */}
       <div style={{ position: 'fixed', bottom: 34, left: 0, right: 0, height: '20vh', pointerEvents: 'none', zIndex: 0, opacity: 0.03, background: 'linear-gradient(to bottom, transparent, rgba(0,212,255,0.1))', backgroundImage: 'linear-gradient(transparent 50%, rgba(0,212,255,0.5) 50%)', backgroundSize: '100% 8px', maskImage: 'linear-gradient(to bottom, transparent, black)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black)' }} />
-      {/* Animated scan keyframe */}
-      <style dangerouslySetInnerHTML={{ __html: '@keyframes about-scan{0%{top:-2px}100%{top:100vh}}' }} />
+      {/* Animated scan keyframe + prof shimmer */}
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes about-scan{0%{top:-2px}100%{top:100vh}} @keyframes prof-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}' }} />
 
       {/* ─── HERO SPLIT ─── */}
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -628,12 +662,27 @@ export default function AboutSection() {
             {/* Proficiency */}
             <div ref={statsRef} style={{ marginBottom: 48 }}>
               <Reveal delay={350}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>PROFICIENCY_MATRIX.sys</div>
-                <ProfBar label="JAVA / DSA / OOP" value={85} color="#00D4FF" delay={100} go={statsGo} />
-                <ProfBar label="BACKEND / PHP / DATABASES" value={68} color="#7B2FFF" delay={200} go={statsGo} />
-                <ProfBar label="FRONTEND / REACT / UI" value={50} color="#39FF14" delay={300} go={statsGo} />
-                <ProfBar label="THREE.JS / WEBGL / GSAP" value={35} color="#FFB800" delay={400} go={statsGo} />
-                <ProfBar label="GIT / TOOLS / DEPLOYMENT" value={62} color="#00D4FF" delay={500} go={statsGo} />
+                <div style={{ position: 'relative', padding: '20px 20px 16px', background: 'linear-gradient(135deg, rgba(8,8,22,0.8), rgba(5,5,16,0.7))', border: '1px solid rgba(0,212,255,0.1)', overflow: 'hidden', marginBottom: 4 }}>
+                  {/* Top neon bar */}
+                  <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.5), transparent)' }} />
+                  {/* Scanlines */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px)', pointerEvents: 'none' }} />
+                  {/* Corner brackets */}
+                  {[{ top: 6, left: 6, borderTop: '1px solid rgba(0,212,255,0.5)', borderLeft: '1px solid rgba(0,212,255,0.5)' } as React.CSSProperties,
+                    { top: 6, right: 6, borderTop: '1px solid rgba(0,212,255,0.5)', borderRight: '1px solid rgba(0,212,255,0.5)' } as React.CSSProperties,
+                    { bottom: 6, left: 6, borderBottom: '1px solid rgba(0,212,255,0.5)', borderLeft: '1px solid rgba(0,212,255,0.5)' } as React.CSSProperties,
+                    { bottom: 6, right: 6, borderBottom: '1px solid rgba(0,212,255,0.5)', borderRight: '1px solid rgba(0,212,255,0.5)' } as React.CSSProperties,
+                  ].map((s, i) => <div key={i} style={{ position: 'absolute', width: 10, height: 10, pointerEvents: 'none', ...s }} />)}
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: '#00D4FF', textShadow: '0 0 10px rgba(0,212,255,0.4)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+                    <span style={{ width: 6, height: 6, background: '#00D4FF', boxShadow: '0 0 6px #00D4FF', display: 'inline-block' }} />
+                    PROFICIENCY_MATRIX.sys
+                  </div>
+                  <ProfBar label="JAVA / DSA / OOP" value={85} color="#00D4FF" delay={100} go={statsGo} />
+                  <ProfBar label="BACKEND / PHP / DATABASES" value={68} color="#7B2FFF" delay={200} go={statsGo} />
+                  <ProfBar label="FRONTEND / REACT / UI" value={50} color="#39FF14" delay={300} go={statsGo} />
+                  <ProfBar label="THREE.JS / WEBGL / GSAP" value={35} color="#FFB800" delay={400} go={statsGo} />
+                  <ProfBar label="GIT / TOOLS / DEPLOYMENT" value={62} color="#00D4FF" delay={500} go={statsGo} />
+                </div>
               </Reveal>
             </div>
 

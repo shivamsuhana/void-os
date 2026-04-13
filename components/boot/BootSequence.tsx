@@ -335,23 +335,47 @@ function AmbientLayers() {
     c.style.width = W + 'px'; c.style.height = H + 'px';
     ctx.scale(dpr, dpr);
 
-    const colors = ['0,212,255', '123,47,255', '57,255,20'];
-    const dots = Array.from({ length: 200 }, () => ({
+    const colors = ['0,212,255', '123,47,255', '57,255,20', '255,184,0'];
+    const dots = Array.from({ length: 160 }, () => ({
       x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
-      size: 0.6 + Math.random() * 1.5,
+      vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25,
+      size: 0.5 + Math.random() * 1.8,
       color: colors[Math.floor(Math.random() * colors.length)],
-      alpha: 0.1 + Math.random() * 0.3,
+      alpha: 0.08 + Math.random() * 0.22,
       phase: Math.random() * Math.PI * 2,
     }));
 
+    let t = 0;
     function draw() {
+      t += 0.008;
       ctx!.clearRect(0, 0, W, H);
+
+      // Pulsing center radial glow
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);
+      const g = ctx!.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.5);
+      g.addColorStop(0, `rgba(123,47,255,${0.03 + pulse * 0.02})`);
+      g.addColorStop(0.5, `rgba(0,212,255,${0.01 + pulse * 0.01})`);
+      g.addColorStop(1, 'transparent');
+      ctx!.fillStyle = g;
+      ctx!.fillRect(0, 0, W, H);
+
+      // Corner lamp — top left cyan
+      const tl = ctx!.createRadialGradient(0, 0, 0, 0, 0, W * 0.35);
+      tl.addColorStop(0, `rgba(0,212,255,${0.04 + pulse * 0.02})`);
+      tl.addColorStop(1, 'transparent');
+      ctx!.fillStyle = tl; ctx!.fillRect(0, 0, W, H);
+
+      // Corner lamp — bottom right purple
+      const br = ctx!.createRadialGradient(W, H, 0, W, H, W * 0.35);
+      br.addColorStop(0, `rgba(123,47,255,${0.04 + pulse * 0.02})`);
+      br.addColorStop(1, 'transparent');
+      ctx!.fillStyle = br; ctx!.fillRect(0, 0, W, H);
+
       for (const d of dots) {
         d.x += d.vx; d.y += d.vy; d.phase += 0.015;
         if (d.x < 0) d.x = W; if (d.x > W) d.x = 0;
         if (d.y < 0) d.y = H; if (d.y > H) d.y = 0;
-        ctx!.fillStyle = `rgba(${d.color},${d.alpha + Math.sin(d.phase) * 0.08})`;
+        ctx!.fillStyle = `rgba(${d.color},${d.alpha + Math.sin(d.phase) * 0.06})`;
         ctx!.beginPath(); ctx!.arc(d.x, d.y, d.size, 0, Math.PI * 2); ctx!.fill();
       }
       animRef.current = requestAnimationFrame(draw);
@@ -362,19 +386,23 @@ function AmbientLayers() {
 
   return (
     <>
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.7 }} />
-      {/* Grid */}
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.3, pointerEvents: 'none', zIndex: 2 }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px)', backgroundSize: '100% 40px' }} />
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(90deg,rgba(123,47,255,0.02) 1px,transparent 1px)', backgroundSize: '40px 100%' }} />
+      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.8 }} />
+      {/* Holographic grid — stronger */}
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.5, pointerEvents: 'none', zIndex: 2 }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(0,212,255,0.04) 1px,transparent 1px)', backgroundSize: '100% 50px' }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(90deg,rgba(123,47,255,0.03) 1px,transparent 1px)', backgroundSize: '50px 100%' }} />
       </div>
+      {/* Animated boot scan line */}
+      <div style={{ position: 'absolute', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent)', zIndex: 3, animation: 'boot-scan 4s linear infinite', boxShadow: '0 0 8px rgba(0,212,255,0.2)' }} />
       {/* Scanlines */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 50, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px)' }} />
-      {/* Vignette */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 49, pointerEvents: 'none', background: 'radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,0.55) 100%)' }} />
+      {/* Stronger vignette */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 49, pointerEvents: 'none', background: 'radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,0.65) 100%)' }} />
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes boot-scan{0%{top:-1px}100%{top:100vh}}' }} />
     </>
   );
 }
+
 
 /* ============================================
    MAIN BOOT SEQUENCE — 4 phases
