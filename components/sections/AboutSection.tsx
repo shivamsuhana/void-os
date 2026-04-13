@@ -537,7 +537,12 @@ export default function AboutSection() {
       {/* Bottom perspective grid */}
       <div style={{ position: 'fixed', bottom: 34, left: 0, right: 0, height: '20vh', pointerEvents: 'none', zIndex: 0, opacity: 0.03, background: 'linear-gradient(to bottom, transparent, rgba(0,212,255,0.1))', backgroundImage: 'linear-gradient(transparent 50%, rgba(0,212,255,0.5) 50%)', backgroundSize: '100% 8px', maskImage: 'linear-gradient(to bottom, transparent, black)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black)' }} />
       {/* Animated scan keyframe */}
-      <style dangerouslySetInnerHTML={{ __html: '@keyframes about-scan{0%{top:-2px}100%{top:100vh}}' }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes about-scan{0%{top:-2px}100%{top:100vh}}
+        @keyframes borderPulse{0%,100%{border-color:rgba(0,212,255,0.15)}50%{border-color:rgba(0,212,255,0.45)}}
+        @keyframes holoShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes idScan{0%{top:0}100%{top:100%}}
+      ` }} />
 
       {/* ─── HERO SPLIT ─── */}
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -551,13 +556,16 @@ export default function AboutSection() {
                 style={{
                   position: 'relative', width: '100%', paddingBottom: '120%',
                   border: `1px solid ${photoHov ? '#00D4FF' : 'rgba(0,212,255,.15)'}`,
-                  boxShadow: photoHov ? '0 0 40px rgba(0,212,255,.12)' : 'none',
+                  boxShadow: photoHov ? '0 0 40px rgba(0,212,255,.12), inset 0 0 40px rgba(0,212,255,.03)' : 'none',
                   transition: 'border-color .4s, box-shadow .4s', overflow: 'hidden',
+                  animation: 'borderPulse 3s ease-in-out infinite',
                 }}
                 onMouseEnter={() => setPhotoHov(true)}
                 onMouseLeave={() => setPhotoHov(false)}
               >
                 <div style={{ position: 'absolute', inset: 0 }}><AsciiPhoto hovered={photoHov} /></div>
+                {/* Scanning line inside photo */}
+                <div style={{ position: 'absolute', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.25), transparent)', pointerEvents: 'none', zIndex: 5, animation: 'idScan 2.5s linear infinite' }} />
                 <div style={{ position: 'absolute', bottom: 12, left: 0, right: 0, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2.5px', color: photoHov ? '#00D4FF' : 'rgba(232,232,240,.6)', transition: 'color .3s' }}>
                   {photoHov ? '← REAL HUMAN →' : 'HOVER TO REVEAL'}
                 </div>
@@ -573,20 +581,29 @@ export default function AboutSection() {
             </Reveal>
 
             <Reveal delay={150}>
-              <GlowCard style={{ marginTop: 20, padding: '20px 22px' }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: '#00D4FF', marginBottom: 8, textShadow: '0 0 6px rgba(0,212,255,.3)' }}>IDENTITY_CARD.json</div>
-                {([
-                  ['NAME', OWNER.name, '#E8E8F0'],
-                  ['ROLE', OWNER.role, '#00D4FF'],
-                  ['BASE', OWNER.location, '#E8E8F0'],
-                  ['EDU', OWNER.degree, '#E8E8F0'],
-                  ['STATUS', 'AVAILABLE FOR HIRE', '#39FF14'],
-                ] as const).map(([k, v, c], i) => (
-                  <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 6, fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
-                    <span style={{ color: 'rgba(232,232,240,.65)', minWidth: 52 }}>{k}:</span>
-                    <span style={{ color: c, textShadow: c === '#39FF14' ? '0 0 12px #39FF14' : 'none' }}>{v}</span>
+              <GlowCard style={{ marginTop: 20, padding: '20px 22px', position: 'relative', overflow: 'hidden' }}>
+                {/* Holographic shimmer overlay */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 40%, rgba(0,212,255,0.04) 45%, rgba(0,212,255,0.08) 50%, rgba(0,212,255,0.04) 55%, transparent 60%)', backgroundSize: '200% 100%', animation: 'holoShimmer 4s linear infinite', pointerEvents: 'none', zIndex: 0 }} />
+                {/* Small scanning line */}
+                <div style={{ position: 'absolute', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)', animation: 'idScan 3s linear infinite', pointerEvents: 'none', zIndex: 1 }} />
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: '#00D4FF', marginBottom: 10, textShadow: '0 0 6px rgba(0,212,255,.3)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span>IDENTITY_CARD.json</span>
+                    <span style={{ fontSize: '6px', color: 'rgba(0,212,255,0.4)', letterSpacing: '1px' }}>VERIFIED ✓</span>
                   </div>
-                ))}
+                  {([
+                    ['NAME', OWNER.name, '#E8E8F0'],
+                    ['ROLE', OWNER.role, '#00D4FF'],
+                    ['BASE', OWNER.location, '#E8E8F0'],
+                    ['EDU', OWNER.degree, '#E8E8F0'],
+                    ['STATUS', 'AVAILABLE FOR HIRE', '#39FF14'],
+                  ] as const).map(([k, v, c], i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 6, fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
+                      <span style={{ color: 'rgba(232,232,240,.4)', minWidth: 52, fontSize: '9px' }}>{k}:</span>
+                      <span style={{ color: c, textShadow: c === '#39FF14' ? '0 0 12px #39FF14' : c === '#00D4FF' ? '0 0 8px rgba(0,212,255,0.3)' : 'none' }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
               </GlowCard>
             </Reveal>
 

@@ -589,15 +589,18 @@ export default function LabSection() {
       <div style={{ maxWidth: '700px', margin: '0 auto', padding: '80px 30px 60px' }}>
         {/* Header */}
         <div ref={headerRef} style={{ marginBottom: '36px', opacity: 0 }}>
-          <div className="section-label">06 // LAB.beta</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#39FF14', textShadow: '0 0 10px rgba(57,255,20,.4)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+            06 // LAB.beta
+            <span style={{ fontSize: '7px', padding: '2px 8px', border: '1px solid rgba(57,255,20,0.2)', color: 'rgba(57,255,20,0.6)', letterSpacing: '1.5px' }}>EXPERIMENTAL</span>
+          </div>
           <h2 style={{
-            fontFamily: 'var(--font-display)', fontWeight: 800,
-            fontSize: 'clamp(28px, 4vw, 42px)', marginBottom: '8px',
+            fontFamily: 'var(--font-display)', fontWeight: 900,
+            fontSize: 'clamp(32px, 5vw, 48px)', marginBottom: '10px', lineHeight: 1.1,
           }}>
-            The <span className="glow-text-green">Experiments</span>
+            The <span style={{ color: '#39FF14', textShadow: '0 0 25px rgba(57,255,20,.4), 0 0 50px rgba(57,255,20,.15)' }}>Experiments</span>
           </h2>
           <p style={{
-            fontSize: '13px', color: 'var(--text-dim)', maxWidth: '420px', lineHeight: 1.8,
+            fontFamily: 'var(--font-body)', fontSize: '13px', color: 'rgba(232,232,240,0.5)', maxWidth: '420px', lineHeight: 1.8,
           }}>
             Playground for creative coding, generative art, and things that glow.
           </p>
@@ -607,21 +610,29 @@ export default function LabSection() {
         <div ref={tabsRef} style={{
           display: 'flex', gap: '6px', marginBottom: '28px', justifyContent: 'center',
         }}>
-          {TABS.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: '8px 18px', borderRadius: '2px',
-                fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '1px',
-                background: activeTab === tab.id ? 'rgba(57,255,20,0.06)' : 'transparent',
-                border: `1px solid ${activeTab === tab.id ? 'rgba(57,255,20,0.2)' : 'rgba(255,255,255,0.05)'}`,
-                color: activeTab === tab.id ? 'var(--green)' : 'var(--text-muted)',
-                transition: 'all 0.2s', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: '6px',
-              }}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
+          {TABS.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                style={{
+                  padding: '9px 18px', borderRadius: '0px',
+                  fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '1.5px',
+                  background: isActive ? 'rgba(57,255,20,0.06)' : 'rgba(255,255,255,0.015)',
+                  border: `1px solid ${isActive ? 'rgba(57,255,20,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                  borderLeft: isActive ? '2px solid #39FF14' : '1px solid rgba(255,255,255,0.06)',
+                  color: isActive ? '#39FF14' : 'rgba(232,232,240,0.4)',
+                  transition: 'all 0.25s', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  boxShadow: isActive ? '0 0 12px rgba(57,255,20,0.08)' : 'none',
+                  textShadow: isActive ? '0 0 8px rgba(57,255,20,0.3)' : 'none',
+                }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.borderColor = 'rgba(57,255,20,0.15)'; e.currentTarget.style.color = 'rgba(232,232,240,0.65)'; }}}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(232,232,240,0.4)'; }}}
+              >
+                <span style={{ fontSize: '11px' }}>{tab.icon}</span> {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Active experiment */}

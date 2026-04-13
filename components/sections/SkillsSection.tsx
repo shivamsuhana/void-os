@@ -665,32 +665,49 @@ export default function SkillsSection() {
           position: 'absolute', top: 50, right: 0, bottom: 0,
           width: 'clamp(200px, 22%, 280px)',
           padding: 'clamp(16px, 2vw, 28px)',
-          background: 'rgba(5,5,16,0.65)', backdropFilter: 'blur(16px)',
-          borderLeft: '1px solid rgba(0,212,255,0.08)',
+          background: 'rgba(5,5,16,0.7)', backdropFilter: 'blur(16px)',
+          borderLeft: '1px solid rgba(0,212,255,0.1)',
           display: 'flex', flexDirection: 'column', gap: 16,
           zIndex: 10, overflowY: 'auto',
           opacity: entered ? 1 : 0,
           transform: entered ? 'translateX(0)' : 'translateX(30px)',
           transition: 'opacity 0.8s ease, transform 0.8s cubic-bezier(0.16,1,0.3,1)',
         }}>
+          {/* Corner brackets */}
+          {[{top:8,left:8},{top:8,right:8},{bottom:8,left:8},{bottom:8,right:8}].map((pos,i)=>(
+            <div key={i} style={{
+              position:'absolute',width:10,height:10,pointerEvents:'none',zIndex:20,
+              borderTop: pos.top!==undefined ? '1px solid rgba(0,212,255,0.2)' : undefined,
+              borderBottom: pos.bottom!==undefined ? '1px solid rgba(0,212,255,0.2)' : undefined,
+              borderLeft: pos.left!==undefined ? '1px solid rgba(0,212,255,0.2)' : undefined,
+              borderRight: pos.right!==undefined ? '1px solid rgba(0,212,255,0.2)' : undefined,
+              ...pos,
+            } as React.CSSProperties} />
+          ))}
+          {/* Top glow line */}
+          <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(123,47,255,0.25), transparent)' }} />
+
           <div>
-            <div style={{ fontSize: '8px', letterSpacing: '3.5px', color: '#7B2FFF', marginBottom: 8, textShadow: '0 0 8px rgba(123,47,255,0.3)' }}>NEURAL_MAP.sys</div>
+            <div style={{ fontSize: '8px', letterSpacing: '3.5px', color: '#7B2FFF', marginBottom: 8, textShadow: '0 0 8px rgba(123,47,255,0.3)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              NEURAL_MAP.sys
+              <span style={{ width: 4, height: 4, borderRadius:'50%', background:'#39FF14', boxShadow:'0 0 6px #39FF14', display:'inline-block' }} />
+            </div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', lineHeight: 1.15, marginBottom: 8 }}>
-              Skills<br /><span style={{ color: '#FFB800', textShadow: '0 0 12px rgba(255,184,0,0.3)' }}>Network</span>
+              Skills<br /><span style={{ color: '#FFB800', textShadow: '0 0 15px rgba(255,184,0,0.3)' }}>Network</span>
             </div>
             <div style={{ fontSize: '10px', lineHeight: 1.7, color: 'rgba(232,232,240,0.55)' }}>
               Hover nodes to see connections. Click to inspect details.
             </div>
           </div>
 
-          <div style={{ height: 1, background: 'rgba(0,212,255,0.1)' }} />
+          <div style={{ height: 1, background: 'linear-gradient(90deg, rgba(0,212,255,0.15), rgba(123,47,255,0.08), transparent)' }} />
 
           <div>
             <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 10 }}>FILTER BY CATEGORY</div>
             <CategoryFilter active={filter} onChange={f => { setFilter(f); setSelected(null); }} />
           </div>
 
-          <div style={{ height: 1, background: 'rgba(0,212,255,0.1)' }} />
+          <div style={{ height: 1, background: 'linear-gradient(90deg, rgba(0,212,255,0.15), rgba(123,47,255,0.08), transparent)' }} />
 
           <div>
             <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 10 }}>NODE SIZE = PROFICIENCY</div>
@@ -698,8 +715,8 @@ export default function SkillsSection() {
           </div>
 
           <div style={{ flex: 1 }} />
-          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.25)', letterSpacing: '1.5px', lineHeight: 2 }}>
-            SKILLS.sys v2.0<br />NODES: LIVE SIMULATION<br />ENGINE: FORCE-DIRECTED GRAPH
+          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1.5px', lineHeight: 2, borderTop: '1px solid rgba(0,212,255,0.06)', paddingTop: 12 }}>
+            SKILLS.sys v2.0<br />NODES: {SKILLS.length} ACTIVE<br />LINKS: {LINKS.length} CONNECTIONS<br />ENGINE: FORCE-DIRECTED
           </div>
         </div>
       )}

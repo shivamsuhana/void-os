@@ -177,53 +177,58 @@ function HoloCard({ entry, active, index }: { entry: TimelineEntry; active: bool
 
         {/* Title */}
         <h3 style={{
-          fontFamily: 'var(--font-display)', fontSize: hov ? '19px' : '18px',
-          fontWeight: 700, marginBottom: 6,
+          fontFamily: 'var(--font-display)', fontSize: hov ? '20px' : '18px',
+          fontWeight: 800, marginBottom: 8,
           color: hov ? '#fff' : '#E8E8F0',
-          textShadow: hov ? `0 0 20px ${entry.color}33` : 'none',
+          textShadow: hov ? `0 0 25px ${entry.color}44, 0 0 50px ${entry.color}18` : 'none',
           transition: 'all 0.3s', lineHeight: 1.3,
         }}>
           {entry.title}
         </h3>
 
-        {/* Company/org */}
+        {/* Company/org with status dot */}
         <div style={{
           fontFamily: 'var(--font-mono)', fontSize: '10px',
-          color: `rgba(${rgb},${hov ? 0.8 : 0.5})`,
-          marginBottom: 12, letterSpacing: '1px',
-          transition: 'color 0.3s',
+          color: `rgba(${rgb},${hov ? 0.9 : 0.55})`,
+          marginBottom: 14, letterSpacing: '1px',
+          transition: 'color 0.3s', display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          ↳ {entry.company}
+          <div style={{ width: 4, height: 4, borderRadius: '50%', background: active ? entry.color : `rgba(${rgb},0.2)`, boxShadow: active ? `0 0 6px ${entry.color}` : 'none' }} />
+          {entry.company}
         </div>
 
-        {/* Description */}
-        <p style={{
-          fontFamily: 'var(--font-body)', fontSize: '13px',
-          color: `rgba(232,232,240,${hov ? 0.75 : 0.55})`,
-          lineHeight: 1.9, marginBottom: 16,
-          transition: 'color 0.3s',
-        }}>
-          {entry.description}
-        </p>
+        {/* Description with subtle left accent */}
+        <div style={{ borderLeft: `1px solid rgba(${rgb},${hov ? 0.2 : 0.06})`, paddingLeft: 12, marginBottom: 16, transition: 'border-color 0.3s' }}>
+          <p style={{
+            fontFamily: 'var(--font-body)', fontSize: '13px',
+            color: `rgba(232,232,240,${hov ? 0.75 : 0.55})`,
+            lineHeight: 1.9,
+            transition: 'color 0.3s',
+          }}>
+            {entry.description}
+          </p>
+        </div>
 
-        {/* Tags */}
+        {/* Tags — circuit board labels */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {entry.tags.map(tag => (
+          {entry.tags.map((tag, ti) => (
             <span key={tag} style={{
-              fontFamily: 'var(--font-mono)', fontSize: '9px', padding: '3px 10px',
-              border: `1px solid rgba(${rgb},${hov ? 0.35 : 0.12})`,
-              color: hov ? entry.color : `rgba(${rgb},0.5)`,
-              letterSpacing: '0.5px', transition: 'all 0.3s',
-              background: hov ? `rgba(${rgb},0.06)` : 'transparent',
+              fontFamily: 'var(--font-mono)', fontSize: '8px', padding: '3px 10px 3px 12px',
+              border: `1px solid rgba(${rgb},${hov ? 0.35 : 0.1})`,
+              color: hov ? entry.color : `rgba(${rgb},0.45)`,
+              letterSpacing: '1px', transition: 'all 0.3s',
+              background: hov ? `rgba(${rgb},0.05)` : 'transparent',
+              borderLeft: `2px solid ${hov ? entry.color : `rgba(${rgb},0.15)`}`,
             }}>{tag}</span>
           ))}
         </div>
 
-        {/* Data stream decoration */}
+        {/* Node ID + data stream */}
         <div style={{
           position: 'absolute', bottom: 8, right: 12,
           fontFamily: 'var(--font-mono)', fontSize: '7px',
-          color: `rgba(${rgb},0.15)`, letterSpacing: '1px',
+          color: `rgba(${rgb},${hov ? 0.3 : 0.12})`, letterSpacing: '1px',
+          transition: 'color 0.3s',
         }}>
           NODE_{String(index).padStart(2, '0')} :: {entry.id.toUpperCase().replace(/-/g, '_')}
         </div>
