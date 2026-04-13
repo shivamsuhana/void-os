@@ -404,31 +404,27 @@ export default function ContactSection() {
       <div style={{ position: 'absolute', left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg,transparent,rgba(255,51,102,0.18),transparent)', pointerEvents: 'none', zIndex: 61, animation: 'contact-scan 6s linear infinite' }} />
 
       {/* ── MAIN LAYOUT ── */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', gap: 16, padding: '60px 20px 16px', zIndex: 2 }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 14, padding: '56px 18px 16px', zIndex: 2 }}>
 
         {/* ══ LEFT: TERMINAL ══ */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, maxWidth: 520 }}>
+        <div style={{ width: '100%', maxWidth: 460, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
           {/* Terminal header */}
           <div style={{
-            padding: '10px 16px', flexShrink: 0,
+            padding: '9px 14px', flexShrink: 0,
             background: 'linear-gradient(90deg, rgba(255,51,102,0.08), rgba(3,3,6,0.9))',
-            border: '1px solid rgba(255,51,102,0.2)',
-            borderBottom: 'none',
-            display: 'flex', alignItems: 'center', gap: 8,
-            position: 'relative', overflow: 'hidden',
+            border: '1px solid rgba(255,51,102,0.2)', borderBottom: 'none',
+            display: 'flex', alignItems: 'center', gap: 8, position: 'relative', overflow: 'hidden',
           }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg,transparent,rgba(255,51,102,0.7),transparent)' }} />
             {['#FF3B5C','#FFB800','#39FF14'].map((col, i) => (
               <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: col, boxShadow: `0 0 6px ${col}` }} />
             ))}
-            <span style={{ flex: 1, fontSize: '9px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.5)', marginLeft: 6 }}>CONTACT.net — NEURAL TRANSMISSION TERMINAL</span>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span style={{ flex: 1, fontSize: '9px', letterSpacing: '2px', color: 'rgba(232,232,240,0.45)', marginLeft: 6 }}>CONTACT.net — NEURAL TERMINAL</span>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, animation: 'blink 2s infinite' }} />
               <span style={{ fontSize: '7px', color: 'rgba(57,255,20,0.5)', letterSpacing: '1px' }}>LIVE</span>
-              <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', marginLeft: 4 }}>
-                {clock.toLocaleTimeString()}
-              </span>
+              <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', marginLeft: 4 }}>{clock.toLocaleTimeString()}</span>
             </div>
           </div>
 
@@ -440,11 +436,9 @@ export default function ContactSection() {
             boxShadow: '0 0 60px rgba(255,51,102,0.07), 0 20px 60px rgba(0,0,0,0.6)',
             position: 'relative', overflow: 'hidden',
           }}>
-            {/* Corner accents */}
             {[{top:6,left:6,borderTop:'1px solid rgba(255,51,102,0.5)',borderLeft:'1px solid rgba(255,51,102,0.5)'},{top:6,right:6,borderTop:'1px solid rgba(255,51,102,0.5)',borderRight:'1px solid rgba(255,51,102,0.5)'},{bottom:6,left:6,borderBottom:'1px solid rgba(255,51,102,0.5)',borderLeft:'1px solid rgba(255,51,102,0.5)'},{bottom:6,right:6,borderBottom:'1px solid rgba(255,51,102,0.5)',borderRight:'1px solid rgba(255,51,102,0.5)'}].map((s,i)=>(
               <div key={i} style={{position:'absolute',width:10,height:10,pointerEvents:'none',zIndex:5,...s}} />
             ))}
-            {/* Scanlines */}
             <div style={{position:'absolute',inset:0,pointerEvents:'none',background:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.007) 2px,rgba(255,255,255,0.007) 4px)',zIndex:1}} />
 
             {/* Output lines */}
@@ -455,10 +449,9 @@ export default function ContactSection() {
                   <span style={{ fontSize: '11px', lineHeight: 1.65, color: l.color, wordBreak: 'break-word' }}>{l.text || '\u00A0'}</span>
                 </div>
               ))}
-              {/* Progress bar */}
               {isSending && sendProgress < 100 && (
                 <div style={{ marginTop: 10, paddingLeft: 16 }}>
-                  <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 2, maxWidth: 300, overflow: 'hidden' }}>
+                  <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 2, maxWidth: 280, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${sendProgress}%`, background: `linear-gradient(90deg,${C.pink},${C.cyan})`, transition: 'width 0.04s', boxShadow: `0 0 10px ${C.pink}60` }} />
                   </div>
                   <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.4)', marginTop: 3, letterSpacing: '1px' }}>QUANTUM BURST {Math.floor(sendProgress)}%</div>
@@ -470,22 +463,22 @@ export default function ContactSection() {
             {!['boot','sending','sent'].includes(step) && (
               <div style={{ borderTop: '1px solid rgba(255,51,102,0.1)', background: 'rgba(255,51,102,0.03)', flexShrink: 0, zIndex: 2 }}>
                 <div style={{ padding: '5px 16px 0', fontSize: '8px', letterSpacing: '2.5px', color: C.amber, opacity: 0.8 }}>
-                  {step === 'name' ? '> YOUR NAME' : step === 'email' ? '> YOUR EMAIL' : step === 'subject' ? '> SUBJECT' : step === 'message' ? '> MESSAGE' : '> CONFIRM [Y/N]'}
+                  {step==='name'?'> YOUR NAME':step==='email'?'> YOUR EMAIL':step==='subject'?'> SUBJECT':step==='message'?'> MESSAGE':'> CONFIRM [Y/N]'}
                 </div>
-                <div style={{ padding: '5px 16px 10px', display: 'flex', alignItems: step === 'message' ? 'flex-start' : 'center', gap: 8 }}>
-                  <span style={{ color: C.pink, fontSize: '16px', flexShrink: 0, marginTop: step === 'message' ? 2 : 0 }}>›</span>
+                <div style={{ padding: '5px 16px 10px', display: 'flex', alignItems: step==='message'?'flex-start':'center', gap: 8 }}>
+                  <span style={{ color: C.pink, fontSize: '16px', flexShrink: 0, marginTop: step==='message'?2:0 }}>›</span>
                   {step === 'message' ? (
-                    <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } }}
+                    <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
+                      onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();}}}
                       placeholder="Your message..." rows={3}
-                      style={{ flex: 1, fontSize: '11px', color: C.white, caretColor: C.pink, resize: 'none', lineHeight: 1.65, background: 'transparent', border: 'none', outline: 'none' }} />
+                      style={{ flex:1, fontSize:'11px', color:C.white, caretColor:C.pink, resize:'none', lineHeight:1.65, background:'transparent', border:'none', outline:'none' }} />
                   ) : (
-                    <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') submit(); }}
-                      placeholder={step === 'confirm' ? 'Y or N...' : 'Type here...'}
-                      style={{ flex: 1, fontSize: '11px', color: C.white, caretColor: C.pink, background: 'transparent', border: 'none', outline: 'none' }} />
+                    <input ref={inputRef} value={input} onChange={e=>setInput(e.target.value)}
+                      onKeyDown={e=>{if(e.key==='Enter')submit();}}
+                      placeholder={step==='confirm'?'Y or N...':'Type here...'}
+                      style={{ flex:1, fontSize:'11px', color:C.white, caretColor:C.pink, background:'transparent', border:'none', outline:'none' }} />
                   )}
-                  <button onClick={submit} style={{ fontSize: '8px', letterSpacing: '2px', color: C.pink, padding: '5px 14px', border: `1px solid ${C.pink}44`, background: `${C.pink}0d`, cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0 }}
+                  <button onClick={submit} style={{ fontSize:'8px', letterSpacing:'2px', color:C.pink, padding:'5px 14px', border:`1px solid ${C.pink}44`, background:`${C.pink}0d`, cursor:'pointer', transition:'all 0.2s', flexShrink:0 }}
                     onMouseEnter={e=>{e.currentTarget.style.background=`${C.pink}22`;e.currentTarget.style.boxShadow=`0 0 14px ${C.pink}40`;}}
                     onMouseLeave={e=>{e.currentTarget.style.background=`${C.pink}0d`;e.currentTarget.style.boxShadow='none';}}>
                     SEND ↵
@@ -497,91 +490,64 @@ export default function ContactSection() {
         </div>
 
         {/* ══ CENTER: BEAM ══ */}
-        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, width: 200 }}>
-          <div style={{ fontSize: '7px', letterSpacing: '3px', color: 'rgba(255,51,102,0.5)', textAlign: 'center', marginBottom: 4 }}>SIGNAL BEAM</div>
+        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, width: 180 }}>
+          <div style={{ fontSize: '7px', letterSpacing: '3px', color: 'rgba(255,51,102,0.45)', textAlign: 'center' }}>SIGNAL BEAM</div>
           <TransmissionBeam active={!['boot'].includes(step)} sending={isSending} />
-          <div style={{ fontSize: '7px', letterSpacing: '2px', color: isSending ? C.amber : step !== 'boot' ? C.green : 'rgba(232,232,240,0.25)', textAlign: 'center', animation: isSending ? 'blink 0.5s infinite' : 'none', transition: 'color 0.4s', textShadow: step !== 'boot' ? `0 0 8px ${isSending ? C.amber : C.green}` : 'none' }}>
+          <div style={{ fontSize: '7px', letterSpacing: '2px', color: isSending ? C.amber : step !== 'boot' ? C.green : 'rgba(232,232,240,0.2)', textAlign: 'center', animation: isSending ? 'blink 0.5s infinite' : 'none', transition: 'color 0.4s', textShadow: step !== 'boot' ? `0 0 8px ${isSending ? C.amber : C.green}` : 'none' }}>
             {isSending ? 'TRANSMITTING...' : step !== 'boot' ? 'CHANNEL OPEN' : 'CONNECTING...'}
           </div>
-
-          {/* Mini signal bars */}
-          <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 24 }}>
-            {[4,7,10,14,10,7,4].map((h, i) => (
-              <div key={i} style={{ width: 4, height: h, background: step !== 'boot' ? `rgba(255,51,102,${0.4 + i * 0.05})` : 'rgba(255,255,255,0.08)', borderRadius: 1, transition: 'all 0.4s', boxShadow: step !== 'boot' ? `0 0 4px rgba(255,51,102,0.4)` : 'none' }} />
+          <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 20 }}>
+            {[4,6,10,14,10,6,4].map((h, i) => (
+              <div key={i} style={{ width: 4, height: h, background: step !== 'boot' ? `rgba(255,51,102,${0.35 + i * 0.05})` : 'rgba(255,255,255,0.07)', borderRadius: 1, transition: 'all 0.5s', boxShadow: step !== 'boot' ? `0 0 4px rgba(255,51,102,0.35)` : 'none' }} />
             ))}
           </div>
         </div>
 
-        {/* ══ RIGHT: PANELS ══ */}
-        <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
-
-          {/* STATUS PANEL */}
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'linear-gradient(135deg,rgba(8,6,22,0.95),rgba(4,3,14,0.9))', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(0,212,255,0.5),transparent)' }} />
+        {/* ══ RIGHT: SIGNAL CHANNELS ONLY ══ */}
+        <div style={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: 14, border: '1px solid rgba(57,255,20,0.14)', background: 'linear-gradient(135deg,rgba(8,6,22,0.95),rgba(4,3,14,0.9))', position: 'relative', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(57,255,20,0.45),transparent)' }} />
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.004) 2px,rgba(255,255,255,0.004) 4px)' }} />
-            <div style={{ fontSize: '7px', letterSpacing: '3px', color: C.cyan, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.cyan, boxShadow: `0 0 6px ${C.cyan}` }} />
-              SYS STATUS
-            </div>
-            {[
-              { k: 'AVAILABILITY', v: 'OPEN', c: C.green },
-              { k: 'RESPONSE ETA', v: '< 24 HRS', c: C.amber },
-              { k: 'ENCRYPTION', v: 'AES-256-Q', c: C.cyan },
-              { k: 'PROTOCOL', v: 'VOID/3.0', c: C.purple },
-              { k: 'LOCATION', v: 'UTC+5:30', c: 'rgba(232,232,240,0.6)' },
-              { k: 'SIGNAL', v: step !== 'boot' ? 'ACTIVE' : 'WAITING', c: step !== 'boot' ? C.green : 'rgba(232,232,240,0.4)' },
-            ].map(({ k, v, c }) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.35)', letterSpacing: '0.5px' }}>{k}</span>
-                <span style={{ fontSize: '8px', color: c, fontWeight: 600, letterSpacing: '1px', textShadow: `0 0 8px ${c}40` }}>{v}</span>
-              </div>
+            {/* Corner accents */}
+            {[{top:5,left:5,borderTop:'1px solid rgba(57,255,20,0.4)',borderLeft:'1px solid rgba(57,255,20,0.4)'},{top:5,right:5,borderTop:'1px solid rgba(57,255,20,0.4)',borderRight:'1px solid rgba(57,255,20,0.4)'},{bottom:5,left:5,borderBottom:'1px solid rgba(57,255,20,0.4)',borderLeft:'1px solid rgba(57,255,20,0.4)'},{bottom:5,right:5,borderBottom:'1px solid rgba(57,255,20,0.4)',borderRight:'1px solid rgba(57,255,20,0.4)'}].map((s,i)=>(
+              <div key={i} style={{position:'absolute',width:8,height:8,pointerEvents:'none',zIndex:5,...s}} />
             ))}
-          </div>
 
-          {/* SIGNAL CHANNELS */}
-          <div style={{ padding: 14, border: '1px solid rgba(57,255,20,0.12)', background: 'linear-gradient(135deg,rgba(8,6,22,0.95),rgba(4,3,14,0.9))', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(57,255,20,0.4),transparent)' }} />
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.004) 2px,rgba(255,255,255,0.004) 4px)' }} />
-            <div style={{ fontSize: '7px', letterSpacing: '3px', color: C.green, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            {/* Header */}
+            <div style={{ fontSize: '7px', letterSpacing: '3px', color: C.green, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, position: 'relative', zIndex: 2 }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, animation: 'blink 2.5s infinite' }} />
               SIGNAL CHANNELS
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+
+            {/* Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', zIndex: 2 }}>
               <SocialNode icon="⬡" label="GITHUB" handle="@shivamsuhana" href={OWNER.github} color="#E8E8F0" index={0} />
               <SocialNode icon="◈" label="LINKEDIN" handle="in/shivamsuhana" href={OWNER.linkedin} color={C.cyan} index={1} />
               <SocialNode icon="◎" label="LEETCODE" handle="/shivamsuhana" href="https://leetcode.com/shivamsuhana" color={C.amber} index={2} />
               <SocialNode icon="✦" label="EMAIL" handle={OWNER.email} href={`mailto:${OWNER.email}`} color={C.green} index={3} />
             </div>
-          </div>
 
-          {/* QUICK NAV */}
-          <div style={{ padding: 14, border: '1px solid rgba(123,47,255,0.15)', background: 'linear-gradient(135deg,rgba(8,6,22,0.95),rgba(4,3,14,0.9))', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(123,47,255,0.4),transparent)' }} />
-            <div style={{ fontSize: '7px', letterSpacing: '3px', color: C.purple, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.purple, boxShadow: `0 0 6px ${C.purple}` }} />
-              QUICK NAV
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
-              {[
-                { label: 'WORK', section: 'work', c: C.purple },
-                { label: 'ABOUT', section: 'about', c: C.cyan },
-                { label: 'LAB', section: 'lab', c: C.green },
-                { label: 'TIME', section: 'timeline', c: C.amber },
-              ].map(({ label, section, c }) => (
-                <button key={section} onClick={() => navigateTo(section as any)} style={{
-                  fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px',
-                  padding: '7px 0', color: c, cursor: 'pointer', border: `1px solid ${c}22`,
-                  background: 'transparent', transition: 'all 0.2s', textAlign: 'center',
-                }}
-                  onMouseEnter={e=>{e.currentTarget.style.background=`${c}15`;e.currentTarget.style.borderColor=`${c}66`;e.currentTarget.style.boxShadow=`0 0 10px ${c}20`;}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.borderColor=`${c}22`;e.currentTarget.style.boxShadow='none';}}>
-                  {label} →
-                </button>
-              ))}
+            {/* Status strip at bottom */}
+            <div style={{ marginTop: 'auto', paddingTop: 16, position: 'relative', zIndex: 2 }}>
+              <div style={{ borderTop: '1px solid rgba(57,255,20,0.08)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {[
+                  { k: 'STATUS', v: 'AVAILABLE', c: C.green },
+                  { k: 'RESPONSE', v: '< 24 HRS', c: C.amber },
+                  { k: 'TIMEZONE', v: 'UTC+5:30', c: 'rgba(232,232,240,0.5)' },
+                ].map(({ k, v, c }) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.3)', letterSpacing: '0.5px' }}>{k}</span>
+                    <span style={{ fontSize: '8px', color: c, fontWeight: 600, textShadow: `0 0 6px ${c}40` }}>{v}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+
       </div>
+
+
 
       {showSuccess && (
         <SuccessScreen name={form.name} onBack={() => {
