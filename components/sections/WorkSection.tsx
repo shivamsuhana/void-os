@@ -155,7 +155,7 @@ function ProjectCard3D({ project, position, index, onSelect }: {
    ═══════════════════════════════════════════ */
 function TunnelParticles() {
   const ref = useRef<THREE.Points>(null);
-  const count = 1500;
+  const count = 800; // was 1500 — reduced for performance
 
   const [positions, colors] = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -302,52 +302,87 @@ function CaseStudyOverlay({ project, onClose }: { project: Project; onClose: () 
 
   return (
     <div ref={overlayRef} onClick={handleClose} style={{
-      position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(3,3,6,0.88)', backdropFilter: 'blur(25px)',
+      position: 'fixed', inset: 0, zIndex: 200,
+      background: 'rgba(3,3,6,0.92)',
+      backdropFilter: 'blur(30px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, opacity: 0,
     }}>
+      {/* Holographic grid overlay */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.03, backgroundImage: `linear-gradient(${project.color} 1px,transparent 1px),linear-gradient(90deg,${project.color} 1px,transparent 1px)`, backgroundSize: '60px 60px' }} />
+      {/* Animated scan line */}
+      <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${project.color}20, transparent)`, pointerEvents: 'none', animation: 'work-scan 3s linear infinite' }} />
+      <style dangerouslySetInnerHTML={{ __html: `@keyframes work-scan{0%{top:-2px}100%{top:100vh}} @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}} @keyframes work-appear{from{opacity:0;transform:scale(0.95) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}` }} />
+
       <div ref={cardRef} onClick={e => e.stopPropagation()} style={{
-        width: '100%', maxWidth: 680, maxHeight: '85vh', overflowY: 'auto',
-        background: 'rgba(8,8,20,0.95)', border: `1px solid ${project.color}22`,
-        boxShadow: `0 0 60px rgba(${rgb},0.1), 0 0 1px ${project.color}44`, opacity: 0,
+        width: '100%', maxWidth: 700, maxHeight: '88vh', overflowY: 'auto',
+        background: 'linear-gradient(160deg, rgba(8,8,22,0.99), rgba(5,5,16,0.97))',
+        border: `1px solid ${project.color}33`,
+        boxShadow: `0 0 80px rgba(${rgb},0.12), 0 0 160px rgba(${rgb},0.06), 0 30px 80px rgba(0,0,0,0.6)`,
+        position: 'relative', overflow: 'hidden', opacity: 0,
       }}>
+        {/* Scanline overlay on modal */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.007) 2px, rgba(255,255,255,0.007) 4px)', zIndex: 1 }} />
+        {/* Top neon bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${project.color}88, transparent)`, zIndex: 10 }} />
+        {/* Bottom neon bar */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${project.color}44, transparent)`, zIndex: 10 }} />
+        {/* Corner accents */}
+        {[
+          { top: 8, left: 8, borderTop: `1px solid ${project.color}`, borderLeft: `1px solid ${project.color}` },
+          { top: 8, right: 8, borderTop: `1px solid ${project.color}`, borderRight: `1px solid ${project.color}` },
+          { bottom: 8, left: 8, borderBottom: `1px solid ${project.color}`, borderLeft: `1px solid ${project.color}` },
+          { bottom: 8, right: 8, borderBottom: `1px solid ${project.color}`, borderRight: `1px solid ${project.color}` },
+        ].map((s, i) => <div key={i} style={{ position: 'absolute', width: 14, height: 14, pointerEvents: 'none', zIndex: 10, ...s }} />)}
+
         {/* Header bar */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(8,8,20,0.95)', borderBottom: `1px solid ${project.color}15`, backdropFilter: 'blur(10px)' }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: project.color, boxShadow: `0 0 8px ${project.color}` }} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px', color: project.color }}>{project.title}.exe</span>
+        <div style={{ position: 'sticky', top: 0, zIndex: 20, padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 12, background: `linear-gradient(135deg, rgba(8,8,22,0.98), rgba(8,8,22,0.95))`, borderBottom: `1px solid ${project.color}18` }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: project.color, boxShadow: `0 0 12px ${project.color}, 0 0 24px ${project.color}66` }} />
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '3px', color: project.color, textShadow: `0 0 10px ${project.color}60` }}>{project.title}.exe</span>
           <div style={{ flex: 1 }} />
-          <button onClick={handleClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', padding: '4px 12px', fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,0.4)', cursor: 'pointer', letterSpacing: '1px', transition: 'all 0.2s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#FF3B5C44'; e.currentTarget.style.color = '#FF3B5C'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(232,232,240,0.4)'; }}
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,0.3)', letterSpacing: '1px' }}>ESC TO CLOSE</div>
+          <button onClick={handleClose} style={{ background: 'rgba(255,59,92,0.08)', border: '1px solid rgba(255,59,92,0.3)', padding: '5px 14px', fontFamily: 'var(--font-mono)', fontSize: '8px', color: '#FF3B5C', cursor: 'pointer', letterSpacing: '1.5px', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,59,92,0.18)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,59,92,0.3)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,59,92,0.08)'; e.currentTarget.style.boxShadow = 'none'; }}
           >✕ CLOSE</button>
         </div>
 
-        <div style={{ height: 2, background: `linear-gradient(90deg, transparent, ${project.color}, transparent)`, opacity: 0.4 }} />
+        <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${project.color}55, transparent)` }} />
 
-        <div style={{ padding: '24px' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 800, marginBottom: 4, color: '#E8E8F0' }}>{project.title}</h2>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: project.color, marginBottom: 16, letterSpacing: '0.5px' }}>{project.description}</p>
+        <div style={{ padding: '26px 26px 28px', position: 'relative', zIndex: 2 }}>
+          {/* Title */}
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '30px', fontWeight: 800, marginBottom: 6, color: '#E8E8F0', textShadow: `0 0 30px ${project.color}20`, letterSpacing: '0.5px' }}>{project.title}</h2>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: project.color, marginBottom: 18, letterSpacing: '1px', textShadow: `0 0 8px ${project.color}40` }}>{project.description}</p>
 
           {/* Tags */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 24 }}>
             {project.tags.map(tag => (
-              <span key={tag} style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', padding: '4px 10px', border: `1px solid ${project.color}30`, background: `rgba(${rgb},0.08)`, color: project.color, letterSpacing: '0.5px' }}>{tag}</span>
+              <span key={tag} style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', padding: '4px 12px', border: `1px solid ${project.color}35`, background: `rgba(${rgb},0.08)`, color: project.color, letterSpacing: '0.5px', boxShadow: `0 0 6px ${project.color}10`, transition: 'all 0.2s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `rgba(${rgb},0.18)`; (e.currentTarget as HTMLElement).style.boxShadow = `0 0 12px ${project.color}30`; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `rgba(${rgb},0.08)`; (e.currentTarget as HTMLElement).style.boxShadow = `0 0 6px ${project.color}10`; }}
+              >{tag}</span>
             ))}
           </div>
 
           {/* Terminal description */}
-          <div style={{ padding: '16px 18px', marginBottom: 20, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(232,232,240,0.5)', lineHeight: 1.9 }}>
-            <div style={{ fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,0.4)', marginBottom: 8 }}>$ cat README.md</div>
+          <div style={{ padding: '18px 20px', marginBottom: 22, background: 'rgba(0,0,0,0.4)', border: `1px solid ${project.color}15`, fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(232,232,240,0.55)', lineHeight: 2, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: `linear-gradient(90deg, transparent, ${project.color}30, transparent)` }} />
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: project.color, marginBottom: 10, opacity: 0.7 }}>$ cat README.md</div>
             {typewriterText}
             <span style={{ opacity: typewriterText.length < project.longDescription.length ? 1 : 0, color: project.color, animation: 'blink 0.8s infinite' }}>█</span>
           </div>
 
           {/* Stats */}
           {statsVisible && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 20 }}>
-              {[{ label: 'YEAR', value: project.year }, { label: 'TECH STACK', value: `${project.tags.length} tools` }, { label: 'STATUS', value: project.liveUrl ? 'LIVE' : 'SOURCE' }].map(s => (
-                <div key={s.label} style={{ padding: '12px', textAlign: 'center', background: `rgba(${rgb},0.04)`, border: `1px solid ${project.color}15` }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 800, color: project.color, textShadow: `0 0 10px ${project.color}44` }}>{s.value}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.3)', marginTop: 4 }}>{s.label}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 22 }}>
+              {[
+                { label: 'YEAR', value: project.year },
+                { label: 'TECH STACK', value: `${project.tags.length} TOOLS` },
+                { label: 'STATUS', value: project.liveUrl ? '⚡ LIVE' : '⌥ SOURCE' }
+              ].map(s => (
+                <div key={s.label} style={{ padding: '16px 12px', textAlign: 'center', background: `rgba(${rgb},0.05)`, border: `1px solid ${project.color}20`, position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 0, left: '15%', right: '15%', height: 1, background: `linear-gradient(90deg, transparent, ${project.color}50, transparent)` }} />
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, color: project.color, textShadow: `0 0 16px ${project.color}66, 0 0 32px ${project.color}22`, marginBottom: 6 }}>{s.value}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '2px', color: 'rgba(232,232,240,0.35)' }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -356,19 +391,21 @@ function CaseStudyOverlay({ project, onClose }: { project: Project; onClose: () 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: 10 }}>
             {project.liveUrl && (
-              <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '12px 20px', textAlign: 'center', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px', background: `rgba(${rgb},0.08)`, border: `1px solid ${project.color}33`, color: project.color, transition: 'all 0.2s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = `rgba(${rgb},0.15)`; }} onMouseLeave={e => { e.currentTarget.style.background = `rgba(${rgb},0.08)`; }}
+              <a href={project.liveUrl} target="_blank" rel="noopener noreferrer"
+                style={{ flex: 1, padding: '14px 20px', textAlign: 'center', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2.5px', background: `rgba(${rgb},0.08)`, border: `1px solid ${project.color}44`, color: project.color, transition: 'all 0.25s', position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={e => { e.currentTarget.style.background = `rgba(${rgb},0.18)`; e.currentTarget.style.boxShadow = `0 0 20px ${project.color}25`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = `rgba(${rgb},0.08)`; e.currentTarget.style.boxShadow = 'none'; }}
               >◉ LIVE DEMO</a>
             )}
             {project.githubUrl && (
-              <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '12px 20px', textAlign: 'center', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(232,232,240,0.5)', transition: 'all 0.2s' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#E8E8F0'; }} onMouseLeave={e => { e.currentTarget.style.color = 'rgba(232,232,240,0.5)'; }}
+              <a href={project.githubUrl} target="_blank" rel="noopener noreferrer"
+                style={{ flex: 1, padding: '14px 20px', textAlign: 'center', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2.5px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(232,232,240,0.6)', transition: 'all 0.25s' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#E8E8F0'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(232,232,240,0.6)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
               >⌥ SOURCE CODE</a>
             )}
           </div>
         </div>
-
-        <style dangerouslySetInnerHTML={{ __html: '@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}' }} />
       </div>
     </div>
   );
@@ -449,49 +486,57 @@ export default function WorkSection() {
     <OSWindowFrame name="WORK" ext=".db" color="#7B2FFF">
     <div ref={containerRef} style={{ position: 'relative', background: '#050510', height: '100%', overflow: 'hidden' }}>
 
-      {/* 3D Tunnel */}
+      {/* 3D Tunnel — no VoidPostProcessing outside Canvas */}
       <div style={{ position: 'absolute', inset: 0 }}>
-        <Canvas camera={{ position: [0, 0, 5], fov: 55 }} gl={{ antialias: true }}>
+        <Canvas camera={{ position: [0, 0, 5], fov: 55 }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
           <TunnelScene scrollProgress={scrollProgress} projects={PROJECTS} onSelect={setSelectedProject} />
         </Canvas>
-        <VoidPostProcessing intensity={1.0} />
       </div>
 
       {/* HUD Overlay */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
+        {/* Top-left corner bracket */}
+        <div style={{ position: 'absolute', top: 70, left: 30, width: 18, height: 18, borderTop: '1px solid rgba(123,47,255,0.6)', borderLeft: '1px solid rgba(123,47,255,0.6)' }} />
+        {/* Top-right corner bracket */}
+        <div style={{ position: 'absolute', top: 70, right: 30, width: 18, height: 18, borderTop: '1px solid rgba(123,47,255,0.3)', borderRight: '1px solid rgba(123,47,255,0.3)' }} />
+
         {/* Header */}
-        <div style={{ position: 'absolute', top: 80, left: 40 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 10px rgba(123,47,255,.3)', marginBottom: 8 }}>02 // WORK.db</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 3vw, 36px)', marginBottom: 6, color: '#E8E8F0' }}>
-            Project <span style={{ color: '#7B2FFF', textShadow: '0 0 15px rgba(123,47,255,.3)' }}>Tunnel</span>
+        <div style={{ position: 'absolute', top: 88, left: 52 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7B2FFF', boxShadow: '0 0 8px #7B2FFF, 0 0 16px rgba(123,47,255,0.5)', animation: 'pulse-dot 2s ease-in-out infinite' }} />
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 14px rgba(123,47,255,.5)' }}>02 // WORK.db</div>
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 3vw, 38px)', marginBottom: 8, color: '#E8E8F0', textShadow: '0 0 40px rgba(123,47,255,0.15)' }}>
+            Project <span style={{ color: '#7B2FFF', textShadow: '0 0 20px rgba(123,47,255,.5), 0 0 40px rgba(123,47,255,.2)' }}>Tunnel</span>
           </h2>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.65)', letterSpacing: '1px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 20, height: 1, background: 'rgba(123,47,255,0.4)' }} />
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.5)', letterSpacing: '2px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
+          </div>
         </div>
 
         {/* Vertical progress */}
-        <div style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', width: 2, height: 200, background: 'rgba(255,255,255,0.08)' }}>
-          <div style={{ width: '100%', height: `${scrollProgress * 100}%`, background: 'linear-gradient(180deg, #00D4FF, #7B2FFF)', boxShadow: '0 0 8px rgba(0,212,255,0.3)', transition: 'height 0.1s ease' }} />
-          <div style={{ position: 'absolute', right: 10, whiteSpace: 'nowrap', top: `${scrollProgress * 100}%`, transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.65)' }}>
+        <div style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', width: 2, height: 200, background: 'rgba(255,255,255,0.06)' }}>
+          <div style={{ width: '100%', height: `${scrollProgress * 100}%`, background: 'linear-gradient(180deg, #7B2FFF, #00D4FF)', boxShadow: '0 0 10px rgba(123,47,255,0.5)', transition: 'height 0.1s ease' }} />
+          <div style={{ position: 'absolute', right: 12, whiteSpace: 'nowrap', top: `${scrollProgress * 100}%`, transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.5)', letterSpacing: '1px' }}>
             {Math.round(scrollProgress * PROJECTS.length)}/{PROJECTS.length}
           </div>
         </div>
 
         {/* Project indicators — bottom */}
-        <div style={{ position: 'absolute', bottom: 30, left: 40, display: 'flex', gap: 6 }}>
+        <div style={{ position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, alignItems: 'center', pointerEvents: 'auto' }}>
           {PROJECTS.map((p, i) => {
             const isActive = Math.abs(scrollProgress - i / Math.max(PROJECTS.length - 1, 1)) < 0.18;
             return (
-              <div key={p.id} style={{
-                pointerEvents: 'auto', cursor: 'pointer',
-                width: isActive ? 24 : 8, height: 3, borderRadius: 1,
-                background: isActive ? p.color : 'rgba(255,255,255,0.1)',
-                boxShadow: isActive ? `0 0 6px ${p.color}55` : 'none',
-                transition: 'all 0.4s ease',
-              }} onClick={() => setScrollProgress(i / Math.max(PROJECTS.length - 1, 1))} />
+              <div key={p.id} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+                onClick={() => setScrollProgress(i / Math.max(PROJECTS.length - 1, 1))}>
+                <div style={{ width: isActive ? 28 : 8, height: 3, background: isActive ? p.color : 'rgba(255,255,255,0.1)', boxShadow: isActive ? `0 0 8px ${p.color}77` : 'none', transition: 'all 0.4s ease' }} />
+              </div>
             );
           })}
         </div>
       </div>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 8px #7B2FFF, 0 0 16px rgba(123,47,255,0.5)}50%{opacity:0.6;box-shadow:0 0 4px #7B2FFF, 0 0 8px rgba(123,47,255,0.3)}}' }} />
 
       {/* Case study modal */}
       {selectedProject && <CaseStudyOverlay project={selectedProject} onClose={() => setSelectedProject(null)} />}
