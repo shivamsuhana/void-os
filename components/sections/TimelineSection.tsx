@@ -109,9 +109,14 @@ function TimelineCard({ entry, index, active, side }: { entry: TimelineEntry; in
         maxWidth: 380, width: '100%',
         padding: '20px 22px',
         background: 'rgba(255,255,255,0.05)',
-        border: `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
-        borderLeft: side === 'left' ? `3px solid ${active ? entry.color : entry.color + '44'}` : undefined,
-        borderRight: side === 'right' ? `3px solid ${active ? entry.color : entry.color + '44'}` : undefined,
+        borderTop: `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
+        borderBottom: `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
+        borderLeft: side === 'left'
+          ? `3px solid ${active ? entry.color : entry.color + '44'}`
+          : `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
+        borderRight: side === 'right'
+          ? `3px solid ${active ? entry.color : entry.color + '44'}`
+          : `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
         borderRadius: '2px',
         opacity: active ? 1 : 0.4,
         transform: active ? (hov ? 'translateY(-4px) scale(1.02)' : 'translateY(0)') : 'translateY(10px)',
