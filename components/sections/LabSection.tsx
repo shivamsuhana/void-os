@@ -208,21 +208,28 @@ function ParticleExperiment() {
 }
 
 /* ============================================
-   VOICE RECOGNITION — Web Speech API + waveform
+   VOICE RECOGNITION — Web Speech API + real waveform
    ============================================ */
 function VoiceRecognition() {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [interimText, setInterimText] = useState('');
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'matched' | 'error'>('idle');
   const [commandLog, setCommandLog] = useState<Array<{ text: string; color: string; time: string }>>([
-    { text: 'VOICE.sys initialized — awaiting input', color: 'rgba(57,255,20,0.6)', time: new Date().toLocaleTimeString() },
-    { text: 'Say "work", "skills", "about", "contact", "lab" or "matrix" to navigate', color: 'rgba(232,232,240,0.4)', time: '' },
+    { text: '> VOICE.sys v2045.1 — NEURAL INTERFACE READY', color: '#39FF14', time: new Date().toLocaleTimeString() },
+    { text: '  Say a command to navigate the OS...', color: 'rgba(232,232,240,0.35)', time: '' },
   ]);
   const [volume, setVolume] = useState(0);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const waveCanvasRef = useRef<HTMLCanvasElement>(null);
+  const ringCanvasRef = useRef<HTMLCanvasElement>(null);
   const recognitionRef = useRef<any>(null);
-  const animRef = useRef<number>(0);
+  const waveAnimRef = useRef<number>(0);
+  const ringAnimRef = useRef<number>(0);
   const volRef = useRef(0);
+  const listeningRef = useRef(false); // avoid stale closure
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
   const { navigateTo } = useVoidStore();
 
   const VOC_COMMANDS: Record<string, { action: () => void; label: string; color: string }> = {
@@ -234,206 +241,393 @@ function VoiceRecognition() {
     time: { action: () => navigateTo('timeline'), label: '→ Navigating to TIME.log', color: '#39FF14' },
     desktop: { action: () => navigateTo('desktop'), label: '→ Returning to Desktop', color: '#00D4FF' },
     home: { action: () => navigateTo('desktop'), label: '→ Returning to Desktop', color: '#00D4FF' },
-    matrix: { action: () => {}, label: '⬛ Matrix mode activated!', color: '#39FF14' },
+    lab: { action: () => {}, label: '⬡ Already in LAB.beta', color: '#39FF14' },
   };
 
-  // Waveform animation
+  const addLog = useCallback((text: string, color: string) => {
+    setCommandLog(prev => [...prev.slice(-10), { text, color, time: new Date().toLocaleTimeString() }]);
+  }, []);
+
+  // ==== WAVEFORM CANVAS ====
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = waveCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d')!;
-    canvas.width = 300; canvas.height = 60;
-    const points = new Array(60).fill(0);
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = 70 * dpr;
+      ctx.scale(dpr, dpr);
+    };
+    resize();
+
+    const W = () => canvas.getBoundingClientRect().width;
+    const H = 70;
+    const histLen = 80;
+    const history = new Array(histLen).fill(0);
+    let t = 0;
 
     const draw = () => {
-      ctx.clearRect(0, 0, 300, 60);
+      t += 0.05;
       const vol = volRef.current;
-      points.shift();
-      points.push(vol * 28 * (0.5 + Math.random() * 0.5));
+      const isListening = listeningRef.current;
 
-      ctx.beginPath();
-      ctx.strokeStyle = listening ? '#39FF14' : 'rgba(57,255,20,0.2)';
-      ctx.lineWidth = 1.5;
-      ctx.shadowColor = '#39FF14';
-      ctx.shadowBlur = listening ? vol * 20 : 0;
-      points.forEach((p, i) => {
-        const x = (i / points.length) * 300;
-        const y = 30 + p * (Math.random() > 0.5 ? 1 : -1);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Center flat line when idle
-      if (!listening) {
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(57,255,20,0.15)';
-        ctx.shadowBlur = 0;
-        ctx.moveTo(0, 30); ctx.lineTo(300, 30); ctx.stroke();
+      // Get real analyser data if available
+      let rmsVol = vol;
+      if (analyserRef.current && isListening) {
+        const data = new Uint8Array(analyserRef.current.frequencyBinCount);
+        analyserRef.current.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) sum += ((data[i] - 128) / 128) ** 2;
+        rmsVol = Math.sqrt(sum / data.length);
       }
-      animRef.current = requestAnimationFrame(draw);
+
+      history.shift();
+      history.push(isListening ? rmsVol + Math.random() * 0.05 : 0);
+
+      const w = W();
+      ctx.clearRect(0, 0, w, H);
+
+      // Background subtle grid
+      ctx.strokeStyle = 'rgba(57,255,20,0.04)';
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x < w; x += w / 8) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(w, H / 2); ctx.stroke();
+
+      if (isListening) {
+        // Multi-layer waveform — 3 waves at different frequencies
+        const layers = [
+          { freq: 1.0, amp: 1.0, color: 'rgba(57,255,20,0.8)', width: 2 },
+          { freq: 2.3, amp: 0.5, color: 'rgba(57,255,20,0.4)', width: 1 },
+          { freq: 0.5, amp: 0.3, color: 'rgba(0,212,255,0.3)', width: 1 },
+        ];
+
+        layers.forEach(layer => {
+          ctx.beginPath();
+          ctx.strokeStyle = layer.color;
+          ctx.lineWidth = layer.width;
+          ctx.shadowColor = '#39FF14';
+          ctx.shadowBlur = rmsVol * 15;
+
+          for (let i = 0; i < histLen; i++) {
+            const x = (i / histLen) * w;
+            const h = history[i];
+            const sin = Math.sin(t * layer.freq * 3 + i * 0.3) * h * 25 * layer.amp;
+            const y = H / 2 + sin;
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        });
+
+        // Frequency bars at bottom
+        ctx.shadowBlur = 0;
+        const barCount = 24;
+        const barW = (w - barCount) / barCount;
+        for (let i = 0; i < barCount; i++) {
+          const barH = (Math.sin(t * 2 + i * 0.4) * 0.5 + 0.5) * rmsVol * 18 + Math.random() * rmsVol * 8;
+          const x = i * (barW + 1);
+          const hue = 110 + i * 3;
+          ctx.fillStyle = `hsla(${hue}, 100%, 55%, 0.6)`;
+          ctx.fillRect(x, H - barH - 2, barW, barH);
+        }
+
+      } else {
+        // Idle — pulsing flat line
+        const pulse = (Math.sin(t * 0.6) * 0.5 + 0.5) * 0.15;
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(57,255,20,${0.1 + pulse})`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 8]);
+        ctx.moveTo(0, H / 2); ctx.lineTo(w, H / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Center label
+        ctx.fillStyle = `rgba(57,255,20,${0.2 + pulse})`;
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('— AWAITING VOICE INPUT —', w / 2, H / 2 - 8);
+        ctx.textAlign = 'left';
+      }
+
+      waveAnimRef.current = requestAnimationFrame(draw);
     };
     draw();
-    return () => cancelAnimationFrame(animRef.current);
-  }, [listening]);
+    return () => cancelAnimationFrame(waveAnimRef.current);
+  }, []); // runs once, reads from refs
 
-  const addLog = (text: string, color: string) => {
-    setCommandLog(prev => [...prev.slice(-8), { text, color, time: new Date().toLocaleTimeString() }]);
-  };
+  // ==== RING CANVAS (mic circle visualizer) ====
+  useEffect(() => {
+    const canvas = ringCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const S = 160;
+    canvas.width = S; canvas.height = S;
+    let t = 0;
+
+    const draw = () => {
+      t += 0.04;
+      const vol = volRef.current;
+      const isListening = listeningRef.current;
+      const cx = S / 2, cy = S / 2;
+
+      ctx.clearRect(0, 0, S, S);
+
+      if (isListening) {
+        // Outer pulsing rings
+        [3, 2, 1].forEach(i => {
+          const r = 55 + i * 15 + Math.sin(t * 2 + i) * vol * 12;
+          const alpha = (0.3 - i * 0.08) * (0.5 + vol * 0.5);
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(57,255,20,${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.shadowColor = '#39FF14';
+          ctx.shadowBlur = vol * 20;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        });
+
+        // Frequency arc segments
+        const segs = 32;
+        for (let i = 0; i < segs; i++) {
+          const angle = (i / segs) * Math.PI * 2 - Math.PI / 2;
+          const r1 = 42;
+          const r2 = r1 + 8 + Math.sin(t * 3 + i * 0.4) * vol * 20 + Math.random() * vol * 10;
+          const x1 = cx + Math.cos(angle) * r1;
+          const y1 = cy + Math.sin(angle) * r1;
+          const x2 = cx + Math.cos(angle) * r2;
+          const y2 = cy + Math.sin(angle) * r2;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+          ctx.strokeStyle = `rgba(57,255,20,${0.5 + vol * 0.5})`;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#39FF14'; ctx.shadowBlur = vol * 10;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+      } else {
+        // Idle rings
+        [1, 2].forEach(i => {
+          const r = 45 + i * 12 + Math.sin(t * 0.8 + i) * 3;
+          ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(57,255,20,${0.1 - i * 0.03})`;
+          ctx.lineWidth = 1; ctx.stroke();
+        });
+      }
+
+      // Core circle
+      const coreR = 36;
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+      grad.addColorStop(0, isListening ? `rgba(57,255,20,${0.3 + vol * 0.4})` : 'rgba(57,255,20,0.06)');
+      grad.addColorStop(1, 'rgba(57,255,20,0.02)');
+      ctx.beginPath(); ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.strokeStyle = isListening ? `rgba(57,255,20,${0.6 + vol * 0.4})` : 'rgba(57,255,20,0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#39FF14';
+      ctx.shadowBlur = isListening ? 10 + vol * 20 : 4;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ringAnimRef.current = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(ringAnimRef.current);
+  }, []);
 
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       setStatus('error');
-      addLog('✕ Web Speech API not supported in this browser. Use Chrome.', '#FF3B5C');
+      addLog('✕ Use Chrome — Web Speech API required', '#FF3B5C');
       return;
     }
+
+    // Try to get real mic audio for visualizer
+    if (navigator.mediaDevices) {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        const ac = new AudioContext();
+        const analyser = ac.createAnalyser();
+        analyser.fftSize = 256;
+        const src = ac.createMediaStreamSource(stream);
+        src.connect(analyser);
+        audioCtxRef.current = ac;
+        analyserRef.current = analyser;
+      }).catch(() => {
+        // fallback to simulated
+      });
+    }
+
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRec();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+    recognitionRef.current = recognition;
 
     recognition.onstart = () => {
+      listeningRef.current = true;
       setListening(true); setStatus('listening');
-      addLog('● Microphone active — speak now', '#39FF14');
-      // Fake volume simulation since we don't have AudioContext
-      const iv = setInterval(() => { volRef.current = 0.4 + Math.random() * 0.6; setVolume(volRef.current); }, 100);
-      (recognition as any)._volIv = iv;
+      setTranscript(''); setInterimText('');
+      addLog('● Microphone ACTIVE — speak a command', '#39FF14');
+      // Simulated vol for fallback
+      const iv = setInterval(() => {
+        const v = 0.3 + Math.random() * 0.7;
+        volRef.current = v; setVolume(v);
+      }, 80);
+      (recognition as any)._iv = iv;
     };
 
     recognition.onresult = (e: any) => {
       const result = e.results[e.results.length - 1];
       const text = result[0].transcript.toLowerCase().trim();
-      setTranscript(text);
       if (result.isFinal) {
+        setTranscript(text); setInterimText('');
         setStatus('processing');
-        addLog(`◉ Heard: "${text}"`, 'rgba(0,212,255,0.8)');
-        // Check command
+        addLog(`◉ Heard: "${text}"`, '#00D4FF');
         const matched = Object.keys(VOC_COMMANDS).find(cmd => text.includes(cmd));
         if (matched) {
           setTimeout(() => {
             addLog(VOC_COMMANDS[matched].label, VOC_COMMANDS[matched].color);
             setStatus('matched');
-            VOC_COMMANDS[matched].action();
+            if (matched !== 'lab') VOC_COMMANDS[matched].action();
           }, 500);
         } else {
-          addLog(`◌ No command found in "${text}"`, 'rgba(232,232,240,0.35)');
+          addLog(`◌ Unrecognized: "${text}"`, 'rgba(232,232,240,0.35)');
           setStatus('idle');
         }
+      } else {
+        setInterimText(text);
       }
     };
+
     recognition.onerror = (e: any) => {
-      addLog(`✕ Error: ${e.error}`, '#FF3B5C');
-      setStatus('error'); setListening(false);
+      clearInterval((recognition as any)._iv);
+      listeningRef.current = false; volRef.current = 0;
+      setListening(false); setStatus('error');
+      addLog(`✕ ${e.error === 'not-allowed' ? 'Mic permission denied' : `Error: ${e.error}`}`, '#FF3B5C');
     };
+
     recognition.onend = () => {
-      clearInterval((recognition as any)._volIv);
-      volRef.current = 0; setVolume(0);
+      clearInterval((recognition as any)._iv);
+      listeningRef.current = false; volRef.current = 0; setVolume(0);
       setListening(false);
-      if (status !== 'matched') setStatus('idle');
+      setInterimText('');
+      if (audioCtxRef.current) { audioCtxRef.current.close(); audioCtxRef.current = null; analyserRef.current = null; }
+      setStatus(prev => prev === 'processing' || prev === 'matched' ? prev : 'idle');
     };
+
     recognition.start();
-    recognitionRef.current = recognition;
   };
 
   const stopListening = () => {
     recognitionRef.current?.stop();
-    setListening(false); setStatus('idle');
+    listeningRef.current = false; volRef.current = 0;
   };
 
   const stColor = { idle: '#39FF14', listening: '#39FF14', processing: '#FFB800', matched: '#00D4FF', error: '#FF3B5C' }[status];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Status + mic button */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '28px 0', justifyContent: 'center', flexWrap: 'wrap' }}>
-        {/* Mic orb */}
-        <div style={{ position: 'relative', width: 100, height: 100, cursor: 'pointer' }}
-          onClick={listening ? stopListening : startListening}
-        >
-          {/* Pulse rings */}
-          {listening && [1, 2, 3].map(i => (
-            <div key={i} style={{
-              position: 'absolute', inset: -i * 14, borderRadius: '50%',
-              border: `1px solid rgba(57,255,20,${0.5 - i * 0.15})`,
-              animation: `voice-pulse 2s ease-out ${i * 0.4}s infinite`,
-            }} />
-          ))}
-          {/* Main circle */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+      {/* Top section: ring + status */}
+      <div style={{ display: 'flex', gap: 20, alignItems: 'center', justifyContent: 'center', padding: '16px 0' }}>
+
+        {/* Ring visualizer */}
+        <div style={{ position: 'relative', width: 160, height: 160, cursor: 'pointer', flexShrink: 0 }}
+          onClick={listening ? stopListening : startListening}>
+          <canvas ref={ringCanvasRef} style={{ width: 160, height: 160, display: 'block' }} />
+          {/* Center mic icon */}
           <div style={{
-            position: 'absolute', inset: 0, borderRadius: '50%',
-            background: listening
-              ? `radial-gradient(circle, rgba(57,255,20,0.25), rgba(57,255,20,0.06))`
-              : 'radial-gradient(circle, rgba(57,255,20,0.08), rgba(57,255,20,0.02))',
-            border: `2px solid ${listening ? '#39FF14' : 'rgba(57,255,20,0.3)'}`,
-            boxShadow: listening ? '0 0 30px rgba(57,255,20,0.5), 0 0 60px rgba(57,255,20,0.2)' : '0 0 10px rgba(57,255,20,0.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.4s ease',
-            transform: listening ? `scale(${1 + volume * 0.08})` : 'scale(1)',
+            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center',
+            justifyContent: 'center', flexDirection: 'column', gap: 2,
           }}>
-            <span style={{ fontSize: '32px', filter: `drop-shadow(0 0 ${listening ? 16 : 6}px rgba(57,255,20,0.8))`, transition: 'all 0.3s' }}>
-              {listening ? '🎙️' : '🎤'}
+            <span style={{
+              fontSize: '28px', lineHeight: 1,
+              filter: `drop-shadow(0 0 ${listening ? 16 : 6}px rgba(57,255,20,${listening ? 0.9 : 0.4}))`,
+              transition: 'filter 0.3s',
+            }}>{listening ? '🎙️' : '🎤'}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: stColor, letterSpacing: '1.5px', textShadow: `0 0 8px ${stColor}80` }}>
+              {listening ? 'ACTIVE' : 'CLICK'}
             </span>
           </div>
         </div>
 
         {/* Status panel */}
-        <div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2.5px', color: stColor, textShadow: `0 0 10px ${stColor}60`, marginBottom: 8 }}>
-            [{status.toUpperCase()}]
+        <div style={{ flex: 1, maxWidth: 260 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '3px', color: stColor, textShadow: `0 0 12px ${stColor}`, marginBottom: 6 }}>
+            ◈ [{status.toUpperCase().padEnd(10)}]
           </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px', marginBottom: 6, color: '#E8E8F0' }}>
-            {listening ? 'LISTENING...' : 'VOICE CONTROL'}
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '20px', marginBottom: 6, color: listening ? '#39FF14' : '#E8E8F0', textShadow: listening ? '0 0 20px rgba(57,255,20,0.5)' : 'none', transition: 'all 0.4s' }}>
+            {listening ? 'LISTENING...' : status === 'processing' ? 'PROCESSING...' : status === 'matched' ? 'MATCHED!' : 'VOICE CTRL'}
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,0.4)', lineHeight: 1.8, maxWidth: 220 }}>
-            {listening ? 'Say a command...' : 'Click mic to activate'}
-            {transcript && <div style={{ color: '#00D4FF', marginTop: 4 }}>"{transcript}"</div>}
-          </div>
-          <button
-            onClick={listening ? stopListening : startListening}
-            style={{
-              marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px',
-              padding: '7px 16px', cursor: 'pointer', transition: 'all 0.3s',
-              background: listening ? 'rgba(255,51,102,0.12)' : 'rgba(57,255,20,0.08)',
-              border: `1px solid ${listening ? 'rgba(255,51,102,0.4)' : 'rgba(57,255,20,0.3)'}`,
-              color: listening ? '#FF3B5C' : '#39FF14',
-              boxShadow: listening ? '0 0 12px rgba(255,51,102,0.2)' : '0 0 8px rgba(57,255,20,0.1)',
-            }}
-          >
-            {listening ? '⬛ STOP' : '⬤ START'}
+          {(transcript || interimText) && (
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', marginBottom: 8, padding: '6px 10px', border: '1px solid rgba(0,212,255,0.2)', background: 'rgba(0,212,255,0.05)' }}>
+              <span style={{ color: '#00D4FF' }}>"{transcript || interimText}"</span>
+              {interimText && !transcript && <span style={{ color: 'rgba(232,232,240,0.3)', fontSize: '9px', marginLeft: 6 }}>interim...</span>}
+            </div>
+          )}
+          <button onClick={listening ? stopListening : startListening} style={{
+            fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '2px',
+            padding: '8px 20px', cursor: 'pointer', transition: 'all 0.3s',
+            background: listening ? 'rgba(255,51,102,0.15)' : 'rgba(57,255,20,0.1)',
+            border: `1px solid ${listening ? 'rgba(255,51,102,0.5)' : 'rgba(57,255,20,0.4)'}`,
+            color: listening ? '#FF3B5C' : '#39FF14',
+            boxShadow: listening ? '0 0 16px rgba(255,51,102,0.3)' : '0 0 12px rgba(57,255,20,0.2)',
+          }}>
+            {listening ? '⬛ STOP LISTENING' : '⬤ START LISTENING'}
           </button>
+
+          {/* Volume bar */}
+          {listening && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: '7px', color: 'rgba(57,255,20,0.4)', letterSpacing: '2px', marginBottom: 4 }}>INPUT LEVEL</div>
+              <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${Math.min(volume * 100, 100)}%`, background: 'linear-gradient(90deg, #39FF14, #00D4FF)', transition: 'width 0.08s', boxShadow: '0 0 8px rgba(57,255,20,0.8)' }} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Waveform */}
-      <div style={{ position: 'relative', background: 'rgba(3,3,6,0.6)', border: '1px solid rgba(57,255,20,0.1)', padding: '10px 16px', borderRadius: 2 }}>
-        <div style={{ fontSize: '7px', letterSpacing: '2px', color: 'rgba(57,255,20,0.4)', marginBottom: 6 }}>AUDIO WAVEFORM</div>
-        <canvas ref={canvasRef} style={{ width: '100%', height: 60, display: 'block' }} />
+      <div style={{ background: 'rgba(3,3,6,0.6)', border: '1px solid rgba(57,255,20,0.12)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ padding: '6px 12px 4px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(57,255,20,0.06)' }}>
+          <span style={{ fontSize: '7px', letterSpacing: '2px', color: 'rgba(57,255,20,0.4)' }}>NEURAL AUDIO WAVEFORM</span>
+          <span style={{ fontSize: '7px', color: stColor, letterSpacing: '1px' }}>{listening ? `${Math.round(volume * 100)}% INPUT` : 'STANDBY'}</span>
+        </div>
+        <canvas ref={waveCanvasRef} style={{ width: '100%', height: '70px', display: 'block' }} />
       </div>
 
       {/* Command log */}
-      <div style={{ background: 'rgba(3,3,6,0.7)', border: '1px solid rgba(57,255,20,0.1)', padding: '10px 14px', borderRadius: 2, maxHeight: 140, overflowY: 'auto' }}>
+      <div style={{ background: 'rgba(3,3,6,0.7)', border: '1px solid rgba(57,255,20,0.1)', padding: '10px 14px', borderRadius: 2, maxHeight: 120, overflowY: 'auto' }}>
         <div style={{ fontSize: '7px', letterSpacing: '2.5px', color: 'rgba(57,255,20,0.4)', marginBottom: 8 }}>COMMAND LOG</div>
         {commandLog.map((l, i) => (
-          <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 3 }}>
-            {l.time && <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.2)', flexShrink: 0 }}>{l.time}</span>}
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: l.color }}>{l.text}</span>
+          <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 3, animation: i === commandLog.length - 1 ? 'fadeIn 0.2s ease' : 'none' }}>
+            {l.time && <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.2)', flexShrink: 0, fontFamily: 'var(--font-mono)' }}>{l.time}</span>}
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: l.color, lineHeight: 1.5 }}>{l.text}</span>
           </div>
         ))}
       </div>
 
-      {/* Commands reference */}
-      <div style={{ padding: '10px 14px', border: '1px solid rgba(57,255,20,0.08)', background: 'rgba(3,3,6,0.5)', borderRadius: 2 }}>
-        <div style={{ fontSize: '7px', letterSpacing: '2px', color: 'rgba(57,255,20,0.35)', marginBottom: 8 }}>VOICE COMMANDS</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
-          {['work', 'skills', 'about', 'contact', 'timeline', 'desktop', 'matrix'].map(cmd => (
-            <span key={cmd} style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', padding: '3px 8px', border: '1px solid rgba(57,255,20,0.15)', color: 'rgba(57,255,20,0.7)', background: 'rgba(57,255,20,0.04)' }}>"{cmd}"</span>
+      {/* Commands ref */}
+      <div style={{ padding: '10px 14px', border: '1px solid rgba(57,255,20,0.07)', background: 'rgba(3,3,6,0.4)', borderRadius: 2 }}>
+        <div style={{ fontSize: '7px', letterSpacing: '2px', color: 'rgba(57,255,20,0.3)', marginBottom: 8 }}>AVAILABLE COMMANDS</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px 12px' }}>
+          {Object.keys(VOC_COMMANDS).map(cmd => (
+            <span key={cmd} style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', padding: '2px 8px', border: '1px solid rgba(57,255,20,0.12)', color: 'rgba(57,255,20,0.6)', background: 'rgba(57,255,20,0.03)' }}>"{cmd}"</span>
           ))}
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: '@keyframes voice-pulse{0%{transform:scale(1);opacity:0.8}100%{transform:scale(1.5);opacity:0}}' }} />
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes voice-pulse{0%{transform:scale(1);opacity:0.8}100%{transform:scale(1.5);opacity:0}} @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}' }} />
     </div>
   );
 }
+
 
 /* ============================================
    MATRIX RAIN — CSS + Canvas
