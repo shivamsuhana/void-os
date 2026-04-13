@@ -544,6 +544,7 @@ export default function AboutSection() {
         @keyframes borderPulse{0%,100%{border-color:rgba(0,212,255,0.15)}50%{border-color:rgba(0,212,255,0.45)}}
         @keyframes holoShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
         @keyframes idScan{0%{top:0}100%{top:100%}}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
       ` }} />
 
       {/* ─── HERO SPLIT ─── */}
@@ -655,6 +656,51 @@ export default function AboutSection() {
               <GlowCard color="#7B2FFF" style={{ padding: '18px 20px', marginBottom: 36, borderLeft: '2px solid rgba(0,212,255,.25)' }}>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: 2, color: 'rgba(232,232,240,.65)' }}>{OWNER.bio}</p>
               </GlowCard>
+            </Reveal>
+
+            {/* ── Floating Stat Badges ── */}
+            <Reveal delay={320}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 36 }}>
+                {OWNER.stats.map((stat, i) => {
+                  const colors = ['#00D4FF', '#39FF14', '#FFB800', '#7B2FFF'];
+                  const c = colors[i % colors.length];
+                  return (
+                    <div key={i} style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                      padding: '14px 6px',
+                      background: 'rgba(8,8,20,0.3)',
+                      backdropFilter: 'blur(8px)',
+                      border: `1px solid ${c}22`,
+                      borderTop: `2px solid ${c}55`,
+                      animation: `float ${3 + i * 0.4}s ease-in-out infinite`,
+                      animationDelay: `${i * 0.3}s`,
+                      transition: 'border-color 0.3s, box-shadow 0.3s, transform 0.3s',
+                      cursor: 'default',
+                    }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = `${c}66`;
+                        e.currentTarget.style.boxShadow = `0 0 20px ${c}22, inset 0 0 20px ${c}08`;
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = `${c}22`;
+                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <span style={{
+                        fontFamily: 'var(--font-display)', fontSize: 'clamp(18px,2.5vw,24px)',
+                        fontWeight: 900, color: c,
+                        textShadow: `0 0 12px ${c}44`,
+                      }}>{stat.value}</span>
+                      <span style={{
+                        fontFamily: 'var(--font-mono)', fontSize: '6px', letterSpacing: '1.5px',
+                        color: 'rgba(232,232,240,0.4)', textAlign: 'center',
+                      }}>{stat.label.toUpperCase()}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </Reveal>
 
             {/* Proficiency */}

@@ -1,13 +1,34 @@
 /* ============================================
-   VOID OS — Portfolio Data
-   Krishu's Personal Portfolio
+   VOID OS — Portfolio Data (SINGLE SOURCE OF TRUTH)
+   ============================================
+   
+   ★ CENTRAL DATA HUB — Edit data HERE, it auto-updates everywhere!
+   
+   DATA FLOW MAP:
+   ┌─────────────────────────────────────────────────────────┐
+   │ OWNER        → About, Contact, Resume, Desktop, AI Twin │
+   │ PROJECTS     → Work, Resume, Skills popup, About stats  │
+   │ SKILLS       → Skills graph, Skills popup               │
+   │ TIMELINE     → Timeline section                         │
+   │ DSA_COUNT    → About stats, Resume, Contact boot, AI    │
+   │ PROJECT_COUNT→ About stats, Resume, Contact boot        │
+   └─────────────────────────────────────────────────────────┘
+   
+   TO ADD A NEW PROJECT:
+   1. Add entry to PROJECTS array below
+   2. Put screenshot at /public/projects/your-project.png
+   3. Add timeline entry to TIMELINE array
+   4. If new skill used, add to SKILLS array
+   That's it! Work, Resume, Skills popup update automatically.
    ============================================ */
 
-// ====== SINGLE SOURCE OF TRUTH FOR NUMBERS ======
-// Change these values ONCE → updates portfolio, resume, AI twin, everywhere
+// ====== GLOBAL COUNTERS ======
+// Change these values ONCE → auto-updates: About section stats, Resume, Contact boot sequence, AI Twin
 export const DSA_COUNT = '50+';       // ← Update when you solve more
 export const PROJECT_COUNT = '5+';     // ← Update when you ship more
 
+// ====== OWNER INFO ======
+// Auto-updates: About section, Contact section, Resume header, Desktop, AI Twin context
 export const OWNER = {
   name: 'KRISHU',
   fullName: 'Shiv Charan',
@@ -39,12 +60,14 @@ Backend engineering is the goal. Java is the weapon. The grind never stops.`,
     'And a whole VOID OS—',
     'just because I could.',
   ],
+  // Stats badges — Auto-updates: About section floating badges
   stats: [
     { label: 'Current Semester', value: '4th' },
     { label: 'DSA Problems', value: DSA_COUNT },
     { label: 'Projects Shipped', value: PROJECT_COUNT },
     { label: 'Curiosity Level', value: '∞' },
   ],
+  // Tech list — Auto-updates: Resume "Technical Skills" row
   techArsenal: [
     'Java', 'DSA', 'C', 'Python', 'OOP',
     'PHP', 'MySQL', 'SQL', 'DBMS',
@@ -76,6 +99,12 @@ export interface Project {
   year: string;
 }
 
+// ====== PROJECTS ======
+// Auto-updates: Work tunnel cards, Resume projects section, Skills popup "USED IN PROJECTS",
+//               About stats (PROJECT_COUNT), Contact boot sequence
+// 
+// HOW TO ADD: Copy any project block below, change the values, add screenshot to /public/projects/
+// IMPORTANT: 'tags' must EXACTLY match skill names in SKILLS array for Skills popup to link them
 export const PROJECTS: Project[] = [
   {
     id: 'void-os',
@@ -126,6 +155,8 @@ export interface Skill {
   connections: string[];
 }
 
+// ====== SKILL CATEGORIES ======
+// Auto-updates: Skills section sidebar categories + graph node colors
 export const SKILL_CATEGORIES = [
   { name: 'Core', color: '#FFB800' },
   { name: 'Frontend', color: '#00D4FF' },
@@ -135,6 +166,12 @@ export const SKILL_CATEGORIES = [
   { name: 'Next Up', color: '#E8E8F0' },
 ];
 
+// ====== SKILLS ======
+// Auto-updates: Skills graph (nodes + connections), Skills popup
+// 
+// HOW TO ADD: { id: 'unique-id', name: 'Display Name', category: 'Core|Frontend|Backend|Database|Tools|Next Up',
+//              proficiency: 0-100, connections: ['id-of-connected-skill'] }
+// IMPORTANT: 'name' is matched against project 'tags' for "USED IN PROJECTS" popup
 export const SKILLS: Skill[] = [
   // Core
   { id: 'java', name: 'Java', category: 'Core', proficiency: 78, connections: ['dsa', 'oop', 'c'] },
@@ -179,6 +216,12 @@ export interface TimelineEntry {
   isMilestone?: boolean;
 }
 
+// ====== TIMELINE ======
+// Auto-updates: Timeline section only (NOT auto-linked to PROJECTS)
+// 
+// HOW TO ADD: Copy any entry below, change values
+// type: 'work' (projects), 'education' (learning), 'milestone' (achievements)
+// isMilestone: true → gets special highlight treatment
 export const TIMELINE: TimelineEntry[] = [
   {
     id: 'void-os-launch',

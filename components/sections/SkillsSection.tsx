@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
-import { SKILLS, SKILL_CATEGORIES, Skill } from '@/lib/portfolio-data';
+import { SKILLS, SKILL_CATEGORIES, Skill, PROJECTS } from '@/lib/portfolio-data';
 import { audioEngine } from '@/lib/audio-engine';
 import OSWindowFrame from '@/components/global/OSWindowFrame';
 
@@ -559,6 +559,33 @@ function SkillPopup({ skill, onClose }: { skill: Skill; onClose: () => void }) {
           }}>{r.name}</span>
         ))}
       </div>
+
+      {/* Used in Projects */}
+      {(() => {
+        const usedIn = PROJECTS.filter(p =>
+          p.tags.some(t => t.toLowerCase() === skill.name.toLowerCase())
+        );
+        if (usedIn.length === 0) return null;
+        return (
+          <>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,0.4)', letterSpacing: '2px', marginBottom: 8 }}>USED IN PROJECTS</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+              {usedIn.map(p => (
+                <div key={p.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '6px 10px',
+                  background: `${p.color}08`,
+                  border: `1px solid ${p.color}22`,
+                  borderLeft: `2px solid ${p.color}55`,
+                }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#EEEEF5', flex: 1 }}>{p.title}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: p.color, letterSpacing: '1px' }}>{p.year}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      })()}
 
       <button onClick={close} style={{
         background: 'none', border: '1px solid rgba(255,255,255,0.1)',

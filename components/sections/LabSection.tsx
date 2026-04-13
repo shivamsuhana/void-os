@@ -20,6 +20,8 @@ function MusicVisualizer() {
   const [micState, setMicState] = useState<'idle' | 'listening' | 'denied'>('idle');
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const [transcript, setTranscript] = useState<string[]>([]);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
 
   const activateMic = useCallback(async () => {
     try {
@@ -36,9 +38,51 @@ function MusicVisualizer() {
     } catch { setMicState('denied'); }
   }, []);
 
+  const deactivateMic = useCallback(() => {
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    analyserRef.current = null;
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+    setMicState('idle');
+  }, []);
+
   useEffect(() => {
     return () => { streamRef.current?.getTracks().forEach(t => t.stop()); };
   }, []);
+
+  // Speech recognition
+  useEffect(() => {
+    if (micState !== 'listening') return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognition = new (SR as any)();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (e: any) => {
+      try {
+        const last = e.results[e.results.length - 1];
+        if (last?.isFinal && last[0]?.transcript) {
+          const text = last[0].transcript.trim();
+          if (text) setTranscript(prev => [...prev.slice(-8), text]);
+        }
+      } catch {}
+    };
+    recognition.onerror = () => {};
+    recognition.onend = () => {
+      if (micState === 'listening') try { recognition.start(); } catch {}
+    };
+    try { recognition.start(); } catch {}
+    recognitionRef.current = recognition;
+    return () => { try { recognition.stop(); } catch {} };
+  }, [micState]);
+
 
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
@@ -188,13 +232,17 @@ function MusicVisualizer() {
       ctx.fillStyle = `rgba(232,232,240,${0.5 + bass * 0.4})`;
       ctx.shadowColor = '#7B2FFF'; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0;
 
-      // ── EXPANDING BEAT RINGS ──
-      if (bass > 0.5) {
-        const ringPhase = (t * 2.5) % 1;
-        const ringR = maxR * (0.2 + ringPhase * 0.8);
-        ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(123,47,255,${(1 - ringPhase) * 0.12})`;
-        ctx.lineWidth = 1.5; ctx.stroke();
+      // ── EXPANDING BEAT RINGS (multiple) ──
+      if (bass > 0.45) {
+        const ringColors = ['rgba(0,212,255,', 'rgba(123,47,255,', 'rgba(57,255,20,'];
+        const speeds = [2.5, 3.2, 1.8];
+        for (let r = 0; r < 3; r++) {
+          const ringPhase = (t * speeds[r] + r * 0.3) % 1;
+          const ringR = maxR * (0.2 + ringPhase * 0.85);
+          ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+          ctx.strokeStyle = `${ringColors[r]}${((1 - ringPhase) * 0.15).toFixed(3)})`;
+          ctx.lineWidth = 2 - ringPhase * 1.5; ctx.stroke();
+        }
       }
 
       // ── ROTATING DASH RING ──
@@ -206,6 +254,14 @@ function MusicVisualizer() {
         ctx.strokeStyle = `rgba(0,212,255,${0.06 + high * 0.12})`;
         ctx.lineWidth = 1; ctx.stroke();
       }
+
+      // ── FREQUENCY LABEL at center ──
+      const dominant = bass > mid && bass > high ? 'BASS' : mid > high ? 'MIDS' : high > 0.3 ? 'TREBLE' : 'HIGH';
+      const domColor = dominant === 'BASS' ? '#FF3366' : dominant === 'MIDS' ? '#7B2FFF' : dominant === 'TREBLE' ? '#FFB800' : '#00D4FF';
+      ctx.font = `bold ${10}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = `${domColor}66`;
+      ctx.fillText(dominant, cx, cy + pulseR + 18);
 
       // ── MOUSE REACTIVE GLOW ──
       const mx = mouseRef.current.x * W, my = mouseRef.current.y * H;
@@ -220,9 +276,32 @@ function MusicVisualizer() {
     return () => { cancelAnimationFrame(frame); canvas.removeEventListener('mousemove', onMove); window.removeEventListener('resize', resize); };
   }, [micState]);
 
+
+
   return (
     <div>
       <canvas ref={canvasRef} style={{ width: '100%', height: '360px', display: 'block', cursor: 'crosshair' }} />
+
+      {/* Speech transcript display */}
+      {transcript.length > 0 && (
+        <div style={{
+          margin: '8px 0', padding: '8px 12px', maxHeight: 60, overflowY: 'auto',
+          background: 'rgba(0,212,255,0.03)', border: '1px solid rgba(0,212,255,0.1)',
+          borderLeft: '2px solid rgba(0,212,255,0.3)',
+        }}>
+          {transcript.map((line, i) => (
+            <div key={i} style={{
+              fontFamily: 'var(--font-mono)', fontSize: '9px', color: `rgba(0,212,255,${0.3 + (i / transcript.length) * 0.5})`,
+              letterSpacing: '1px', lineHeight: 1.8,
+              textShadow: i === transcript.length - 1 ? '0 0 6px rgba(0,212,255,0.3)' : 'none',
+            }}>
+              <span style={{ color: 'rgba(232,232,240,0.2)', marginRight: 6 }}>{'>'}</span>
+              {line.toUpperCase()}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, padding: '0 4px' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--text-muted)', letterSpacing: '1.5px' }}>
           ♫ {micState === 'listening' ? 'LIVE MICROPHONE · 128 BANDS' : 'PROCEDURAL MODE · 128 BANDS'}
@@ -234,16 +313,26 @@ function MusicVisualizer() {
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#FF3366', letterSpacing: '1px' }}>REC</span>
             </div>
           )}
-          <button onClick={activateMic} disabled={micState === 'listening'} style={{
-            fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px',
-            padding: '5px 12px', cursor: micState === 'listening' ? 'default' : 'pointer',
-            background: micState === 'listening' ? 'rgba(57,255,20,0.08)' : 'rgba(255,51,102,0.08)',
-            border: `1px solid ${micState === 'listening' ? 'rgba(57,255,20,0.25)' : 'rgba(255,51,102,0.25)'}`,
-            color: micState === 'listening' ? '#39FF14' : '#FF3366',
-            transition: 'all 0.3s',
-          }}>
-            {micState === 'idle' ? '🎙 ACTIVATE MIC' : micState === 'listening' ? '● LISTENING' : '✕ MIC DENIED'}
-          </button>
+          {micState === 'listening' ? (
+            <button onClick={deactivateMic} style={{
+              fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px',
+              padding: '5px 12px', cursor: 'pointer',
+              background: 'rgba(255,51,102,0.08)',
+              border: '1px solid rgba(255,51,102,0.3)',
+              color: '#FF3366', transition: 'all 0.3s',
+            }}>■ STOP MIC</button>
+          ) : (
+            <button onClick={activateMic} disabled={micState === 'denied'} style={{
+              fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px',
+              padding: '5px 12px', cursor: micState === 'denied' ? 'default' : 'pointer',
+              background: micState === 'denied' ? 'rgba(255,51,102,0.08)' : 'rgba(0,212,255,0.08)',
+              border: `1px solid ${micState === 'denied' ? 'rgba(255,51,102,0.25)' : 'rgba(0,212,255,0.25)'}`,
+              color: micState === 'denied' ? '#FF3366' : '#00D4FF',
+              transition: 'all 0.3s',
+            }}>
+              {micState === 'idle' ? '🎙 ACTIVATE MIC' : '✕ MIC DENIED'}
+            </button>
+          )}
         </div>
       </div>
     </div>

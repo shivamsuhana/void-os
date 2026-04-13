@@ -138,7 +138,7 @@ function ProjectCard3D({ project, position, index, onSelect }: {
       >
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: '6px', minWidth: '200px', textAlign: 'center', padding: '14px',
+          gap: '5px', minWidth: '220px', textAlign: 'center', padding: '8px',
           position: 'relative',
         }}>
           {/* Corner brackets */}
@@ -152,20 +152,44 @@ function ProjectCard3D({ project, position, index, onSelect }: {
               ...pos,
             } as React.CSSProperties} />
           ))}
+          {/* Thumbnail */}
+          <div style={{
+            width: '190px', height: '85px', overflow: 'hidden', position: 'relative',
+            border: `1px solid ${project.color}${hovered ? '44' : '15'}`,
+            transition: 'border-color 0.3s',
+            marginBottom: '4px',
+          }}>
+            <img src={project.image} alt={project.title} style={{
+              width: '100%', height: '100%', objectFit: 'cover',
+              opacity: hovered ? 0.85 : 0.5,
+              transition: 'opacity 0.4s',
+              filter: hovered ? 'none' : 'grayscale(0.4) brightness(0.7)',
+            }} />
+            {/* Scanline overlay on thumbnail */}
+            <div style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none',
+              background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)',
+            }} />
+            {/* Bottom fade */}
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0, height: '30px',
+              background: `linear-gradient(transparent, rgba(10,10,30,0.9))`,
+            }} />
+          </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '2px', color: project.color, opacity: 0.8 }}>{project.year}</span>
             {project.featured && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '6px', letterSpacing: '1px', color: '#39FF14', padding: '1px 4px', border: '1px solid rgba(57,255,20,0.3)' }}>★</span>}
           </div>
           <div style={{
-            fontFamily: "'Syne', sans-serif", fontSize: hovered ? '16px' : '14px',
+            fontFamily: "'Syne', sans-serif", fontSize: hovered ? '14px' : '12px',
             fontWeight: 800, color: '#EEEEF5',
             transition: 'all 0.3s', textShadow: hovered ? `0 0 25px ${project.color}66, 0 0 50px ${project.color}22` : `0 0 10px ${project.color}22`,
           }}>{project.title}</div>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: '7px', letterSpacing: '0.5px',
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '6px', letterSpacing: '0.5px',
             color: hovered ? 'rgba(232,232,240,0.55)' : 'rgba(232,232,240,0.25)',
-            transition: 'color 0.3s', maxWidth: '170px', lineHeight: 1.6,
-          }}>{project.description.slice(0, 65)}...</div>
+            transition: 'color 0.3s', maxWidth: '180px', lineHeight: 1.5,
+          }}>{project.description.slice(0, 55)}...</div>
           <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {project.tags.slice(0, 3).map(tag => (
               <span key={tag} style={{
@@ -338,7 +362,7 @@ function CaseStudyOverlay({ project, onClose }: { project: Project; onClose: () 
 
   return (
     <div ref={overlayRef} onClick={handleClose} style={{
-      position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(3,3,6,0.88)', backdropFilter: 'blur(25px)',
+      position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(3,3,6,0.88)', backdropFilter: 'blur(25px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, opacity: 0,
     }}>
       <div ref={cardRef} onClick={e => e.stopPropagation()} style={{
@@ -486,8 +510,8 @@ export default function WorkSection() {
     <div ref={containerRef} style={{ position: 'relative', background: '#050510', height: '100%', overflow: 'hidden' }}>
 
       {/* 3D Tunnel */}
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <Canvas camera={{ position: [0, 0, 5], fov: 55 }} gl={{ antialias: true }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+        <Canvas camera={{ position: [0, 0, 5], fov: 55 }} gl={{ antialias: true }} style={{ position: 'relative', zIndex: 1 }}>
           <TunnelScene scrollProgress={scrollProgress} projects={PROJECTS} onSelect={setSelectedProject} />
         </Canvas>
         <VoidPostProcessing intensity={1.0} />
