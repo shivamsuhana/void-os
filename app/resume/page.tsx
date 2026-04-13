@@ -127,11 +127,21 @@ export default function ResumePage() {
             </p>
             {/* Contact Line 1: Phone | Email | Location */}
             <p style={{ fontSize: '9pt', color: '#555', margin: '0 0 2px' }}>
-              {OWNER.phone} | {OWNER.email} | {OWNER.location}
+              {OWNER.phone}
+              {' | '}
+              <a href={`mailto:${OWNER.email}`} style={{ color: '#1a1aaa', textDecoration: 'none' }}>{OWNER.email}</a>
+              {' | '}
+              {OWNER.location}
             </p>
             {/* Contact Line 2: GitHub | LinkedIn | LeetCode | GFG */}
             <p style={{ fontSize: '9pt', color: '#555', margin: 0 }}>
-              {OWNER.github?.replace('https://', '')} | {OWNER.linkedin?.replace('https://', '')} | {OWNER.leetcode?.replace('https://', '')} | {OWNER.gfg?.replace('https://www.', '')}
+              <a href={OWNER.github} target="_blank" rel="noopener noreferrer" style={{ color: '#1a1aaa', textDecoration: 'none' }}>{OWNER.github?.replace('https://', '')}</a>
+              {' | '}
+              <a href={OWNER.linkedin} target="_blank" rel="noopener noreferrer" style={{ color: '#1a1aaa', textDecoration: 'none' }}>{OWNER.linkedin?.replace('https://', '')}</a>
+              {' | '}
+              <a href={OWNER.leetcode} target="_blank" rel="noopener noreferrer" style={{ color: '#1a1aaa', textDecoration: 'none' }}>{OWNER.leetcode?.replace('https://', '')}</a>
+              {' | '}
+              <a href={OWNER.gfg} target="_blank" rel="noopener noreferrer" style={{ color: '#1a1aaa', textDecoration: 'none' }}>{OWNER.gfg?.replace('https://www.', '')}</a>
             </p>
           </header>
 
