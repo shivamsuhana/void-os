@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import AlienCursor from '@/components/global/AlienCursor';
 
 export const metadata: Metadata = {
   title: 'VOID OS — Krishu\'s Portfolio',
@@ -50,10 +49,8 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body>
-        <AlienCursor />
         {children}
       </body>
     </html>
   );
 }
-

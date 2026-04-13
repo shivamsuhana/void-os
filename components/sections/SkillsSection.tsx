@@ -640,14 +640,7 @@ export default function SkillsSection() {
 
       {/* CRT overlay */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
-      {/* Vignette */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)' }} />
-      {/* Holographic amber grid */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.025, backgroundImage: 'linear-gradient(rgba(255,184,0,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,184,0,1) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
-      {/* Animated amber scan line */}
-      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(255,184,0,0.1), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'skills-scan 4s linear infinite' }} />
-      <style dangerouslySetInnerHTML={{ __html: '@keyframes skills-scan{0%{top:-2px}100%{top:100vh}}' }} />
-
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.45) 100%)' }} />
 
       {/* Right sidebar */}
       {!isMobile && (
@@ -655,48 +648,44 @@ export default function SkillsSection() {
           position: 'absolute', top: 50, right: 0, bottom: 0,
           width: 'clamp(200px, 22%, 280px)',
           padding: 'clamp(16px, 2vw, 28px)',
-          background: 'linear-gradient(160deg, rgba(8,8,22,0.96), rgba(5,5,16,0.92))',
-          borderLeft: '1px solid rgba(255,184,0,0.12)',
+          background: 'rgba(5,5,16,0.65)', backdropFilter: 'blur(16px)',
+          borderLeft: '1px solid rgba(0,212,255,0.08)',
           display: 'flex', flexDirection: 'column', gap: 16,
           zIndex: 10, overflowY: 'auto',
           opacity: entered ? 1 : 0,
           transform: entered ? 'translateX(0)' : 'translateX(30px)',
           transition: 'opacity 0.8s ease, transform 0.8s cubic-bezier(0.16,1,0.3,1)',
-          boxShadow: 'inset 1px 0 0 rgba(255,184,0,0.06)',
         }}>
-          {/* Top edge glow */}
-          <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,184,0,0.4), transparent)' }} />
           <div>
-            <div style={{ fontSize: '8px', letterSpacing: '3.5px', color: '#FFB800', marginBottom: 8, textShadow: '0 0 12px rgba(255,184,0,0.5)' }}>⬡ NEURAL_MAP.sys</div>
+            <div style={{ fontSize: '8px', letterSpacing: '3.5px', color: '#7B2FFF', marginBottom: 8, textShadow: '0 0 8px rgba(123,47,255,0.3)' }}>NEURAL_MAP.sys</div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)', lineHeight: 1.15, marginBottom: 8 }}>
-              Skills<br /><span style={{ color: '#FFB800', textShadow: '0 0 16px rgba(255,184,0,0.5)' }}>Network</span>
+              Skills<br /><span style={{ color: '#FFB800', textShadow: '0 0 12px rgba(255,184,0,0.3)' }}>Network</span>
             </div>
-            <div style={{ fontSize: '10px', lineHeight: 1.7, color: 'rgba(232,232,240,0.5)' }}>
+            <div style={{ fontSize: '10px', lineHeight: 1.7, color: 'rgba(232,232,240,0.55)' }}>
               Hover nodes to see connections. Click to inspect details.
             </div>
           </div>
 
-          <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,184,0,0.2), transparent)' }} />
+          <div style={{ height: 1, background: 'rgba(0,212,255,0.1)' }} />
 
           <div>
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>FILTER BY CATEGORY</div>
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 10 }}>FILTER BY CATEGORY</div>
             <CategoryFilter active={filter} onChange={f => { setFilter(f); setSelected(null); }} />
           </div>
 
-          <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,184,0,0.2), transparent)' }} />
+          <div style={{ height: 1, background: 'rgba(0,212,255,0.1)' }} />
 
           <div>
-            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.35)', marginBottom: 10 }}>NODE SIZE = PROFICIENCY</div>
+            <div style={{ fontSize: '8px', letterSpacing: '2.5px', color: 'rgba(232,232,240,0.4)', marginBottom: 10 }}>NODE SIZE = PROFICIENCY</div>
             <StatsRow />
           </div>
 
           <div style={{ flex: 1 }} />
-          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1.5px', lineHeight: 2 }}>
+          <div style={{ fontSize: '7px', color: 'rgba(232,232,240,0.25)', letterSpacing: '1.5px', lineHeight: 2 }}>
             SKILLS.sys v2.0<br />NODES: LIVE SIMULATION<br />ENGINE: FORCE-DIRECTED GRAPH
           </div>
         </div>
       )}
-
 
       {/* Graph canvas area */}
       <div style={{
