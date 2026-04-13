@@ -103,55 +103,75 @@ function TimelineCard({ entry, index, active, side }: { entry: TimelineEntry; in
     <div
       ref={cardRef}
       onMouseEnter={() => setHov(true)}
-      onMouseLeave={(e) => { setHov(false); e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+      onMouseLeave={(e) => {
+        setHov(false);
+        e.currentTarget.style.background = `linear-gradient(135deg, rgba(8,8,20,0.9), rgba(8,8,20,0.7))`;
+        e.currentTarget.style.boxShadow = 'none';
+      }}
       onMouseMove={handleMouseMove}
       style={{
         maxWidth: 380, width: '100%',
-        padding: '20px 22px',
-        background: 'rgba(255,255,255,0.05)',
-        borderTop: `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
-        borderBottom: `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
+        padding: '22px 24px',
+        background: `linear-gradient(135deg, rgba(8,8,20,0.9), rgba(8,8,20,0.7))`,
+        borderTop: `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '44') : 'rgba(255,255,255,0.06)'}`,
+        borderBottom: `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '44') : 'rgba(255,255,255,0.06)'}`,
         borderLeft: side === 'left'
           ? `3px solid ${active ? entry.color : entry.color + '44'}`
-          : `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
+          : `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '44') : 'rgba(255,255,255,0.06)'}`,
         borderRight: side === 'right'
           ? `3px solid ${active ? entry.color : entry.color + '44'}`
-          : `1px solid ${active ? (hov ? entry.color + '66' : entry.color + '33') : 'rgba(255,255,255,0.08)'}`,
+          : `1px solid ${active ? (hov ? entry.color + '88' : entry.color + '44') : 'rgba(255,255,255,0.06)'}`,
         borderRadius: '2px',
-        opacity: active ? 1 : 0.4,
-        transform: active ? (hov ? 'translateY(-4px) scale(1.02)' : 'translateY(0)') : 'translateY(10px)',
-        transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+        opacity: active ? 1 : 0.3,
+        transform: active ? (hov ? 'translateY(-6px) scale(1.03)' : 'translateY(0)') : 'translateY(14px)',
+        transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
         position: 'relative', overflow: 'hidden', cursor: 'default',
-        boxShadow: hov ? `0 8px 40px rgba(${rgb},0.15), 0 0 20px rgba(${rgb},0.05)` : 'none',
+        boxShadow: hov
+          ? `0 12px 50px rgba(${rgb},0.2), 0 0 30px rgba(${rgb},0.08), inset 0 0 40px rgba(${rgb},0.04)`
+          : active ? `0 4px 20px rgba(${rgb},0.06)` : 'none',
       }}
     >
-      {/* Top glow */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: hov ? 2 : 1, background: `linear-gradient(90deg, transparent, ${entry.color}${hov ? '88' : '33'}, transparent)`, opacity: active ? 1 : 0, transition: 'all 0.3s' }} />
+      {/* Scanline overlay */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px)', zIndex: 0 }} />
+      {/* Top glow bar */}
+      <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: hov ? 2 : 1, background: `linear-gradient(90deg, transparent, ${entry.color}${hov ? 'aa' : '55'}, transparent)`, opacity: active ? 1 : 0, transition: 'all 0.4s', zIndex: 1 }} />
+      {/* Corner accents */}
+      {active && [
+        { top: 6, left: 6, borderTop: `1px solid ${entry.color}88`, borderLeft: `1px solid ${entry.color}88` },
+        { top: 6, right: 6, borderTop: `1px solid ${entry.color}88`, borderRight: `1px solid ${entry.color}88` },
+        { bottom: 6, left: 6, borderBottom: `1px solid ${entry.color}88`, borderLeft: `1px solid ${entry.color}88` },
+        { bottom: 6, right: 6, borderBottom: `1px solid ${entry.color}88`, borderRight: `1px solid ${entry.color}88` },
+      ].map((s, i) => <div key={i} style={{ position: 'absolute', width: 10, height: 10, pointerEvents: 'none', zIndex: 1, opacity: hov ? 1 : 0.5, transition: 'opacity 0.3s', ...s }} />)}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: entry.color, letterSpacing: '2px', textShadow: active ? `0 0 8px ${entry.color}40` : 'none' }}>{entry.period}</span>
-        {entry.isMilestone && (
-          <span style={{
-            fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#39FF14', letterSpacing: '1px',
-            padding: '2px 8px', border: '1px solid rgba(57,255,20,0.25)', background: 'rgba(57,255,20,0.06)',
-            textShadow: '0 0 6px rgba(57,255,20,0.3)',
-          }}>★ MILESTONE</span>
-        )}
-      </div>
+      {/* Content */}
+      <div style={{ position: 'relative', zIndex: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: entry.color, letterSpacing: '2.5px', textShadow: active ? `0 0 10px ${entry.color}60` : 'none' }}>{entry.period}</span>
+          {entry.isMilestone && (
+            <span style={{
+              fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#39FF14', letterSpacing: '1.5px',
+              padding: '3px 10px', border: '1px solid rgba(57,255,20,0.35)', background: 'rgba(57,255,20,0.08)',
+              textShadow: '0 0 8px rgba(57,255,20,0.5)', boxShadow: '0 0 10px rgba(57,255,20,0.1)',
+            }}>⬡ MILESTONE</span>
+          )}
+        </div>
 
-      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: hov ? '17px' : '16px', fontWeight: 700, marginBottom: 4, color: hov ? '#fff' : '#E8E8F0', textShadow: hov ? `0 0 16px ${entry.color}30` : 'none', transition: 'all 0.3s' }}>{entry.title}</h3>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: entry.color, marginBottom: 10, letterSpacing: '1px', opacity: hov ? 0.8 : 0.5, transition: 'opacity 0.3s' }}>{entry.company}</div>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: `rgba(232,232,240,${hov ? 0.7 : 0.55})`, lineHeight: 1.8, marginBottom: 12, transition: 'color 0.3s' }}>{entry.description}</p>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 800, marginBottom: 4, color: hov ? '#fff' : '#E8E8F0', textShadow: hov ? `0 0 20px ${entry.color}50, 0 0 40px ${entry.color}20` : 'none', transition: 'all 0.3s', letterSpacing: '0.5px' }}>{entry.title}</h3>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: entry.color, marginBottom: 12, letterSpacing: '1.5px', opacity: hov ? 1 : 0.6, transition: 'opacity 0.3s', textShadow: hov ? `0 0 8px ${entry.color}50` : 'none' }}>{entry.company}</div>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: `rgba(232,232,240,${hov ? 0.75 : 0.5})`, lineHeight: 1.9, marginBottom: 14, transition: 'color 0.3s' }}>{entry.description}</p>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-        {entry.tags.map(tag => (
-          <span key={tag} style={{
-            fontFamily: 'var(--font-mono)', fontSize: '8px', padding: '2px 8px',
-            border: `1px solid ${hov ? entry.color + '40' : entry.color + '18'}`,
-            color: hov ? entry.color : `rgba(${rgb},0.5)`, letterSpacing: '0.5px',
-            transition: 'all 0.3s',
-          }}>{tag}</span>
-        ))}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+          {entry.tags.map(tag => (
+            <span key={tag} style={{
+              fontFamily: 'var(--font-mono)', fontSize: '8px', padding: '3px 10px',
+              border: `1px solid ${hov ? entry.color + '55' : entry.color + '22'}`,
+              color: hov ? entry.color : `rgba(${rgb},0.55)`,
+              letterSpacing: '0.5px', transition: 'all 0.3s',
+              background: hov ? `rgba(${rgb},0.06)` : 'transparent',
+              textShadow: hov ? `0 0 6px ${entry.color}44` : 'none',
+            }}>{tag}</span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -213,22 +233,29 @@ export default function TimelineSection() {
   return (
     <OSWindowFrame name="TIME" ext=".log" color="#39FF14">
     <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
-      <SectionAmbientBG color="#39FF14" particleCount={70} />
+      <SectionAmbientBG color="#39FF14" particleCount={40} />
+      {/* CRT scanlines */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
+      {/* Vignette */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)' }} />
+      {/* Holographic grid */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(57,255,20,1) 1px,transparent 1px),linear-gradient(90deg,rgba(57,255,20,1) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
+      {/* Animated scan line */}
+      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(57,255,20,0.12), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'timeline-scan 5s linear infinite' }} />
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes timeline-scan{0%{top:-2px}100%{top:100vh}}' }} />
 
       <div ref={containerRef} style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(40px,6vw,80px) clamp(20px,5vw,60px)', position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div style={{ marginBottom: 60, textAlign: 'center' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-            <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, #39FF14)' }} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#39FF14', textShadow: '0 0 10px rgba(57,255,20,.3)' }}>04 // TIME.log</span>
-            <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, #39FF14, transparent)' }} />
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #39FF14)' }} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#39FF14', textShadow: '0 0 12px rgba(57,255,20,.5)' }}>04 // TIME.log</span>
+            <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, #39FF14, transparent)' }} />
           </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(32px,5vw,48px)', lineHeight: 1.1, marginBottom: 8, color: '#E8E8F0' }}>
-            Signal <span style={{ color: '#39FF14', textShadow: '0 0 20px rgba(57,255,20,.3)' }}>Pathway</span>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(32px,5vw,52px)', lineHeight: 1.1, marginBottom: 10, color: '#E8E8F0', textShadow: '0 0 40px rgba(57,255,20,0.1)' }}>
+            Signal <span style={{ color: '#39FF14', textShadow: '0 0 30px rgba(57,255,20,.5), 0 0 60px rgba(57,255,20,.2)' }}>Pathway</span>
           </h2>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'rgba(232,232,240,.55)', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'rgba(232,232,240,.55)', maxWidth: 500, margin: '0 auto', lineHeight: 1.8 }}>
             Scroll to propagate the signal through my journey — each node lights up as the data reaches it.
           </p>
         </div>
