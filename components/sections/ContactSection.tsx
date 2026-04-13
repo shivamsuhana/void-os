@@ -5,621 +5,571 @@ import { useVoidStore } from '@/lib/store';
 import { OWNER } from '@/lib/portfolio-data';
 import OSWindowFrame from '@/components/global/OSWindowFrame';
 
-/* ═══════════════════════════════════════════
-   COLORS
-   ═══════════════════════════════════════════ */
-const C = {
-  void: '#030306', blue: '#00D4FF', white: '#E8E8F0',
-  amber: '#FFB800', green: '#39FF14', purple: '#7B2FFF', red: '#FF3B5C',
-};
+/* ─── palette ─────────────────────────────── */
+const C = { void: '#030306', cyan: '#00D4FF', white: '#E8E8F0', amber: '#FFB800', green: '#39FF14', purple: '#7B2FFF', red: '#FF3B5C', pink: '#FF3366' };
 
-/* ═══════════════════════════════════════════
-   SOUND ENGINE — Alien 2045 sound effects
-   ═══════════════════════════════════════════ */
-function playSound(type: 'key' | 'send' | 'success' | 'error') {
-  try {
-    const ctx = new AudioContext();
-    const now = ctx.currentTime;
-
-    if (type === 'key') {
-      // Subtle keypress tick
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(2800 + Math.random() * 400, now);
-      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.04);
-      gain.gain.setValueAtTime(0.03, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.05);
-    }
-
-    if (type === 'send') {
-      // Deep transmission whoosh — multi-layered
-      for (let i = 0; i < 4; i++) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const pan = ctx.createStereoPanner();
-        osc.type = i < 2 ? 'sawtooth' : 'sine';
-        osc.frequency.setValueAtTime(200 + i * 300, now + i * 0.15);
-        osc.frequency.exponentialRampToValueAtTime(80 + i * 100, now + 0.8 + i * 0.15);
-        gain.gain.setValueAtTime(0.06, now + i * 0.15);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2 + i * 0.15);
-        pan.pan.setValueAtTime(-0.5 + i * 0.33, now);
-        osc.connect(gain).connect(pan).connect(ctx.destination);
-        osc.start(now + i * 0.15); osc.stop(now + 1.5 + i * 0.15);
-      }
-      // White noise burst
-      const bufferSize = ctx.sampleRate * 1.2;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.02;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const nGain = ctx.createGain();
-      nGain.gain.setValueAtTime(0.08, now);
-      nGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass'; filter.frequency.value = 1500; filter.Q.value = 3;
-      noise.connect(filter).connect(nGain).connect(ctx.destination);
-      noise.start(now); noise.stop(now + 1.2);
-    }
-
-    if (type === 'success') {
-      // Triumphant ascending chord
-      [440, 554, 659, 880, 1100].forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq * 0.5, now + i * 0.08);
-        osc.frequency.exponentialRampToValueAtTime(freq, now + 0.3 + i * 0.08);
-        gain.gain.setValueAtTime(0.08, now + i * 0.08);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5 + i * 0.08);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(now + i * 0.08); osc.stop(now + 1.6);
-      });
-      // Shimmer
-      const osc2 = ctx.createOscillator();
-      const g2 = ctx.createGain();
-      osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(4000, now + 0.5);
-      osc2.frequency.exponentialRampToValueAtTime(8000, now + 1.2);
-      g2.gain.setValueAtTime(0.015, now + 0.5);
-      g2.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-      osc2.connect(g2).connect(ctx.destination);
-      osc2.start(now + 0.5); osc2.stop(now + 1.5);
-    }
-
-    if (type === 'error') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(200, now);
-      osc.frequency.setValueAtTime(150, now + 0.1);
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.2);
-    }
-
-    setTimeout(() => ctx.close(), 3000);
-  } catch { /* Audio not supported */ }
+/* ─── tiny helpers ─────────────────────────── */
+function playClick() {
+  try { const a = new AudioContext(), o = a.createOscillator(), g = a.createGain(); o.type='sine'; o.frequency.value=3000; o.frequency.exponentialRampToValueAtTime(600,a.currentTime+.05); g.gain.setValueAtTime(.03,a.currentTime); g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.06); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+.07); setTimeout(()=>a.close(),500); } catch{}
+}
+function playSend() {
+  try { const a=new AudioContext(),now=a.currentTime; [200,400,700,1100].forEach((f,i)=>{ const o=a.createOscillator(),g=a.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(f,now+i*.12); g.gain.setValueAtTime(.05,now+i*.12); g.gain.exponentialRampToValueAtTime(.001,now+.9+i*.12); o.connect(g).connect(a.destination); o.start(now+i*.12); o.stop(now+1.2+i*.12); }); setTimeout(()=>a.close(),3000); } catch{}
 }
 
-/* ═══════════════════════════════════════════
-   RADAR CANVAS
-   ═══════════════════════════════════════════ */
-function RadarCanvas() {
+/* ══════════════════════════════════════════════════
+   DEEP SPACE BACKGROUND CANVAS
+   ══════════════════════════════════════════════════ */
+function SpaceBackground() {
   const ref = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
     const c = ref.current; if (!c) return;
     const ctx = c.getContext('2d')!;
-    const size = 140;
-    c.width = size; c.height = size;
-    let t = 0;
-    let frame: number;
+    let t = 0; let frame: number;
+    const resize = () => { c.width = c.offsetWidth; c.height = c.offsetHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Stars
+    const stars = Array.from({ length: 120 }, () => ({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() * 1.2 + 0.2,
+      s: Math.random() * 0.003 + 0.001,
+      a: Math.random(),
+    }));
 
     const draw = () => {
-      t += 0.018;
-      const cx = size / 2, cy = size / 2, r = size / 2 - 8;
-      ctx.clearRect(0, 0, size, size);
+      t += 0.008;
+      const W = c.width, H = c.height;
+      ctx.clearRect(0, 0, W, H);
 
-      // Rings
-      [0.3, 0.6, 0.9].forEach(s => {
-        ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0,212,255,0.15)'; ctx.lineWidth = 0.5; ctx.stroke();
+      // Deep BG
+      ctx.fillStyle = '#030306';
+      ctx.fillRect(0, 0, W, H);
+
+      // Perspective grid — converging to horizon
+      const horizon = H * 0.52;
+      const vp = W / 2;
+      ctx.strokeStyle = 'rgba(255,51,102,0.06)';
+      ctx.lineWidth = 1;
+      // Vertical lines
+      for (let i = -14; i <= 14; i++) {
+        const dx = (i / 14) * W * 0.9;
+        ctx.beginPath();
+        ctx.moveTo(vp + dx, horizon);
+        ctx.lineTo(vp + dx * 5, H + 200);
+        ctx.stroke();
+      }
+      // Horizontal lines
+      for (let i = 0; i < 10; i++) {
+        const pct = (i / 10) ** 1.4;
+        const y = horizon + (H - horizon + 200) * pct;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      // Top ceiling grid
+      ctx.strokeStyle = 'rgba(0,212,255,0.025)';
+      for (let i = -8; i <= 8; i++) {
+        const dx = (i / 8) * W * 0.6;
+        ctx.beginPath(); ctx.moveTo(vp + dx, horizon); ctx.lineTo(vp + dx * 4, -200); ctx.stroke();
+      }
+      for (let i = 0; i < 6; i++) {
+        const pct = (i / 6) ** 1.4;
+        const y = horizon - (horizon + 200) * pct;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // Stars
+      stars.forEach(s => {
+        s.a += s.s;
+        const alpha = (Math.sin(s.a) + 1) * 0.4 + 0.1;
+        ctx.beginPath(); ctx.arc(s.x * W, s.y * H * 0.9, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(232,232,240,${alpha})`; ctx.fill();
       });
 
-      // Cross
-      ctx.strokeStyle = 'rgba(0,212,255,0.1)'; ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+      // Ambient nebula
+      const neb = ctx.createRadialGradient(vp, horizon, 0, vp, horizon, W * 0.6);
+      neb.addColorStop(0, `rgba(255,51,102,${0.04 + Math.sin(t * 0.4) * 0.02})`);
+      neb.addColorStop(0.5, `rgba(0,212,255,${0.015})`);
+      neb.addColorStop(1, 'transparent');
+      ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
 
-      // Sweep
-      const sweepAngle = t % (Math.PI * 2);
-      const sx = cx + Math.cos(sweepAngle) * r;
-      const sy = cy + Math.sin(sweepAngle) * r;
-      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(sx, sy);
-      ctx.strokeStyle = 'rgba(0,212,255,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+      frame = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); };
+  }, []);
+  return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />;
+}
 
-      // Sweep trail
-      const g = ctx.createRadialGradient(sx * 0.5 + cx * 0.5, sy * 0.5 + cy * 0.5, 0, cx, cy, r);
-      g.addColorStop(0, 'rgba(0,212,255,0.1)');
-      g.addColorStop(1, 'transparent');
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r, sweepAngle - 0.5, sweepAngle);
-      ctx.closePath(); ctx.fill();
+/* ══════════════════════════════════════════════════
+   TRANSMISSION BEAM — central animated circle
+   ══════════════════════════════════════════════════ */
+function TransmissionBeam({ active, sending, size = 200 }: { active: boolean; sending: boolean; size?: number }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext('2d')!;
+    const S = size; c.width = S; c.height = S;
+    const cx = S / 2, cy = S / 2;
+    let t = 0; let frame: number;
 
-      // Blips
-      [{ a: t * 0.3 + 1, d: 0.45 }, { a: t * 0.2 + 3, d: 0.7 }, { a: t * 0.15 + 5, d: 0.55 }].forEach(b => {
-        const bx = cx + Math.cos(b.a) * r * b.d;
-        const by = cy + Math.sin(b.a) * r * b.d;
-        const diff = ((sweepAngle - b.a) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-        const alpha = diff < 1 ? (1 - diff) * 0.8 : 0.1;
-        ctx.beginPath(); ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0,212,255,${alpha})`; ctx.fill();
-        if (alpha > 0.3) {
-          ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0,212,255,${alpha * 0.2})`; ctx.fill();
+    const draw = () => {
+      t += 0.03;
+      ctx.clearRect(0, 0, S, S);
+
+      // Outer rings
+      [80, 70, 60].forEach((r, i) => {
+        const alpha = sending ? (0.3 + Math.sin(t * 4 + i) * 0.25) : (active ? 0.12 + i * 0.04 : 0.04 + i * 0.02);
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,51,102,${alpha})`; ctx.lineWidth = 1;
+        ctx.shadowColor = C.pink; ctx.shadowBlur = sending ? 20 : 4;
+        ctx.stroke(); ctx.shadowBlur = 0;
+      });
+
+      // Rotating dash segments
+      const segs = 24;
+      for (let i = 0; i < segs; i++) {
+        const a1 = (i / segs) * Math.PI * 2 + t * (sending ? 2 : 0.5);
+        const a2 = a1 + (Math.PI * 2 / segs) * 0.4;
+        const r = 75 + (sending ? Math.sin(t * 8 + i * 0.3) * 6 : 0);
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, a1, a2);
+        const alpha = sending ? 0.8 : (active ? 0.35 : 0.12);
+        ctx.strokeStyle = `rgba(255,51,102,${alpha})`; ctx.lineWidth = sending ? 2 : 1;
+        ctx.shadowColor = C.pink; ctx.shadowBlur = sending ? 12 : 2;
+        ctx.stroke(); ctx.shadowBlur = 0;
+      }
+
+      // Radar sweep when active
+      if (active || sending) {
+        const sweepA = t * (sending ? 3 : 1.5);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(sweepA);
+        const sweep = ctx.createLinearGradient(0, 0, 60, 0);
+        sweep.addColorStop(0, `rgba(255,51,102,${sending ? 0.6 : 0.3})`);
+        sweep.addColorStop(1, 'transparent');
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 70, -0.3, 0.3);
+        ctx.closePath();
+        ctx.fillStyle = sweep; ctx.fill();
+        ctx.restore();
+      }
+
+      // Core
+      const coreR = sending ? 22 + Math.sin(t * 8) * 3 : 18;
+      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+      coreGrad.addColorStop(0, sending ? 'rgba(255,51,102,0.9)' : (active ? 'rgba(255,51,102,0.5)' : 'rgba(255,51,102,0.15)'));
+      coreGrad.addColorStop(1, 'transparent');
+      ctx.beginPath(); ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+      ctx.fillStyle = coreGrad; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, cy, S * 0.03, 0, Math.PI * 2);
+      ctx.fillStyle = sending ? C.pink : (active ? 'rgba(255,51,102,0.7)' : 'rgba(255,51,102,0.3)');
+      ctx.shadowColor = C.pink; ctx.shadowBlur = sending ? 20 : 8;
+      ctx.fill(); ctx.shadowBlur = 0;
+
+      // Sending particles
+      if (sending) {
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2 + t * 2;
+          const r = S * 0.15 + Math.sin(t * 6 + i) * S * 0.075;
+          const px = cx + Math.cos(a) * r, py = cy + Math.sin(a) * r;
+          ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0,212,255,${0.6 + Math.sin(t * 4 + i) * 0.4})`; ctx.fill();
         }
-      });
-
-      // Center
-      ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(0,212,255,${0.5 + Math.sin(t * 3) * 0.3})`; ctx.fill();
+      }
 
       frame = requestAnimationFrame(draw);
     };
     draw();
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [active, sending, size]);
 
-  return <canvas ref={ref} style={{ width: 140, height: 140, display: 'block' }} />;
+  return <canvas ref={ref} style={{ width: size, height: size, display: 'block' }} />;
 }
 
-/* ═══════════════════════════════════════════
-   SUCCESS POPUP — Alien tech achievement
-   ═══════════════════════════════════════════ */
-function SuccessPopup({ name, onBack }: { name: string; onBack: () => void }) {
-  const [vis, setVis] = useState(false);
-  const [ring1, setRing1] = useState(false);
-  const [ring2, setRing2] = useState(false);
-  const [textIn, setTextIn] = useState(false);
-
-  useEffect(() => {
-    setTimeout(() => setVis(true), 50);
-    setTimeout(() => setRing1(true), 200);
-    setTimeout(() => setRing2(true), 400);
-    setTimeout(() => setTextIn(true), 600);
-  }, []);
+/* ══════════════════════════════════════════════════
+   ALIEN SOCIAL NODE
+   ══════════════════════════════════════════════════ */
+function SocialNode({ icon, label, handle, href, color, index }: {
+  icon: string; label: string; handle: string; href: string; color: string; index: number;
+}) {
+  const [hov, setHov] = useState(false);
+  const rgb = `${parseInt(color.slice(1,3),16)},${parseInt(color.slice(3,5),16)},${parseInt(color.slice(5,7),16)}`;
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      background: vis ? 'rgba(0,0,0,0.85)' : 'transparent',
-      backdropFilter: vis ? 'blur(20px)' : 'none',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)',
-      opacity: vis ? 1 : 0,
-    }}>
+    <a href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <div style={{
-        textAlign: 'center', maxWidth: 420,
-        transform: vis ? 'scale(1)' : 'scale(0.8)',
-        transition: 'transform 0.6s cubic-bezier(0.16,1,0.3,1)',
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '10px 14px',
+        background: hov ? `linear-gradient(135deg, rgba(${rgb},0.15), rgba(3,3,6,0.95))` : 'rgba(5,4,16,0.7)',
+        border: `1px solid ${hov ? color + '66' : color + '1a'}`,
+        transform: hov ? 'translateX(6px) scale(1.02)' : 'translateX(0) scale(1)',
+        transition: 'all 0.3s cubic-bezier(0.16,1,0.3,1)',
+        boxShadow: hov ? `0 0 24px rgba(${rgb},0.2), inset 0 0 20px rgba(${rgb},0.05)` : 'none',
+        cursor: 'pointer', position: 'relative', overflow: 'hidden',
+        animationDelay: `${index * 0.1}s`,
       }}>
-        {/* Concentric rings */}
-        <div style={{ position: 'relative', width: 120, height: 120, margin: '0 auto 30px' }}>
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: '50%',
-            border: `2px solid ${C.green}`,
-            transform: ring1 ? 'scale(1)' : 'scale(0)',
-            opacity: ring1 ? 0.3 : 0,
-            transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
-            boxShadow: `0 0 30px ${C.green}40`,
-          }} />
-          <div style={{
-            position: 'absolute', inset: 15, borderRadius: '50%',
-            border: `2px solid ${C.blue}`,
-            transform: ring2 ? 'scale(1)' : 'scale(0)',
-            opacity: ring2 ? 0.5 : 0,
-            transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s',
-            boxShadow: `0 0 20px ${C.blue}40`,
-          }} />
-          <div style={{
-            position: 'absolute', inset: 30, borderRadius: '50%',
-            background: `radial-gradient(circle, ${C.green}33, transparent)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transform: textIn ? 'scale(1)' : 'scale(0)',
-            transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1) 0.3s',
-          }}>
-            <span style={{ fontSize: '36px', filter: `drop-shadow(0 0 20px ${C.green})` }}>✓</span>
-          </div>
+        {/* Left pulse bar */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: hov ? 3 : 1, background: color, opacity: hov ? 1 : 0.25, boxShadow: hov ? `0 0 10px ${color}` : 'none', transition: 'all 0.3s' }} />
+        {/* Top glow line */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${color}${hov ? '77' : '1a'}, transparent)`, transition: 'all 0.3s' }} />
+
+        {/* Icon hex */}
+        <div style={{
+          width: 36, height: 36, flexShrink: 0, position: 'relative',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: `rgba(${rgb},${hov ? 0.2 : 0.07})`,
+          border: `1px solid ${color}${hov ? '55' : '1a'}`,
+          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+          transition: 'all 0.3s',
+          boxShadow: hov ? `0 0 16px rgba(${rgb},0.4)` : 'none',
+        }}>
+          <span style={{ fontSize: '15px' }}>{icon}</span>
         </div>
 
-        {/* Text */}
-        <div style={{
-          opacity: textIn ? 1 : 0,
-          transform: textIn ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 0.5s ease 0.4s',
-        }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '22px', color: C.green, marginBottom: 8, textShadow: `0 0 20px ${C.green}60`, letterSpacing: '2px' }}>
-            TRANSMISSION COMPLETE
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 1 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2.5px', color, textShadow: hov ? `0 0 10px ${color}` : 'none', transition: 'all 0.3s' }}>{label}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: hov ? color : 'rgba(232,232,240,0.15)', transition: 'color 0.3s' }}>↗</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(232,232,240,0.6)', lineHeight: 2, marginBottom: 6 }}>
-            Signal from <span style={{ color: C.blue, fontWeight: 600 }}>{name.toUpperCase()}</span> received.
-          </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(232,232,240,0.4)', marginBottom: 30, letterSpacing: '1px' }}>
-            Response ETA: {'< 24 hours'} · Delivered to {OWNER.email}
-          </div>
-
-          <button onClick={onBack} style={{
-            fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '2.5px',
-            color: C.blue, padding: '12px 30px', cursor: 'pointer',
-            border: `1px solid ${C.blue}55`, background: `${C.blue}10`,
-            transition: 'all 0.2s',
-            boxShadow: `0 0 20px ${C.blue}15`,
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}22`; e.currentTarget.style.boxShadow = `0 0 30px ${C.blue}30`; }}
-            onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}10`; e.currentTarget.style.boxShadow = `0 0 20px ${C.blue}15`; }}
-          >← SEND ANOTHER</button>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: hov ? '#E8E8F0' : 'rgba(232,232,240,0.55)', transition: 'color 0.3s', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{handle}</span>
         </div>
       </div>
+    </a>
+  );
+}
+
+/* ══════════════════════════════════════════════════
+   SUCCESS SCREEN
+   ══════════════════════════════════════════════════ */
+function SuccessScreen({ name, onBack }: { name: string; onBack: () => void }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => { setTimeout(() => setShow(true), 100); }, []);
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(3,3,6,0.97)', backdropFilter: 'blur(20px)' }}>
+      <div style={{ position: 'relative', marginBottom: 32 }}>
+        {[1,2,3,4].map(i => (
+          <div key={i} style={{ position: 'absolute', inset: -i * 20, borderRadius: '50%', border: `1px solid rgba(57,255,20,${0.5 - i * 0.1})`, opacity: 0, animation: `success-ring 2s ease-out ${i * 0.3}s infinite` }} />
+        ))}
+        <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'radial-gradient(circle, rgba(57,255,20,0.2), transparent)', border: '1px solid rgba(57,255,20,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: show ? 'scale(1)' : 'scale(0)', transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1)', boxShadow: '0 0 40px rgba(57,255,20,0.3)' }}>
+          <span style={{ fontSize: '40px', filter: 'drop-shadow(0 0 20px #39FF14)' }}>✓</span>
+        </div>
+      </div>
+      <div style={{ opacity: show ? 1 : 0, transform: show ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.6s ease 0.3s', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '28px', color: C.green, textShadow: '0 0 30px rgba(57,255,20,0.6)', letterSpacing: '3px', marginBottom: 12 }}>TRANSMISSION DELIVERED</div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(232,232,240,0.5)', lineHeight: 2, marginBottom: 6 }}>
+          Signal from <span style={{ color: C.cyan }}>{name.toUpperCase()}</span> received and logged.
+        </div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(232,232,240,0.3)', letterSpacing: '1.5px', marginBottom: 32 }}>
+          ETA: {'<'} 24h · Routed to {OWNER.email}
+        </div>
+        <button onClick={onBack} style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '3px', color: C.cyan, padding: '12px 36px', border: `1px solid ${C.cyan}44`, background: `${C.cyan}0d`, cursor: 'pointer', transition: 'all 0.2s', boxShadow: `0 0 20px ${C.cyan}15` }}
+          onMouseEnter={e => { e.currentTarget.style.background=`${C.cyan}22`; e.currentTarget.style.boxShadow=`0 0 30px ${C.cyan}30`; }}
+          onMouseLeave={e => { e.currentTarget.style.background=`${C.cyan}0d`; e.currentTarget.style.boxShadow=`0 0 20px ${C.cyan}15`; }}>
+          ← NEW TRANSMISSION
+        </button>
+      </div>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes success-ring{0%{transform:scale(1);opacity:0.6}100%{transform:scale(2);opacity:0}}' }} />
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════
-   CONTACT SECTION — All-in-terminal flow
-   ═══════════════════════════════════════════ */
-type TStep = 'booting' | 'name' | 'email' | 'subject' | 'message' | 'confirm' | 'sending' | 'sent';
-type LineData = { text: string; color: string; prompt: boolean; id: number };
+/* ══════════════════════════════════════════════════
+   MAIN CONTACT SECTION
+   ══════════════════════════════════════════════════ */
+type Step = 'boot' | 'name' | 'email' | 'subject' | 'message' | 'confirm' | 'sending' | 'sent';
+type Line = { text: string; color: string; prompt: boolean; id: number };
 
 export default function ContactSection() {
   const { navigateTo } = useVoidStore();
-  const [lines, setLines] = useState<LineData[]>([]);
-  const [step, setStep] = useState<TStep>('booting');
+  const [lines, setLines] = useState<Line[]>([]);
+  const [step, setStep] = useState<Step>('boot');
   const [input, setInput] = useState('');
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
-  const [headerIn, setHeaderIn] = useState(false);
-  const [clock, setClock] = useState(new Date());
   const [showSuccess, setShowSuccess] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
+  const [clock, setClock] = useState(new Date());
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const addLine = useCallback((text: string, color: string, prompt = false) => {
+  const push = useCallback((text: string, color = 'rgba(232,232,240,0.65)', prompt = false) => {
     setLines(p => [...p, { text, color, prompt, id: Date.now() + Math.random() }]);
-    setTimeout(() => { if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight; }, 40);
+    setTimeout(() => { if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight; }, 30);
   }, []);
 
-  // Boot sequence
   useEffect(() => {
-    setTimeout(() => setHeaderIn(true), 100);
-    const bootLines = [
-      { text: 'CONTACT.net v2045.1 — INITIALIZING...', color: C.blue, delay: 0 },
-      { text: 'Establishing secure channel...', color: 'rgba(232,232,240,0.5)', delay: 280 },
-      { text: 'Encrypting transmission route (AES-256)...', color: 'rgba(232,232,240,0.5)', delay: 560 },
-      { text: `Signal locked. Timezone: UTC+5:30`, color: C.green, delay: 840 },
-      { text: 'Status: AVAILABLE FOR NEW PROJECTS', color: C.green, delay: 1100 },
-      { text: '────────────────────────────────────────', color: 'rgba(232,232,240,0.1)', delay: 1350 },
-      { text: 'READY. Begin transmission.', color: C.white, delay: 1600 },
-      { text: '', color: '', delay: 1700 },
-      { text: '> IDENTIFY YOURSELF — Enter your name:', color: C.amber, delay: 1900 },
+    const seq = [
+      { t: '> CONTACT.net v2045 — INITIALIZING NEURAL CHANNEL', c: C.cyan, d: 0 },
+      { t: '  Establishing quantum-encrypted tunnel...', c: 'rgba(232,232,240,0.4)', d: 280 },
+      { t: '  [OK] Route secured · AES-256-Q handshake complete', c: C.green, d: 560 },
+      { t: '  [OK] STATUS: AVAILABLE FOR NEW PROJECTS', c: C.green, d: 840 },
+      { t: '  [OK] LOAD: LOW · ETA: < 24 HOURS', c: C.green, d: 1100 },
+      { t: '──────────────────────────────────', c: 'rgba(232,232,240,0.07)', d: 1350 },
+      { t: '', c: '', d: 1500 },
+      { t: '> IDENTIFY YOURSELF — Enter your name:', c: C.amber, d: 1700 },
     ];
-    bootLines.forEach(({ text, color, delay }) => setTimeout(() => addLine(text, color), delay + 300));
-    setTimeout(() => { setStep('name'); setTimeout(() => inputRef.current?.focus(), 80); }, 2400);
+    seq.forEach(({ t, c, d }) => setTimeout(() => push(t, c), d + 200));
+    setTimeout(() => { setStep('name'); setTimeout(() => inputRef.current?.focus(), 80); }, 2100);
     const ti = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(ti);
-  }, [addLine]);
+  }, [push]);
 
-  // Focus management
   useEffect(() => {
     if (step === 'message') textareaRef.current?.focus();
-    else if (!['booting', 'sending', 'sent'].includes(step)) inputRef.current?.focus();
+    else if (!['boot', 'sending', 'sent'].includes(step)) { setTimeout(() => inputRef.current?.focus(), 40); }
   }, [step]);
 
-  const handleSubmit = useCallback(() => {
+  const submit = useCallback(() => {
     if (!input.trim() && step !== 'confirm') return;
-
-    playSound('key');
+    playClick();
 
     if (step === 'name') {
-      addLine(`  ${input}`, C.blue, true);
-      setForm(f => ({ ...f, name: input.trim() }));
-      setInput('');
-      // Analyze
-      addLine('', '');
-      const analyze = ['Scanning identity...', 'Verifying protocol...', 'Identity confirmed.'];
-      analyze.forEach((l, i) => {
-        setTimeout(() => addLine(l, i === analyze.length - 1 ? C.green : 'rgba(232,232,240,0.45)'), i * 300 + 200);
-      });
-      setTimeout(() => {
-        addLine('', '');
-        addLine(`> Hello, ${input.trim()}. Your email address:`, C.amber);
-        setStep('email');
-      }, 1200);
+      push(`  ${input}`, C.cyan, true); setForm(f => ({ ...f, name: input.trim() })); setInput('');
+      ['  Verifying identity...', '  Running deep-scan...', '  Identity confirmed. Proceed.'].forEach((l, i) => setTimeout(() => push(l, i === 2 ? C.green : 'rgba(232,232,240,0.35)'), i * 300 + 200));
+      setTimeout(() => { push(''); push(`> Hello, ${input.trim()}. Your email address:`, C.amber); setStep('email'); }, 1200);
     }
-
     else if (step === 'email') {
-      if (!input.includes('@') || !input.includes('.')) {
-        playSound('error');
-        addLine('  ERROR: Invalid email format. Try again.', C.red);
+      if (!input.includes('@') || !input.includes('.')) { push('  ✕ Invalid email format. Try again.', C.red); return; }
+      push(`  ${input}`, C.cyan, true); setForm(f => ({ ...f, email: input.trim() })); setInput('');
+      push(''); push('> Subject of transmission:', C.amber); setStep('subject');
+    }
+    else if (step === 'subject') {
+      push(`  ${input}`, C.cyan, true); setForm(f => ({ ...f, subject: input.trim() })); setInput('');
+      push(''); push('> Message (Shift+Enter for newline):', C.amber); setStep('message');
+    }
+    else if (step === 'message') {
+      push(`  "${input.length > 80 ? input.slice(0, 80) + '…' : input}"`, C.cyan, true);
+      setForm(f => ({ ...f, message: input.trim() })); setInput('');
+      push(''); push('──────────────────────────────────', 'rgba(232,232,240,0.07)');
+      push('> CONFIRM TRANSMISSION? [Y / N]', C.amber); setStep('confirm');
+    }
+    else if (step === 'confirm') {
+      const v = input.trim().toLowerCase();
+      if (v === 'n' || v === 'no') {
+        push('  N — Aborting. Resetting form.', C.red); setInput('');
+        setForm({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => { push(''); push('> IDENTIFY YOURSELF — Enter your name:', C.amber); setStep('name'); }, 600);
         return;
       }
-      addLine(`  ${input}`, C.blue, true);
-      setForm(f => ({ ...f, email: input.trim() }));
-      setInput('');
-      addLine('', '');
-      addLine('> Subject of transmission:', C.amber);
-      setStep('subject');
+      push('  Y — TRANSMITTING', C.green, true); setInput(''); setStep('sending');
+      push(''); push('  INITIATING QUANTUM BURST...', C.amber); playSend();
+      let prog = 0;
+      const iv = setInterval(() => { prog += 1.2; setSendProgress(Math.min(prog, 100)); if (prog >= 100) clearInterval(iv); }, 40);
+      const steps2 = ['  Compressing payload...', '  Routing via quantum nodes...', '  Establishing endpoint handshake...', `  Transmitting to ${OWNER.email}...`, '  Awaiting delivery confirmation...'];
+      steps2.forEach((l, i) => setTimeout(() => push(l, 'rgba(232,232,240,0.35)'), i * 380 + 200));
+
+      const subj = form.subject || `Message from ${form.name}`;
+      const body = `From: ${form.name}\nEmail: ${form.email}\nSubject: ${subj}\n\n${form.message}`;
+      const mailto = `mailto:${OWNER.email}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+
+      setTimeout(async () => {
+        try {
+          const r = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: form.name, email: form.email, message: `[${subj}] ${form.message}`, _honeypot: '' }) });
+          const d = await r.json(); if (d.fallback) window.location.href = mailto;
+        } catch { window.location.href = mailto; }
+      }, 1400);
+
+      setTimeout(() => {
+        push(''); push('  ✓ TRANSMISSION SUCCESSFUL — SIGNAL DELIVERED', C.green);
+        push(`  Delivered to: ${OWNER.email}`, C.cyan);
+        setStep('sent'); setTimeout(() => setShowSuccess(true), 800);
+      }, steps2.length * 380 + 500);
     }
+  }, [step, input, form, push]);
 
-    else if (step === 'subject') {
-      addLine(`  ${input}`, C.blue, true);
-      setForm(f => ({ ...f, subject: input.trim() }));
-      setInput('');
-      addLine('', '');
-      addLine('> Type your message (Shift+Enter for new line, Enter to submit):', C.amber);
-      setStep('message');
-    }
-
-    else if (step === 'message') {
-      addLine(`  "${input.slice(0, 80)}${input.length > 80 ? '...' : ''}"`, C.blue, true);
-      setForm(f => ({ ...f, message: input.trim() }));
-      setInput('');
-      addLine('', '');
-      addLine('────────────────────────────────────────', 'rgba(232,232,240,0.1)');
-      addLine('> CONFIRM TRANSMISSION? [Y/N]', C.amber);
-      setStep('confirm');
-    }
-
-    else if (step === 'confirm') {
-      const val = input.trim().toLowerCase();
-      if (val === 'y' || val === 'yes' || val === '') {
-        addLine('  Y', C.green, true);
-        setInput('');
-        setStep('sending');
-        addLine('', '');
-        addLine('INITIATING QUANTUM TRANSMISSION...', C.amber);
-
-        playSound('send');
-
-        // Progress bar
-        let prog = 0;
-        const iv = setInterval(() => { prog += 1.5; setSendProgress(Math.min(prog, 100)); if (prog >= 100) clearInterval(iv); }, 50);
-
-        // Send sequence
-        const seq = [
-          'Compressing payload...',
-          'Routing through quantum nodes...',
-          'Establishing handshake...',
-          `Transmitting to ${OWNER.email}...`,
-          'Awaiting confirmation...',
-        ];
-        seq.forEach((l, i) => {
-          setTimeout(() => addLine(l, 'rgba(232,232,240,0.5)'), i * 400 + 300);
-        });
-
-        // Actually send — build mailto with all form data pre-filled
-        const subjectLine = form.subject || `Message from ${form.name}`;
-        const bodyText = `From: ${form.name}\nEmail: ${form.email}\nSubject: ${subjectLine}\n\n${form.message}`;
-        const mailtoUrl = `mailto:${OWNER.email}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(bodyText)}`;
-
-        setTimeout(async () => {
-          try {
-            const res = await fetch('/api/contact', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: form.name, email: form.email, message: `[${subjectLine}] ${form.message}`, _honeypot: '' }),
-            });
-            const data = await res.json();
-            if (data.fallback) window.location.href = mailtoUrl;
-          } catch {
-            window.location.href = mailtoUrl;
-          }
-        }, 1500);
-
-        // Success
-        setTimeout(() => {
-          addLine('', '');
-          addLine('✓ TRANSMISSION SUCCESSFUL', C.green);
-          addLine(`  Delivered to: ${OWNER.email}`, C.blue);
-          addLine('  Status: RECEIVED ✓', C.green);
-          playSound('success');
-          setStep('sent');
-          setTimeout(() => setShowSuccess(true), 600);
-        }, seq.length * 400 + 600);
-
-      } else {
-        addLine('  N — Transmission cancelled.', C.red);
-        setInput('');
-        addLine('', '');
-        addLine('> IDENTIFY YOURSELF — Enter your name:', C.amber);
-        setForm({ name: '', email: '', subject: '', message: '' });
-        setStep('name');
-      }
-    }
-  }, [step, input, form, addLine]);
-
-  const promptLabels: Record<string, string> = { name: 'NAME', email: 'EMAIL', subject: 'SUBJECT', message: 'MESSAGE', confirm: 'Y/N' };
-  const promptLabel = promptLabels[step] || '';
+  const isSending = step === 'sending';
 
   return (
     <OSWindowFrame name="CONTACT" ext=".net" color="#FF3366">
-    <div style={{ position: 'relative', background: C.void, overflow: 'hidden', height: '100%', fontFamily: 'var(--font-mono)', color: C.white }}>
-      <style dangerouslySetInnerHTML={{ __html: `
-        input::placeholder,textarea::placeholder{color:rgba(232,232,240,0.25);}
+    <div style={{ position: 'relative', height: '100%', overflow: 'hidden', background: C.void, fontFamily: 'var(--font-mono)', color: C.white }}>
+      <style>{`
+        ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(255,51,102,0.18)}
+        input,textarea{font-family:var(--font-mono)!important;} input::placeholder,textarea::placeholder{color:rgba(232,232,240,0.18);}
+        @keyframes contact-scan{0%{top:-2px}100%{top:calc(100% + 2px)}}
+        @keyframes node-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-        @keyframes pulseRing{0%{transform:scale(1);opacity:0.7}100%{transform:scale(2.2);opacity:0}}
-        @keyframes fadeIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:none}}
-        @keyframes glow{0%,100%{box-shadow:0 0 10px rgba(0,212,255,0.15)}50%{box-shadow:0 0 25px rgba(0,212,255,0.3)}}
-        ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.25)}
-      `}} />
+      `}</style>
 
-      {/* BG layers */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(255,51,102,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(255,51,102,0.8) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)' }} />
-      {/* Animated scan line */}
-      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.12), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'contactScan 6s linear infinite' }} />
-      <style dangerouslySetInnerHTML={{ __html: '@keyframes contactScan{0%{top:-2px}100%{top:100vh}}' }} />
+      {/* Deep space background */}
+      <SpaceBackground />
 
+      {/* CRT scanlines overlay */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 60, background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px)' }} />
 
+      {/* Scan line animation */}
+      <div style={{ position: 'absolute', left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg,transparent,rgba(255,51,102,0.18),transparent)', pointerEvents: 'none', zIndex: 61, animation: 'contact-scan 6s linear infinite' }} />
 
-      {/* BODY: Centered floating layout */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 20, padding: '60px 30px 20px' }}>
-        <style dangerouslySetInnerHTML={{ __html: '@media(max-width:900px){#contact-right{display:none!important;}}' }} />
+      {/* ── MAIN LAYOUT ── */}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 12, padding: '44px 10px 10px', zIndex: 2 }}>
 
-        {/* Terminal card */}
-        <div style={{
-          width: '100%', maxWidth: 560,
-          display: 'flex', flexDirection: 'column',
-          border: '1px solid rgba(255,51,102,0.2)',
-          background: 'rgba(5,5,16,0.9)',
-          borderRadius: 4,
-          boxShadow: '0 0 50px rgba(255,51,102,0.06), 0 0 100px rgba(0,0,0,0.4), inset 0 0 30px rgba(255,51,102,0.02)',
-          overflow: 'hidden',
-          marginTop: 'auto', marginBottom: 'auto',
-          maxHeight: '80vh',
-        }}>
-          {/* Tab bar */}
-          <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,51,102,0.12)', background: 'rgba(255,51,102,0.03)', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-            {['#FF3B5C', '#FFB800', '#39FF14'].map((c, i) => (
-              <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: c, opacity: 0.7 }} />
+        {/* ══ LEFT: TERMINAL ══ */}
+        <div style={{ flex: '0 1 auto', width: '56%', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+
+          {/* Terminal header */}
+          <div style={{
+            padding: '9px 14px', flexShrink: 0,
+            background: 'linear-gradient(90deg, rgba(255,51,102,0.08), rgba(3,3,6,0.9))',
+            border: '1px solid rgba(255,51,102,0.2)', borderBottom: 'none',
+            display: 'flex', alignItems: 'center', gap: 8, position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg,transparent,rgba(255,51,102,0.7),transparent)' }} />
+            {['#FF3B5C','#FFB800','#39FF14'].map((col, i) => (
+              <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: col, boxShadow: `0 0 6px ${col}` }} />
             ))}
-            <span style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'rgba(255,51,102,0.7)', marginLeft: 6, textShadow: '0 0 8px rgba(255,51,102,0.3)' }}>CONTACT.net</span>
-            <span style={{ marginLeft: 'auto', fontSize: '8px', color: 'rgba(57,255,20,0.5)', letterSpacing: '1px' }}>● CONNECTED</span>
+            <span style={{ flex: 1, fontSize: '9px', letterSpacing: '2px', color: 'rgba(232,232,240,0.45)', marginLeft: 6 }}>CONTACT.net — NEURAL TERMINAL</span>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}`, animation: 'blink 2s infinite' }} />
+              <span style={{ fontSize: '7px', color: 'rgba(57,255,20,0.5)', letterSpacing: '1px' }}>LIVE</span>
+              <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.2)', marginLeft: 4 }}>{clock.toLocaleTimeString()}</span>
+            </div>
           </div>
 
-          {/* Terminal output */}
-          <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', minHeight: 0 }}>
-            {lines.map((l, i) => (
-              <div key={l.id} style={{
-                display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 1,
-                animation: i === lines.length - 1 ? 'fadeIn 0.15s ease' : 'none',
-              }}>
-                <span style={{ color: l.prompt ? C.blue : 'rgba(232,232,240,0.2)', flexShrink: 0, fontSize: '11px', userSelect: 'none' }}>
-                  {l.prompt ? '>' : ' '}
-                </span>
-                <span style={{ fontSize: '11px', lineHeight: 1.55, color: l.color || 'rgba(232,232,240,0.7)', wordBreak: 'break-word', fontWeight: l.color === C.green ? 600 : 400 }}>{l.text || '\u00A0'}</span>
-              </div>
+          {/* Terminal glass body */}
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0,
+            background: 'linear-gradient(160deg, rgba(8,6,22,0.97), rgba(4,3,14,0.95))',
+            border: '1px solid rgba(255,51,102,0.18)',
+            boxShadow: '0 0 60px rgba(255,51,102,0.07), 0 20px 60px rgba(0,0,0,0.6)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            {[{top:6,left:6,borderTop:'1px solid rgba(255,51,102,0.5)',borderLeft:'1px solid rgba(255,51,102,0.5)'},{top:6,right:6,borderTop:'1px solid rgba(255,51,102,0.5)',borderRight:'1px solid rgba(255,51,102,0.5)'},{bottom:6,left:6,borderBottom:'1px solid rgba(255,51,102,0.5)',borderLeft:'1px solid rgba(255,51,102,0.5)'},{bottom:6,right:6,borderBottom:'1px solid rgba(255,51,102,0.5)',borderRight:'1px solid rgba(255,51,102,0.5)'}].map((s,i)=>(
+              <div key={i} style={{position:'absolute',width:10,height:10,pointerEvents:'none',zIndex:5,...s}} />
             ))}
-            {step === 'sending' && sendProgress < 100 && (
-              <div style={{ marginTop: 6, marginLeft: 16 }}>
-                <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', maxWidth: 280 }}>
-                  <div style={{ height: '100%', width: `${sendProgress}%`, background: `linear-gradient(90deg, ${C.blue}, ${C.green})`, transition: 'width 0.05s', boxShadow: `0 0 10px ${C.blue}60` }} />
+            <div style={{position:'absolute',inset:0,pointerEvents:'none',background:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.007) 2px,rgba(255,255,255,0.007) 4px)',zIndex:1}} />
+
+            {/* Output lines */}
+            <div ref={termRef} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', minHeight: 80, maxHeight: 260, position: 'relative', zIndex: 2 }}>
+              {lines.map((l, i) => (
+                <div key={l.id} style={{ display: 'flex', gap: 8, marginBottom: 1, animation: i >= lines.length - 2 ? 'fadeUp 0.2s ease' : 'none' }}>
+                  <span style={{ color: l.prompt ? C.pink : 'rgba(255,255,255,0.1)', flexShrink: 0, fontSize: '11px' }}>{l.prompt ? '❯' : ' '}</span>
+                  <span style={{ fontSize: '11px', lineHeight: 1.65, color: l.color, wordBreak: 'break-word' }}>{l.text || '\u00A0'}</span>
                 </div>
-                <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.6)', marginTop: 3, letterSpacing: '1px' }}>TRANSMITTING... {Math.floor(sendProgress)}%</div>
+              ))}
+              {isSending && sendProgress < 100 && (
+                <div style={{ marginTop: 10, paddingLeft: 16 }}>
+                  <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 2, maxWidth: 280, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${sendProgress}%`, background: `linear-gradient(90deg,${C.pink},${C.cyan})`, transition: 'width 0.04s', boxShadow: `0 0 10px ${C.pink}60` }} />
+                  </div>
+                  <div style={{ fontSize: '8px', color: 'rgba(232,232,240,0.4)', marginTop: 3, letterSpacing: '1px' }}>QUANTUM BURST {Math.floor(sendProgress)}%</div>
+                </div>
+              )}
+            </div>
+
+            {/* Input zone */}
+            {!['boot','sending','sent'].includes(step) && (
+              <div style={{ borderTop: '1px solid rgba(255,51,102,0.1)', background: 'rgba(255,51,102,0.03)', flexShrink: 0, zIndex: 2 }}>
+                <div style={{ padding: '5px 16px 0', fontSize: '8px', letterSpacing: '2.5px', color: C.amber, opacity: 0.8 }}>
+                  {step==='name'?'> YOUR NAME':step==='email'?'> YOUR EMAIL':step==='subject'?'> SUBJECT':step==='message'?'> MESSAGE':'> CONFIRM [Y/N]'}
+                </div>
+                <div style={{ padding: '5px 16px 10px', display: 'flex', alignItems: step==='message'?'flex-start':'center', gap: 8 }}>
+                  <span style={{ color: C.pink, fontSize: '16px', flexShrink: 0, marginTop: step==='message'?2:0 }}>›</span>
+                  {step === 'message' ? (
+                    <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
+                      onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit();}}}
+                      placeholder="Your message..." rows={3}
+                      style={{ flex:1, fontSize:'11px', color:C.white, caretColor:C.pink, resize:'none', lineHeight:1.65, background:'transparent', border:'none', outline:'none' }} />
+                  ) : (
+                    <input ref={inputRef} value={input} onChange={e=>setInput(e.target.value)}
+                      onKeyDown={e=>{if(e.key==='Enter')submit();}}
+                      placeholder={step==='confirm'?'Y or N...':'Type here...'}
+                      style={{ flex:1, fontSize:'11px', color:C.white, caretColor:C.pink, background:'transparent', border:'none', outline:'none' }} />
+                  )}
+                  <button onClick={submit} style={{ fontSize:'8px', letterSpacing:'2px', color:C.pink, padding:'5px 14px', border:`1px solid ${C.pink}44`, background:`${C.pink}0d`, cursor:'pointer', transition:'all 0.2s', flexShrink:0 }}
+                    onMouseEnter={e=>{e.currentTarget.style.background=`${C.pink}22`;e.currentTarget.style.boxShadow=`0 0 14px ${C.pink}40`;}}
+                    onMouseLeave={e=>{e.currentTarget.style.background=`${C.pink}0d`;e.currentTarget.style.boxShadow='none';}}>
+                    SEND ↵
+                  </button>
+                </div>
               </div>
             )}
           </div>
+        </div>
 
-          {/* Input */}
-          {!['booting', 'sending', 'sent'].includes(step) && (
-            <div style={{ borderTop: '1px solid rgba(0,212,255,0.12)', background: 'rgba(0,212,255,0.03)', flexShrink: 0 }}>
-              <div style={{ padding: '6px 16px 0', fontSize: '9px', letterSpacing: '2px', color: C.amber, textShadow: `0 0 8px ${C.amber}30` }}>
-                {step === 'name' && '> ENTER YOUR NAME'}
-                {step === 'email' && '> ENTER YOUR EMAIL'}
-                {step === 'subject' && '> SUBJECT OF TRANSMISSION'}
-                {step === 'message' && '> YOUR MESSAGE (Shift+Enter for newline)'}
-                {step === 'confirm' && '> CONFIRM? [Y / N]'}
-              </div>
-              <div style={{ padding: '6px 16px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: C.blue, fontSize: '12px', flexShrink: 0 }}>❯</span>
-                {step === 'message' ? (
-                  <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-                    placeholder="Type your message..." rows={3}
-                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: C.white, caretColor: C.blue, resize: 'none', lineHeight: 1.6, background: 'transparent', border: 'none', outline: 'none' }} />
-                ) : (
-                  <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-                    placeholder={step === 'confirm' ? 'Y or N...' : 'Type here...'}
-                    style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '11px', color: C.white, caretColor: C.blue, background: 'transparent', border: 'none', outline: 'none' }} />
-                )}
-                <button onClick={handleSubmit} style={{
-                  fontFamily: 'var(--font-mono)', fontSize: '9px', color: C.blue, cursor: 'pointer', padding: '5px 12px',
-                  border: `1px solid ${C.blue}44`, background: `${C.blue}10`, transition: 'all 0.2s', borderRadius: 3,
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${C.blue}22`; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${C.blue}10`; }}
-                >ENTER ↵</button>
+        {/* ══ RIGHT: SCANNER + CHANNELS ══ */}
+        <div style={{ width: 218, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+
+          {/* SCANNER PANEL — top */}
+          <div style={{ padding: '12px 12px 10px', border: '1px solid rgba(255,51,102,0.2)', background: 'linear-gradient(135deg,rgba(10,6,22,0.97),rgba(4,3,14,0.95))', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(255,51,102,0.6),transparent)' }} />
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.005) 2px,rgba(255,255,255,0.005) 4px)' }} />
+            {/* Corner accents */}
+            {[{top:4,left:4,borderTop:'1px solid rgba(255,51,102,0.5)',borderLeft:'1px solid rgba(255,51,102,0.5)'},{top:4,right:4,borderTop:'1px solid rgba(255,51,102,0.5)',borderRight:'1px solid rgba(255,51,102,0.5)'},{bottom:4,left:4,borderBottom:'1px solid rgba(255,51,102,0.5)',borderLeft:'1px solid rgba(255,51,102,0.5)'},{bottom:4,right:4,borderBottom:'1px solid rgba(255,51,102,0.5)',borderRight:'1px solid rgba(255,51,102,0.5)'}].map((s,i)=>(
+              <div key={i} style={{position:'absolute',width:8,height:8,pointerEvents:'none',zIndex:5,...s}} />
+            ))}
+
+            <div style={{ fontSize: '7px', letterSpacing: '3px', color: 'rgba(255,51,102,0.6)', position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: C.pink, boxShadow: `0 0 5px ${C.pink}`, animation: 'blink 1.5s infinite' }} />
+              SIGNAL SCANNER
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <TransmissionBeam active={!['boot'].includes(step)} sending={isSending} size={130} />
+            </div>
+
+            <div style={{ fontSize: '7px', letterSpacing: '2px', color: isSending ? C.amber : step !== 'boot' ? C.green : 'rgba(232,232,240,0.2)', textAlign: 'center', animation: isSending ? 'blink 0.5s infinite' : 'none', transition: 'color 0.4s', textShadow: step !== 'boot' ? `0 0 8px ${isSending ? C.amber : C.green}60` : 'none', position: 'relative', zIndex: 2 }}>
+              {isSending ? '◉ TRANSMITTING...' : step !== 'boot' ? '◉ CHANNEL OPEN' : '○ CONNECTING...'}
+            </div>
+
+            {/* Signal strength bars */}
+            <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 18, position: 'relative', zIndex: 2 }}>
+              {[3,5,8,12,8,5,3].map((h, i) => (
+                <div key={i} style={{ width: 4, height: h, background: step !== 'boot' ? `rgba(255,51,102,${0.3 + i * 0.06})` : 'rgba(255,255,255,0.06)', borderRadius: 1, transition: 'all 0.5s', boxShadow: step !== 'boot' ? `0 0 4px rgba(255,51,102,0.3)` : 'none' }} />
+              ))}
+            </div>
+          </div>
+
+          {/* SIGNAL CHANNELS — below scanner */}
+          <div style={{ flex: 1, padding: '12px 10px', border: '1px solid rgba(57,255,20,0.14)', background: 'linear-gradient(135deg,rgba(8,6,22,0.95),rgba(4,3,14,0.9))', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(57,255,20,0.45),transparent)' }} />
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.004) 2px,rgba(255,255,255,0.004) 4px)' }} />
+            {[{top:4,left:4,borderTop:'1px solid rgba(57,255,20,0.4)',borderLeft:'1px solid rgba(57,255,20,0.4)'},{top:4,right:4,borderTop:'1px solid rgba(57,255,20,0.4)',borderRight:'1px solid rgba(57,255,20,0.4)'},{bottom:4,left:4,borderBottom:'1px solid rgba(57,255,20,0.4)',borderLeft:'1px solid rgba(57,255,20,0.4)'},{bottom:4,right:4,borderBottom:'1px solid rgba(57,255,20,0.4)',borderRight:'1px solid rgba(57,255,20,0.4)'}].map((s,i)=>(
+              <div key={i} style={{position:'absolute',width:8,height:8,pointerEvents:'none',zIndex:5,...s}} />
+            ))}
+
+            <div style={{ fontSize: '7px', letterSpacing: '3px', color: C.green, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5, position: 'relative', zIndex: 2 }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: C.green, boxShadow: `0 0 5px ${C.green}`, animation: 'blink 2.5s infinite' }} />
+              SIGNAL CHANNELS
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative', zIndex: 2 }}>
+              <SocialNode icon="⬡" label="GITHUB" handle="@shivamsuhana" href={OWNER.github} color="#E8E8F0" index={0} />
+              <SocialNode icon="◈" label="LINKEDIN" handle="in/shivamsuhana" href={OWNER.linkedin} color={C.cyan} index={1} />
+              <SocialNode icon="◎" label="LEETCODE" handle="/shivamsuhana" href="https://leetcode.com/shivamsuhana" color={C.amber} index={2} />
+              <SocialNode icon="✦" label="EMAIL" handle={OWNER.email} href={`mailto:${OWNER.email}`} color={C.green} index={3} />
+            </div>
+
+            {/* Status strip */}
+            <div style={{ marginTop: 'auto', paddingTop: 10, position: 'relative', zIndex: 2 }}>
+              <div style={{ borderTop: '1px solid rgba(57,255,20,0.07)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {[
+                  { k: 'STATUS', v: 'AVAILABLE', c: C.green },
+                  { k: 'RESPONSE', v: '< 24 HRS', c: C.amber },
+                  { k: 'TIMEZONE', v: 'UTC+5:30', c: 'rgba(232,232,240,0.45)' },
+                ].map(({ k, v, c }) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '7px', color: 'rgba(232,232,240,0.28)', letterSpacing: '0.5px' }}>{k}</span>
+                    <span style={{ fontSize: '8px', color: c, fontWeight: 600, textShadow: `0 0 6px ${c}40` }}>{v}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
-
-        {/* RIGHT panels */}
-        <div id="contact-right" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, marginTop: 'auto', marginBottom: 'auto' }}>
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.7)', marginBottom: 6 }}>SIGNAL DETECTION</div>
-            <RadarCanvas />
-            <div style={{ fontSize: '8px', color: C.green, marginTop: 6, textShadow: `0 0 8px ${C.green}50` }}>● VISITOR DETECTED</div>
-          </div>
-
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2px', color: C.purple, marginBottom: 10, textShadow: `0 0 8px ${C.purple}55` }}>TRANSMISSION DATA</div>
-            {[
-              { label: 'SENDER', value: form.name, s: 'name' },
-              { label: 'EMAIL', value: form.email, s: 'email' },
-              { label: 'SUBJECT', value: form.subject, s: 'subject' },
-              { label: 'MESSAGE', value: form.message ? `"${form.message.slice(0, 30)}..."` : '', s: 'message' },
-            ].map(f => (
-              <div key={f.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.55)', letterSpacing: '1px' }}>{f.label}</span>
-                <span style={{ fontSize: '9px', color: f.value ? C.blue : 'rgba(232,232,240,0.2)', maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: f.value ? `0 0 6px ${C.blue}30` : 'none' }}>
-                  {f.value || (step === f.s ? '▍' : '—')}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.65)', marginBottom: 8 }}>CONNECTION STATUS</div>
-            {[
-              { l: 'STATUS', v: 'AVAILABLE', c: C.green },
-              { l: 'RESPONSE', v: '< 24 HOURS', c: C.amber },
-              { l: 'CHANNEL', v: 'ENCRYPTED', c: C.blue },
-              { l: 'PROTOCOL', v: 'VOID/3', c: C.purple },
-              { l: 'TIMEZONE', v: 'UTC+5:30', c: C.white },
-            ].map(s => (
-              <div key={s.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.5)', letterSpacing: '1px' }}>{s.l}</span>
-                <span style={{ fontSize: '9px', color: s.c, fontWeight: 600, textShadow: `0 0 6px ${s.c}30` }}>{s.v}</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ padding: 14, border: '1px solid rgba(0,212,255,0.15)', background: 'rgba(5,5,16,0.7)', borderRadius: 8 }}>
-            <div style={{ fontSize: '8px', letterSpacing: '2px', color: 'rgba(232,232,240,0.65)', marginBottom: 8 }}>SIGNAL CHANNELS</div>
-            {[
-              { l: 'EMAIL', v: OWNER.email, h: `mailto:${OWNER.email}`, c: C.green },
-              { l: 'GITHUB', v: '@shivamsuhana', h: OWNER.github, c: C.white },
-              { l: 'LINKEDIN', v: 'in/shivamsuhana', h: OWNER.linkedin, c: C.blue },
-            ].map(lk => (
-              <a key={lk.l} href={lk.h} target="_blank" rel="noopener noreferrer" style={{
-                display: 'flex', justifyContent: 'space-between', padding: '4px 0',
-                textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.03)',
-                transition: 'all 0.2s',
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '4px'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.paddingLeft = '0'; }}
-              >
-                <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.5)', letterSpacing: '1px' }}>{lk.l}</span>
-                <span style={{ fontSize: '9px', color: lk.c, textShadow: `0 0 6px ${lk.c}30` }}>{lk.v}</span>
-              </a>
-            ))}
-          </div>
-
-          <div style={{ padding: '8px 14px', fontSize: '7px', color: 'rgba(232,232,240,0.2)', letterSpacing: '1.5px', lineHeight: 1.8 }}>
-            SECURE CHANNEL · AES-256<br />VOID OS v3.0.1
           </div>
         </div>
+
       </div>
 
-      {showSuccess && <SuccessPopup name={form.name} onBack={() => { setShowSuccess(false); setStep('name'); setLines([]); setForm({ name: '', email: '', subject: '', message: '' }); setInput(''); setSendProgress(0); setTimeout(() => { addLine('VOID OS CONTACT TERMINAL v3.0.1', C.blue); addLine('Secure channel established.', 'rgba(232,232,240,0.5)'); addLine('', ''); addLine('> IDENTIFY YOURSELF — Enter your name:', C.amber); }, 100); }} />}
+
+
+      {showSuccess && (
+        <SuccessScreen name={form.name} onBack={() => {
+          setShowSuccess(false); setLines([]); setForm({ name: '', email: '', subject: '', message: '' }); setInput(''); setSendProgress(0);
+          setTimeout(() => { setStep('name'); push('> CONTACT.net — READY FOR NEW TRANSMISSION', C.cyan); push('> IDENTIFY YOURSELF:', C.amber); }, 100);
+        }} />
+      )}
     </div>
     </OSWindowFrame>
   );
