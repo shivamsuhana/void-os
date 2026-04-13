@@ -383,15 +383,6 @@ export default function WorkSection() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track project clicks for deep_diver achievement
-  const handleProjectSelect = useCallback((p: Project) => {
-    setSelectedProject(p);
-    try {
-      const clicks = parseInt(localStorage.getItem('void_project_clicks') || '0');
-      localStorage.setItem('void_project_clicks', String(clicks + 1));
-    } catch { /* ignore */ }
-  }, []);
-
   const selectedProjectRef = useRef(selectedProject);
   useEffect(() => { selectedProjectRef.current = selectedProject; }, [selectedProject]);
 
@@ -458,15 +449,10 @@ export default function WorkSection() {
     <OSWindowFrame name="WORK" ext=".db" color="#7B2FFF">
     <div ref={containerRef} style={{ position: 'relative', background: '#050510', height: '100%', overflow: 'hidden' }}>
 
-      {/* Holographic grid overlay */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5, opacity: 0.02, backgroundImage: 'linear-gradient(rgba(123,47,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(123,47,255,1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
-      {/* Scan line */}
-      <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(123,47,255,0.15), transparent)', pointerEvents: 'none', zIndex: 6, animation: 'workScan 5s linear infinite' }} />
-
       {/* 3D Tunnel */}
       <div style={{ position: 'absolute', inset: 0 }}>
         <Canvas camera={{ position: [0, 0, 5], fov: 55 }} gl={{ antialias: true }}>
-          <TunnelScene scrollProgress={scrollProgress} projects={PROJECTS} onSelect={handleProjectSelect} />
+          <TunnelScene scrollProgress={scrollProgress} projects={PROJECTS} onSelect={setSelectedProject} />
         </Canvas>
         <VoidPostProcessing intensity={1.0} />
       </div>
@@ -475,12 +461,11 @@ export default function WorkSection() {
       <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
         {/* Header */}
         <div style={{ position: 'absolute', top: 80, left: 40 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 12px rgba(123,47,255,.4)', marginBottom: 10 }}>02 // WORK.db</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 'clamp(28px, 4vw, 42px)', marginBottom: 8, color: '#E8E8F0', lineHeight: 1.1 }}>
-            Project <span style={{ color: '#7B2FFF', textShadow: '0 0 25px rgba(123,47,255,.4), 0 0 50px rgba(123,47,255,.15)' }}>Tunnel</span>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 10px rgba(123,47,255,.3)', marginBottom: 8 }}>02 // WORK.db</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 3vw, 36px)', marginBottom: 6, color: '#E8E8F0' }}>
+            Project <span style={{ color: '#7B2FFF', textShadow: '0 0 15px rgba(123,47,255,.3)' }}>Tunnel</span>
           </h2>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(232,232,240,.6)', letterSpacing: '1px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(123,47,255,0.4)', letterSpacing: '1px', marginTop: 8 }}>{PROJECTS.length} PROJECTS LOADED</div>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.65)', letterSpacing: '1px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
         </div>
 
         {/* Vertical progress */}
@@ -510,7 +495,6 @@ export default function WorkSection() {
 
       {/* Case study modal */}
       {selectedProject && <CaseStudyOverlay project={selectedProject} onClose={() => setSelectedProject(null)} />}
-      <style dangerouslySetInnerHTML={{ __html: '@keyframes workScan{0%{top:-2px}100%{top:100%}}' }} />
     </div>
     </OSWindowFrame>
   );

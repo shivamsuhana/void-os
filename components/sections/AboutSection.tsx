@@ -9,10 +9,9 @@ import SectionAmbientBG from '@/components/global/SectionAmbientBG';
 import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 /* ═══════════════════════════════════════════
-   DEEP SPACE PERSPECTIVE BACKGROUND
-   Converging grid, nebula, twinkling stars
+   HEX GRID BACKGROUND
    ═══════════════════════════════════════════ */
-function DeepSpaceBG() {
+function HexGridBG() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current; if (!c) return;
@@ -20,53 +19,28 @@ function DeepSpaceBG() {
     let W = c.width = window.innerWidth, H = c.height = window.innerHeight;
     const resize = () => { W = c.width = window.innerWidth; H = c.height = window.innerHeight; };
     window.addEventListener('resize', resize);
-
-    const stars = Array.from({ length: 100 }, () => ({
-      x: Math.random(), y: Math.random(), r: Math.random() * 1.2 + 0.3,
-      s: Math.random() * 0.003 + 0.001, a: Math.random(),
-    }));
-
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; alpha: number }[] = [];
+    for (let i = 0; i < 50; i++) particles.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3, size: Math.random() * 2 + .5, alpha: Math.random() * .3 + .05 });
     let t = 0, frame: number;
     const draw = () => {
-      t += 0.006;
-      ctx.fillStyle = '#030306'; ctx.fillRect(0, 0, W, H);
-
-      const horizon = H * 0.5, vp = W / 2;
-
-      // Bottom perspective grid
-      ctx.strokeStyle = 'rgba(0,212,255,0.04)'; ctx.lineWidth = 1;
-      for (let i = -12; i <= 12; i++) {
-        const dx = (i / 12) * W * 0.8;
-        ctx.beginPath(); ctx.moveTo(vp + dx, horizon); ctx.lineTo(vp + dx * 4, H + 200); ctx.stroke();
+      t += .005;
+      ctx.fillStyle = 'rgba(3,3,6,.15)'; ctx.fillRect(0, 0, W, H);
+      const hexR = 40;
+      ctx.strokeStyle = `rgba(0,212,255,${.035 + Math.sin(t) * .015})`; ctx.lineWidth = .5;
+      for (let gy = -1; gy < H / (hexR * Math.sqrt(3)) + 1; gy++) {
+        for (let gx = -1; gx < W / (hexR * 1.5) + 1; gx++) {
+          const cx2 = gx * hexR * 1.5, cy2 = gy * hexR * Math.sqrt(3) + (gx % 2 ? hexR * Math.sqrt(3) / 2 : 0);
+          ctx.beginPath();
+          for (let a = 0; a < 6; a++) { const ang = Math.PI / 3 * a + Math.PI / 6, px = cx2 + hexR * .4 * Math.cos(ang), py = cy2 + hexR * .4 * Math.sin(ang); a === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py); }
+          ctx.closePath(); ctx.stroke();
+        }
       }
-      for (let i = 0; i < 8; i++) {
-        const pct = (i / 8) ** 1.4;
-        const y = horizon + (H - horizon + 200) * pct;
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0; if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,212,255,${p.alpha * (.7 + .3 * Math.sin(t * 3 + p.x * .01))})`; ctx.fill();
       }
-
-      // Top ceiling perspective grid
-      ctx.strokeStyle = 'rgba(0,212,255,0.02)';
-      for (let i = -6; i <= 6; i++) {
-        const dx = (i / 6) * W * 0.5;
-        ctx.beginPath(); ctx.moveTo(vp + dx, horizon); ctx.lineTo(vp + dx * 3, -200); ctx.stroke();
-      }
-
-      // Stars
-      stars.forEach(s => {
-        s.a += s.s;
-        const alpha = (Math.sin(s.a) + 1) * 0.35 + 0.1;
-        ctx.beginPath(); ctx.arc(s.x * W, s.y * H * 0.9, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(232,232,240,${alpha})`; ctx.fill();
-      });
-
-      // Nebula glow
-      const neb = ctx.createRadialGradient(vp, horizon, 0, vp, horizon, W * 0.5);
-      neb.addColorStop(0, `rgba(0,212,255,${0.03 + Math.sin(t * 0.5) * 0.015})`);
-      neb.addColorStop(0.5, `rgba(123,47,255,${0.015})`);
-      neb.addColorStop(1, 'transparent');
-      ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
-
       frame = requestAnimationFrame(draw);
     }; draw();
     return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); };
@@ -87,9 +61,9 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
     const rect = card.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}22, ${color}0a 50%, rgba(6,4,18,.92))`;
-    card.style.borderColor = `${color}66`;
-    card.style.boxShadow = `0 0 40px ${color}15, inset 0 0 50px ${color}08, 0 8px 32px rgba(0,0,0,.4)`;
+    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}20, ${color}08 50%, rgba(8,8,20,.85))`;
+    card.style.borderColor = `${color}88`;
+    card.style.boxShadow = `0 0 30px ${color}18, inset 0 0 40px ${color}08, 0 4px 20px rgba(0,0,0,.3)`;
   }, [color]);
 
   return (
@@ -97,38 +71,29 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
       ref={cardRef}
       style={{
         position: 'relative',
-        background: `linear-gradient(160deg, rgba(8,6,22,.95), rgba(4,3,14,.9))`,
-        border: `1px solid ${color}20`,
+        background: `linear-gradient(135deg, rgba(8,8,20,.9), rgba(8,8,20,.7))`,
+        border: `1px solid ${color}25`,
         transition: 'border-color .3s, background .5s, box-shadow .3s, transform .3s',
         overflow: 'hidden',
         ...style
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px) scale(1.01)';
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = `${color}20`;
-        el.style.background = `linear-gradient(160deg, rgba(8,6,22,.95), rgba(4,3,14,.9))`;
+        el.style.borderColor = `${color}25`;
+        el.style.background = `linear-gradient(135deg, rgba(8,8,20,.9), rgba(8,8,20,.7))`;
         el.style.boxShadow = 'none';
-        el.style.transform = 'translateY(0) scale(1)';
+        el.style.transform = 'translateY(0)';
       }}
       {...props}
     >
       {/* Scanline overlay */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.006) 2px, rgba(255,255,255,.006) 4px)', zIndex: 1 }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.008) 2px, rgba(255,255,255,.008) 4px)', zIndex: 1 }} />
       {/* Top edge glow line */}
-      <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: `linear-gradient(90deg, transparent, ${color}55, transparent)`, pointerEvents: 'none', zIndex: 1 }} />
-      {/* Corner accents */}
-      {[
-        { top: 4, left: 4, borderTop: `1px solid ${color}50`, borderLeft: `1px solid ${color}50` },
-        { top: 4, right: 4, borderTop: `1px solid ${color}50`, borderRight: `1px solid ${color}50` },
-        { bottom: 4, left: 4, borderBottom: `1px solid ${color}50`, borderLeft: `1px solid ${color}50` },
-        { bottom: 4, right: 4, borderBottom: `1px solid ${color}50`, borderRight: `1px solid ${color}50` },
-      ].map((s, i) => (
-        <div key={i} style={{ position: 'absolute', width: 8, height: 8, pointerEvents: 'none', zIndex: 3, ...s } as React.CSSProperties} />
-      ))}
+      <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: `linear-gradient(90deg, transparent, ${color}40, transparent)`, pointerEvents: 'none', zIndex: 1 }} />
       {/* Content */}
       <div style={{ position: 'relative', zIndex: 2 }}>{children}</div>
     </div>
@@ -410,98 +375,58 @@ function Globe() {
 }
 
 /* ═══════════════════════════════════════════
-   COUNT UP — Animated number counter
+   PROFICIENCY BAR
    ═══════════════════════════════════════════ */
-function CountUp({ value, go }: { value: string; go: boolean }) {
-  const [display, setDisplay] = useState(value);
-  const num = parseInt(value.replace(/[^0-9]/g, ''));
-  const suffix = value.replace(/[0-9]/g, '');
-
-  useEffect(() => {
-    if (!go || isNaN(num)) return;
-    let start = 0;
-    const step = () => {
-      start += Math.ceil(num / 40);
-      if (start >= num) { setDisplay(`${num}${suffix}`); return; }
-      setDisplay(`${start}${suffix}`);
-      requestAnimationFrame(step);
-    };
-    step();
-  }, [go, num, suffix, value]);
-
-  return <>{display}</>;
-}
-
-/* ═══════════════════════════════════════════
-   ARC GAUGE — Circular proficiency indicator
-   ═══════════════════════════════════════════ */
-function ArcGauge({ label, value, color, delay, go }: { label: string; value: number; color: string; delay: number; go: boolean }) {
-  const [progress, setProgress] = useState(0);
+function ProfBar({ label, value, color, delay, go }: { label: string; value: number; color: string; delay: number; go: boolean }) {
+  const [w, setW] = useState(0);
   const [hov, setHov] = useState(false);
   const [displayVal, setDisplayVal] = useState(0);
   
-  useEffect(() => { if (go) setTimeout(() => setProgress(value), delay); }, [go, value, delay]);
+  useEffect(() => { if (go) setTimeout(() => setW(value), delay); }, [go, value, delay]);
   
+  // Animate the percentage counter
   useEffect(() => {
-    if (progress === 0) return;
+    if (w === 0) return;
     let start = 0;
     const step = () => {
-      start += Math.ceil(value / 25);
+      start += Math.ceil(value / 30);
       if (start >= value) { setDisplayVal(value); return; }
       setDisplayVal(start);
       requestAnimationFrame(step);
     };
     setTimeout(step, delay);
-  }, [progress, value, delay]);
-
-  const size = 90;
-  const strokeWidth = 3;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference - (progress / 100) * circumference;
+  }, [w, value, delay]);
 
   return (
-    <div
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default', transition: 'transform 0.3s', transform: hov ? 'scale(1.08)' : 'scale(1)' }}
+    <div 
+      style={{ marginBottom: 14, cursor: 'default' }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
-      <div style={{ position: 'relative', width: size, height: size }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          {/* Background ring */}
-          <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={strokeWidth} />
-          {/* Progress arc */}
-          <circle
-            cx={size/2} cy={size/2} r={radius} fill="none"
-            stroke={color} strokeWidth={hov ? strokeWidth + 1 : strokeWidth}
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            strokeLinecap="round"
-            style={{
-              transition: `stroke-dashoffset 1.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms, stroke-width 0.3s`,
-              filter: hov ? `drop-shadow(0 0 6px ${color}88)` : `drop-shadow(0 0 3px ${color}44)`,
-            }}
-          />
-        </svg>
-        {/* Center value */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700,
-          color: hov ? color : '#E8E8F0',
-          textShadow: hov ? `0 0 12px ${color}66` : 'none',
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, transition: 'all 0.2s' }}>
+        <span style={{ 
+          fontFamily: 'var(--font-mono)', fontSize: hov ? '10px' : '9px', letterSpacing: '1.5px', 
+          color: hov ? color : 'rgba(232,232,240,.65)',
+          textShadow: hov ? `0 0 10px ${color}50` : 'none',
           transition: 'all 0.3s',
-        }}>
-          {displayVal}
-        </div>
+        }}>{label}</span>
+        <span style={{ 
+          fontFamily: 'var(--font-mono)', fontSize: hov ? '11px' : '9px', fontWeight: hov ? 700 : 400,
+          color, textShadow: `0 0 ${hov ? 12 : 6}px ${color}66`,
+          transition: 'all 0.3s',
+        }}>{displayVal}%</span>
       </div>
-      <span style={{
-        fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1px',
-        color: hov ? color : 'rgba(232,232,240,0.5)',
-        textShadow: hov ? `0 0 8px ${color}40` : 'none',
-        marginTop: 8, textAlign: 'center', maxWidth: 100,
-        transition: 'all 0.3s',
-      }}>{label}</span>
+      <div style={{ 
+        height: hov ? 6 : 2, background: 'rgba(255,255,255,.06)', borderRadius: 3,
+        transition: 'height 0.3s cubic-bezier(.16,1,.3,1)',
+      }}>
+        <div style={{ 
+          height: '100%', width: `${w}%`, borderRadius: 3,
+          background: `linear-gradient(90deg, ${color}66, ${color})`, 
+          boxShadow: hov ? `0 0 16px ${color}88, 0 0 30px ${color}33` : `0 0 8px ${color}44`,
+          transition: 'width 1.2s cubic-bezier(.16,1,.3,1), box-shadow 0.3s',
+        }} />
+      </div>
     </div>
   );
 }
@@ -595,10 +520,14 @@ export default function AboutSection() {
 
   return (
     <OSWindowFrame name="ABOUT" ext=".exe" color="#00D4FF">
-    <div style={{ position: 'relative', background: '#030306', overflowY: 'auto', height: '100%' }}>
-      <DeepSpaceBG />
+    <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
+      <SectionAmbientBG color="#00D4FF" particleCount={40} />
       {/* CRT scanlines */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)' }} />
+      {/* Vignette */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)' }} />
+      {/* Holographic grid overlay — CSS, no canvas */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.04, backgroundImage: 'linear-gradient(rgba(0,212,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,1) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
       {/* Animated horizontal scan line */}
       <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'about-scan 4s linear infinite' }} />
       {/* Bottom perspective grid */}
@@ -676,9 +605,9 @@ export default function AboutSection() {
           <div>
             <Reveal delay={100}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 12px rgba(123,47,255,.4)' }}>ABOUT.exe</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3.5px', color: '#7B2FFF', textShadow: '0 0 8px rgba(123,47,255,.3)' }}>ABOUT.exe</div>
                 <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,#7B2FFF,transparent)' }} />
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.4)' }}>v3.0.1</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,.4)' }}>v1.0.0</div>
               </div>
             </Reveal>
 
@@ -699,14 +628,12 @@ export default function AboutSection() {
             {/* Proficiency */}
             <div ref={statsRef} style={{ marginBottom: 48 }}>
               <Reveal delay={350}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 20 }}>PROFICIENCY_MATRIX.sys</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', gap: 16 }}>
-                  <ArcGauge label="JAVA / DSA" value={85} color="#00D4FF" delay={100} go={statsGo} />
-                  <ArcGauge label="BACKEND" value={68} color="#7B2FFF" delay={200} go={statsGo} />
-                  <ArcGauge label="FRONTEND" value={50} color="#39FF14" delay={300} go={statsGo} />
-                  <ArcGauge label="3D / WEBGL" value={35} color="#FFB800" delay={400} go={statsGo} />
-                  <ArcGauge label="DEVTOOLS" value={62} color="#00D4FF" delay={500} go={statsGo} />
-                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>PROFICIENCY_MATRIX.sys</div>
+                <ProfBar label="JAVA / DSA / OOP" value={85} color="#00D4FF" delay={100} go={statsGo} />
+                <ProfBar label="BACKEND / PHP / DATABASES" value={68} color="#7B2FFF" delay={200} go={statsGo} />
+                <ProfBar label="FRONTEND / REACT / UI" value={50} color="#39FF14" delay={300} go={statsGo} />
+                <ProfBar label="THREE.JS / WEBGL / GSAP" value={35} color="#FFB800" delay={400} go={statsGo} />
+                <ProfBar label="GIT / TOOLS / DEPLOYMENT" value={62} color="#00D4FF" delay={500} go={statsGo} />
               </Reveal>
             </div>
 
@@ -752,7 +679,7 @@ export default function AboutSection() {
                   onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px) scale(1.03)'; }}
                   onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0) scale(1)'; }}
                 >
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: 800, color: '#00D4FF', textShadow: '0 0 20px rgba(0,212,255,.5), 0 0 40px rgba(0,212,255,.2)', marginBottom: 8, letterSpacing: '-1px' }}><CountUp value={s.value} go={statsGo} /></div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: 800, color: '#00D4FF', textShadow: '0 0 20px rgba(0,212,255,.5), 0 0 40px rgba(0,212,255,.2)', marginBottom: 8, letterSpacing: '-1px' }}>{s.value}</div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.6)', letterSpacing: '2px', textTransform: 'uppercase' }}>{s.label}</div>
                 </GlowCard>
               ))}

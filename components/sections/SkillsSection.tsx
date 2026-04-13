@@ -641,11 +641,6 @@ export default function SkillsSection() {
       {/* CRT overlay */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.45) 100%)' }} />
-      {/* Holographic grid */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.02, backgroundImage: 'linear-gradient(rgba(255,184,0,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(255,184,0,0.8) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
-      {/* Scan line */}
-      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(255,184,0,0.1), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'skillsScan 5s linear infinite' }} />
-      <style dangerouslySetInnerHTML={{ __html: '@keyframes skillsScan{0%{top:-2px}100%{top:100vh}}' }} />
 
       {/* Right sidebar */}
       {!isMobile && (

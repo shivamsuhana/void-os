@@ -384,22 +384,6 @@ export default function BootSequence() {
   const [phase, setPhase] = useState<'power' | 'diag' | 'glitch' | 'reveal'>('power');
   const [isReady, setIsReady] = useState(false);
 
-  // Auto-skip for returning visitors
-  useEffect(() => {
-    try {
-      if (localStorage.getItem('void_boot_seen') === 'true') {
-        setBootComplete(true);
-        setActiveSection('desktop');
-      }
-    } catch { /* ignore */ }
-  }, [setBootComplete, setActiveSection]);
-
-  const skipBoot = useCallback(() => {
-    try { localStorage.setItem('void_boot_seen', 'true'); } catch { /* ignore */ }
-    setBootComplete(true);
-    setActiveSection('desktop');
-  }, [setBootComplete, setActiveSection]);
-
   const handlePowerDone = useCallback(() => setPhase('diag'), []);
   const handleDiagDone = useCallback(() => setPhase('glitch'), []);
   const handleGlitchDone = useCallback(() => {
@@ -477,7 +461,6 @@ export default function BootSequence() {
         gsap.to(wormhole, { opacity: 0, duration: 0.3, onComplete: () => wormhole.remove() });
         setBootComplete(true);
         setActiveSection('desktop');
-        try { localStorage.setItem('void_boot_seen', 'true'); } catch { /* ignore */ }
       }
     };
 
@@ -520,20 +503,6 @@ export default function BootSequence() {
       {phase === 'diag' && <Diagnostics onComplete={handleDiagDone} />}
       {phase === 'glitch' && <GlitchBurst onComplete={handleGlitchDone} />}
       {phase === 'reveal' && <NameReveal onReady={handleReady} />}
-
-      {/* Skip boot button */}
-      <button
-        onClick={skipBoot}
-        style={{
-          position: 'fixed', bottom: 20, right: 20, zIndex: 1001,
-          fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2px',
-          color: 'rgba(232,232,240,0.2)', padding: '6px 14px',
-          border: '1px solid rgba(255,255,255,0.05)', background: 'transparent',
-          cursor: 'pointer', transition: 'all 0.3s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(232,232,240,0.6)'; e.currentTarget.style.borderColor = 'rgba(0,212,255,0.2)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(232,232,240,0.2)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}
-      >SKIP BOOT →</button>
     </div>
   );
 }

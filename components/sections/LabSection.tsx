@@ -10,197 +10,87 @@ import OSWindowFrame from '@/components/global/OSWindowFrame';
 type LabTab = 'music' | 'particles' | 'terminal';
 
 /* ============================================
-   MUSIC VISUALIZER — Circular Spectrum Analyzer
-   Concentric rings, radial bars, orbiting particles,
-   center pulse orb, waveform circle overlay
+   MUSIC VISUALIZER — procedural audio bars
    ============================================ */
 function MusicVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: 0.5, y: 0.5 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * 2; canvas.height = rect.height * 2;
+      ctx.scale(2, 2);
     };
     resize();
 
-    const BARS = 64;
-    const barData = new Array(BARS).fill(0);
-    const particles: { a: number; r: number; s: number; life: number; hue: number }[] = [];
+    const bars = 48;
+    const barData = new Array(bars).fill(0);
     let frame: number;
-    let t = 0;
-
-    // Spawn particles
-    const spawnParticle = () => {
-      if (particles.length > 50) return;
-      particles.push({
-        a: Math.random() * Math.PI * 2,
-        r: 0.3 + Math.random() * 0.15,
-        s: 0.0005 + Math.random() * 0.002,
-        life: 1,
-        hue: 180 + Math.random() * 120,
-      });
-    };
-
-    const onMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouseRef.current = { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height };
-    };
-    canvas.addEventListener('mousemove', onMove);
 
     const animate = () => {
-      t += 0.015;
-      const W = canvas.width, H = canvas.height;
-      const cx = W / 2, cy = H / 2;
-      const maxR = Math.min(W, H) * 0.38;
+      const W = canvas.width / 2, H = canvas.height / 2;
+      ctx.clearRect(0, 0, W, H);
 
-      // Clear with trail
-      ctx.fillStyle = 'rgba(3,3,6,0.15)';
-      ctx.fillRect(0, 0, W, H);
-
-      // Generate audio data
-      const bass = Math.sin(t * 1.8) * 0.4 + Math.sin(t * 3.7) * 0.2 + 0.5;
-      const mid = Math.sin(t * 2.5 + 1) * 0.35 + Math.sin(t * 5.2) * 0.15 + 0.45;
-      const high = Math.sin(t * 4.1 + 2) * 0.25 + Math.sin(t * 8.3) * 0.2 + 0.35;
-
-      for (let i = 0; i < BARS; i++) {
-        const freq = i / BARS;
-        let target;
-        if (freq < 0.3) target = bass * (1 - freq) + Math.sin(t * 2 + i * 0.4) * 0.15;
-        else if (freq < 0.7) target = mid * 0.8 + Math.sin(t * 3.5 + i * 0.25) * 0.2;
-        else target = high * 0.6 + Math.sin(t * 6 + i * 0.15) * 0.25;
-        target += Math.random() * 0.08;
-        barData[i] = barData[i] * 0.82 + target * 0.18;
+      // Background grid
+      ctx.strokeStyle = 'rgba(0,212,255,0.02)';
+      ctx.lineWidth = 0.5;
+      for (let y = 0; y < H; y += 30) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
 
-      // Spawn particles on beats
-      if (bass > 0.7 && Math.random() > 0.5) spawnParticle();
+      const barWidth = W / bars - 1.5;
+      for (let i = 0; i < bars; i++) {
+        const target = Math.sin(Date.now() * 0.002 + i * 0.3) * 0.3 + Math.sin(Date.now() * 0.005 + i * 0.1) * 0.2 + 0.3;
+        barData[i] = barData[i] * 0.85 + target * 0.15 + Math.random() * 0.05;
 
-      // ── CONCENTRIC GUIDE RINGS ──
-      [0.3, 0.5, 0.7, 0.9].forEach((s, ri) => {
-        ctx.beginPath(); ctx.arc(cx, cy, maxR * s, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0,212,255,${0.04 + ri * 0.01})`;
-        ctx.lineWidth = 0.5; ctx.stroke();
-      });
+        const h = barData[i] * (H - 20);
+        const x = i * (barWidth + 1.5);
+        const y = H - h;
+        const hue = 190 + (i / bars) * 80;
 
-      // ── RADIAL SPECTRUM BARS ──
-      for (let i = 0; i < BARS; i++) {
-        const angle = (i / BARS) * Math.PI * 2 - Math.PI / 2;
-        const val = barData[i];
-        const innerR = maxR * 0.25;
-        const outerR = innerR + val * maxR * 0.65;
-        const hue = 180 + (i / BARS) * 140;
+        const grad = ctx.createLinearGradient(x, y, x, H);
+        grad.addColorStop(0, `hsla(${hue}, 100%, 60%, 0.85)`);
+        grad.addColorStop(1, `hsla(${hue}, 100%, 40%, 0.1)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, y, barWidth, h);
 
-        const x1 = cx + Math.cos(angle) * innerR;
-        const y1 = cy + Math.sin(angle) * innerR;
-        const x2 = cx + Math.cos(angle) * outerR;
-        const y2 = cy + Math.sin(angle) * outerR;
-
-        const grad = ctx.createLinearGradient(x1, y1, x2, y2);
-        grad.addColorStop(0, `hsla(${hue}, 100%, 50%, 0.1)`);
-        grad.addColorStop(0.5, `hsla(${hue}, 100%, 60%, ${0.5 + val * 0.4})`);
-        grad.addColorStop(1, `hsla(${hue}, 90%, 70%, ${0.3 + val * 0.5})`);
-
-        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = Math.max(2, (W / BARS) * 0.3);
-        ctx.lineCap = 'round';
-        ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.5)`;
-        ctx.shadowBlur = val > 0.5 ? 8 : 2;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Outer tip dot
-        if (val > 0.4) {
-          ctx.beginPath(); ctx.arc(x2, y2, 2 + val * 2, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${hue}, 100%, 75%, ${val * 0.6})`;
-          ctx.fill();
-        }
+        // Top cap glow
+        ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.9)`;
+        ctx.fillRect(x, y, barWidth, 1.5);
       }
 
-      // ── WAVEFORM CIRCLE ──
-      ctx.beginPath();
-      for (let i = 0; i <= BARS; i++) {
-        const angle = (i / BARS) * Math.PI * 2 - Math.PI / 2;
-        const wave = barData[i % BARS] * maxR * 0.12;
-        const r = maxR * 0.88 + wave;
-        const x = cx + Math.cos(angle) * r;
-        const y = cy + Math.sin(angle) * r;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      // Reflection
+      ctx.save();
+      ctx.globalAlpha = 0.06;
+      ctx.scale(1, -1);
+      ctx.translate(0, -H * 2);
+      for (let i = 0; i < bars; i++) {
+        const h = barData[i] * (H - 20);
+        const x = i * (barWidth + 1.5);
+        ctx.fillStyle = `hsla(${190 + (i / bars) * 80}, 100%, 50%, 0.3)`;
+        ctx.fillRect(x, H, barWidth, h * 0.3);
       }
-      ctx.closePath();
-      ctx.strokeStyle = `rgba(0,212,255,${0.15 + bass * 0.15})`;
-      ctx.lineWidth = 1.5;
-      ctx.shadowColor = 'rgba(0,212,255,0.3)'; ctx.shadowBlur = 6;
-      ctx.stroke(); ctx.shadowBlur = 0;
-
-      // ── ORBITING PARTICLES ──
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.a += p.s * (1 + bass * 2);
-        p.life -= 0.003;
-        if (p.life <= 0) { particles.splice(i, 1); continue; }
-        const px = cx + Math.cos(p.a) * maxR * p.r;
-        const py = cy + Math.sin(p.a) * maxR * p.r;
-        ctx.beginPath(); ctx.arc(px, py, 1.5 + p.life * 2, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${p.hue}, 100%, 65%, ${p.life * 0.6})`;
-        ctx.shadowColor = `hsla(${p.hue}, 100%, 65%, 0.5)`; ctx.shadowBlur = 6;
-        ctx.fill(); ctx.shadowBlur = 0;
-      }
-
-      // ── CENTER PULSE ORB ──
-      const pulseR = maxR * 0.18 + bass * maxR * 0.06;
-      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, pulseR);
-      coreGrad.addColorStop(0, `rgba(123,47,255,${0.4 + bass * 0.3})`);
-      coreGrad.addColorStop(0.5, `rgba(0,212,255,${0.15 + mid * 0.15})`);
-      coreGrad.addColorStop(1, 'transparent');
-      ctx.beginPath(); ctx.arc(cx, cy, pulseR, 0, Math.PI * 2);
-      ctx.fillStyle = coreGrad; ctx.fill();
-
-      // Inner core dot
-      ctx.beginPath(); ctx.arc(cx, cy, 4 + bass * 3, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(232,232,240,${0.6 + bass * 0.3})`;
-      ctx.shadowColor = '#7B2FFF'; ctx.shadowBlur = 15;
-      ctx.fill(); ctx.shadowBlur = 0;
-
-      // ── BEAT PULSE RINGS ──
-      if (bass > 0.65) {
-        const ringR = maxR * (0.25 + ((t * 3) % 1) * 0.7);
-        const ringAlpha = Math.max(0, 1 - ((t * 3) % 1)) * 0.15;
-        ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(123,47,255,${ringAlpha})`;
-        ctx.lineWidth = 2; ctx.stroke();
-      }
-
-      // ── MOUSE REACTIVE GLOW ──
-      const mx = mouseRef.current.x * W, my = mouseRef.current.y * H;
-      const mouseGrad = ctx.createRadialGradient(mx, my, 0, mx, my, maxR * 0.4);
-      mouseGrad.addColorStop(0, 'rgba(0,212,255,0.05)');
-      mouseGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = mouseGrad; ctx.fillRect(0, 0, W, H);
+      ctx.restore();
 
       frame = requestAnimationFrame(animate);
     };
     animate();
-    return () => { cancelAnimationFrame(frame); canvas.removeEventListener('mousemove', onMove); };
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   return (
     <div>
-      <canvas ref={canvasRef} style={{ width: '100%', height: '340px', display: 'block', cursor: 'crosshair' }} />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, padding: '0 4px' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--text-muted)', letterSpacing: '1.5px' }}>
-          ♫ CIRCULAR SPECTRUM ANALYZER · 64 BANDS
-        </div>
-        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#39FF14', animation: 'glowPulse 2s infinite', boxShadow: '0 0 6px #39FF14' }} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#39FF14', letterSpacing: '1px' }}>LIVE</span>
-        </div>
+      <canvas ref={canvasRef} style={{ width: '100%', height: '280px', display: 'block', borderRadius: '2px' }} />
+      <div style={{
+        fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)',
+        marginTop: '10px', textAlign: 'center', letterSpacing: '1px',
+      }}>
+        ♫ PROCEDURAL AUDIO VISUALIZATION · DEMO MODE
       </div>
     </div>
   );
@@ -506,10 +396,10 @@ export default function LabSection() {
     return () => { tl.kill(); };
   }, [labUnlocked]);
 
-  const TABS: Array<{ id: LabTab; label: string; icon: string; status: string; statusColor: string }> = [
-    { id: 'music', label: 'AUDIO.viz', icon: '♫', status: 'STABLE', statusColor: '#39FF14' },
-    { id: 'particles', label: 'FORCE.exp', icon: '◎', status: 'BETA', statusColor: '#FFB800' },
-    { id: 'terminal', label: 'ROOT.sh', icon: '▸', status: 'ALPHA', statusColor: '#FF3366' },
+  const TABS: Array<{ id: LabTab; label: string; icon: string }> = [
+    { id: 'music', label: 'AUDIO.viz', icon: '♫' },
+    { id: 'particles', label: 'FORCE.exp', icon: '◎' },
+    { id: 'terminal', label: 'ROOT.sh', icon: '▸' },
   ];
 
   if (!labUnlocked) {
@@ -528,11 +418,6 @@ export default function LabSection() {
     <OSWindowFrame name="LAB" ext=".beta" color="#39FF14">
     <div style={{ position: 'relative', background: 'var(--void)', overflow: 'auto', height: '100%' }}>
       <SectionAmbientBG color="#7B2FFF" particleCount={70} />
-      {/* Holographic grid */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.025, backgroundImage: 'linear-gradient(rgba(57,255,20,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(57,255,20,0.8) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
-      {/* Scan line */}
-      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(57,255,20,0.1), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'labScan 4s linear infinite' }} />
-      <style dangerouslySetInnerHTML={{ __html: '@keyframes labScan{0%{top:-2px}100%{top:100vh}}' }} />
 
       {/* CLASSIFIED watermark */}
       <div style={{
@@ -552,19 +437,16 @@ export default function LabSection() {
         <div ref={headerRef} style={{ marginBottom: '36px', opacity: 0 }}>
           <div className="section-label">06 // LAB.beta</div>
           <h2 style={{
-            fontFamily: 'var(--font-display)', fontWeight: 900,
-            fontSize: 'clamp(32px, 5vw, 48px)', marginBottom: '10px',
+            fontFamily: 'var(--font-display)', fontWeight: 800,
+            fontSize: 'clamp(28px, 4vw, 42px)', marginBottom: '8px',
           }}>
             The <span className="glow-text-green">Experiments</span>
           </h2>
           <p style={{
-            fontSize: '14px', color: 'var(--text-dim)', maxWidth: '420px', lineHeight: 1.8,
+            fontSize: '13px', color: 'var(--text-dim)', maxWidth: '420px', lineHeight: 1.8,
           }}>
             Playground for creative coding, generative art, and things that glow.
           </p>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(57,255,20,0.4)', letterSpacing: '1px', marginTop: 8 }}>
-            {TABS.length} EXPERIMENTS LOADED
-          </div>
         </div>
 
         {/* Tabs */}
@@ -584,7 +466,6 @@ export default function LabSection() {
               }}
             >
               {tab.icon} {tab.label}
-              <span style={{ fontSize: '6px', letterSpacing: '1px', padding: '1px 5px', border: `1px solid ${tab.statusColor}33`, color: tab.statusColor, marginLeft: 4, opacity: 0.7 }}>{tab.status}</span>
             </button>
           ))}
         </div>
