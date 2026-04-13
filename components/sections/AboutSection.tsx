@@ -375,58 +375,98 @@ function Globe() {
 }
 
 /* ═══════════════════════════════════════════
-   PROFICIENCY BAR
+   COUNT UP — Animated number counter
    ═══════════════════════════════════════════ */
-function ProfBar({ label, value, color, delay, go }: { label: string; value: number; color: string; delay: number; go: boolean }) {
-  const [w, setW] = useState(0);
+function CountUp({ value, go }: { value: string; go: boolean }) {
+  const [display, setDisplay] = useState(value);
+  const num = parseInt(value.replace(/[^0-9]/g, ''));
+  const suffix = value.replace(/[0-9]/g, '');
+
+  useEffect(() => {
+    if (!go || isNaN(num)) return;
+    let start = 0;
+    const step = () => {
+      start += Math.ceil(num / 40);
+      if (start >= num) { setDisplay(`${num}${suffix}`); return; }
+      setDisplay(`${start}${suffix}`);
+      requestAnimationFrame(step);
+    };
+    step();
+  }, [go, num, suffix, value]);
+
+  return <>{display}</>;
+}
+
+/* ═══════════════════════════════════════════
+   ARC GAUGE — Circular proficiency indicator
+   ═══════════════════════════════════════════ */
+function ArcGauge({ label, value, color, delay, go }: { label: string; value: number; color: string; delay: number; go: boolean }) {
+  const [progress, setProgress] = useState(0);
   const [hov, setHov] = useState(false);
   const [displayVal, setDisplayVal] = useState(0);
   
-  useEffect(() => { if (go) setTimeout(() => setW(value), delay); }, [go, value, delay]);
+  useEffect(() => { if (go) setTimeout(() => setProgress(value), delay); }, [go, value, delay]);
   
-  // Animate the percentage counter
   useEffect(() => {
-    if (w === 0) return;
+    if (progress === 0) return;
     let start = 0;
     const step = () => {
-      start += Math.ceil(value / 30);
+      start += Math.ceil(value / 25);
       if (start >= value) { setDisplayVal(value); return; }
       setDisplayVal(start);
       requestAnimationFrame(step);
     };
     setTimeout(step, delay);
-  }, [w, value, delay]);
+  }, [progress, value, delay]);
+
+  const size = 90;
+  const strokeWidth = 3;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference - (progress / 100) * circumference;
 
   return (
-    <div 
-      style={{ marginBottom: 14, cursor: 'default' }}
+    <div
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'default', transition: 'transform 0.3s', transform: hov ? 'scale(1.08)' : 'scale(1)' }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, transition: 'all 0.2s' }}>
-        <span style={{ 
-          fontFamily: 'var(--font-mono)', fontSize: hov ? '10px' : '9px', letterSpacing: '1.5px', 
-          color: hov ? color : 'rgba(232,232,240,.65)',
-          textShadow: hov ? `0 0 10px ${color}50` : 'none',
+      <div style={{ position: 'relative', width: size, height: size }}>
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          {/* Background ring */}
+          <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={strokeWidth} />
+          {/* Progress arc */}
+          <circle
+            cx={size/2} cy={size/2} r={radius} fill="none"
+            stroke={color} strokeWidth={hov ? strokeWidth + 1 : strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            strokeLinecap="round"
+            style={{
+              transition: `stroke-dashoffset 1.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms, stroke-width 0.3s`,
+              filter: hov ? `drop-shadow(0 0 6px ${color}88)` : `drop-shadow(0 0 3px ${color}44)`,
+            }}
+          />
+        </svg>
+        {/* Center value */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700,
+          color: hov ? color : '#E8E8F0',
+          textShadow: hov ? `0 0 12px ${color}66` : 'none',
           transition: 'all 0.3s',
-        }}>{label}</span>
-        <span style={{ 
-          fontFamily: 'var(--font-mono)', fontSize: hov ? '11px' : '9px', fontWeight: hov ? 700 : 400,
-          color, textShadow: `0 0 ${hov ? 12 : 6}px ${color}66`,
-          transition: 'all 0.3s',
-        }}>{displayVal}%</span>
+        }}>
+          {displayVal}
+        </div>
       </div>
-      <div style={{ 
-        height: hov ? 6 : 2, background: 'rgba(255,255,255,.06)', borderRadius: 3,
-        transition: 'height 0.3s cubic-bezier(.16,1,.3,1)',
-      }}>
-        <div style={{ 
-          height: '100%', width: `${w}%`, borderRadius: 3,
-          background: `linear-gradient(90deg, ${color}66, ${color})`, 
-          boxShadow: hov ? `0 0 16px ${color}88, 0 0 30px ${color}33` : `0 0 8px ${color}44`,
-          transition: 'width 1.2s cubic-bezier(.16,1,.3,1), box-shadow 0.3s',
-        }} />
-      </div>
+      <span style={{
+        fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1px',
+        color: hov ? color : 'rgba(232,232,240,0.5)',
+        textShadow: hov ? `0 0 8px ${color}40` : 'none',
+        marginTop: 8, textAlign: 'center', maxWidth: 100,
+        transition: 'all 0.3s',
+      }}>{label}</span>
     </div>
   );
 }
@@ -605,9 +645,9 @@ export default function AboutSection() {
           <div>
             <Reveal delay={100}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30 }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3.5px', color: '#7B2FFF', textShadow: '0 0 8px rgba(123,47,255,.3)' }}>ABOUT.exe</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '4px', color: '#7B2FFF', textShadow: '0 0 12px rgba(123,47,255,.4)' }}>ABOUT.exe</div>
                 <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg,#7B2FFF,transparent)' }} />
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: 'rgba(232,232,240,.4)' }}>v1.0.0</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.4)' }}>v3.0.1</div>
               </div>
             </Reveal>
 
@@ -628,12 +668,14 @@ export default function AboutSection() {
             {/* Proficiency */}
             <div ref={statsRef} style={{ marginBottom: 48 }}>
               <Reveal delay={350}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>PROFICIENCY_MATRIX.sys</div>
-                <ProfBar label="JAVA / DSA / OOP" value={85} color="#00D4FF" delay={100} go={statsGo} />
-                <ProfBar label="BACKEND / PHP / DATABASES" value={68} color="#7B2FFF" delay={200} go={statsGo} />
-                <ProfBar label="FRONTEND / REACT / UI" value={50} color="#39FF14" delay={300} go={statsGo} />
-                <ProfBar label="THREE.JS / WEBGL / GSAP" value={35} color="#FFB800" delay={400} go={statsGo} />
-                <ProfBar label="GIT / TOOLS / DEPLOYMENT" value={62} color="#00D4FF" delay={500} go={statsGo} />
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 20 }}>PROFICIENCY_MATRIX.sys</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', gap: 16 }}>
+                  <ArcGauge label="JAVA / DSA" value={85} color="#00D4FF" delay={100} go={statsGo} />
+                  <ArcGauge label="BACKEND" value={68} color="#7B2FFF" delay={200} go={statsGo} />
+                  <ArcGauge label="FRONTEND" value={50} color="#39FF14" delay={300} go={statsGo} />
+                  <ArcGauge label="3D / WEBGL" value={35} color="#FFB800" delay={400} go={statsGo} />
+                  <ArcGauge label="DEVTOOLS" value={62} color="#00D4FF" delay={500} go={statsGo} />
+                </div>
               </Reveal>
             </div>
 
@@ -679,7 +721,7 @@ export default function AboutSection() {
                   onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px) scale(1.03)'; }}
                   onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0) scale(1)'; }}
                 >
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: 800, color: '#00D4FF', textShadow: '0 0 20px rgba(0,212,255,.5), 0 0 40px rgba(0,212,255,.2)', marginBottom: 8, letterSpacing: '-1px' }}>{s.value}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: 800, color: '#00D4FF', textShadow: '0 0 20px rgba(0,212,255,.5), 0 0 40px rgba(0,212,255,.2)', marginBottom: 8, letterSpacing: '-1px' }}><CountUp value={s.value} go={statsGo} /></div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'rgba(232,232,240,.6)', letterSpacing: '2px', textTransform: 'uppercase' }}>{s.label}</div>
                 </GlowCard>
               ))}
