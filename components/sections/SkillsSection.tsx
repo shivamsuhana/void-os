@@ -398,8 +398,10 @@ function ForceGraph({ onSelect, selected, filter }: {
           ctx.globalAlpha = alpha;
         }
 
-        // Label
+        // Label with glow
         const showFull = isHov || isSel || n.r > 20;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = isHov || isSel ? 12 : 4;
         if (showFull) {
           ctx.font = `bold ${Math.floor(Math.min(R * 0.42, 12))}px 'Syne', sans-serif`;
           ctx.textAlign = 'center';
@@ -412,9 +414,10 @@ function ForceGraph({ onSelect, selected, filter }: {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
           ctx.fillStyle = color;
-          ctx.globalAlpha = alpha * 0.65;
+          ctx.globalAlpha = alpha * 0.7;
           ctx.fillText(n.name, n.x, n.y + R + 5);
         }
+        ctx.shadowBlur = 0;
 
         // Proficiency ring arc
         if (!dimmed) {

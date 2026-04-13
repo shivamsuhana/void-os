@@ -310,9 +310,12 @@ export default function ContactSection() {
       { t: '  [OK] Route secured · AES-256-Q handshake complete', c: C.green, d: 560 },
       { t: '  [OK] STATUS: AVAILABLE FOR NEW PROJECTS', c: C.green, d: 840 },
       { t: '  [OK] LOAD: LOW · ETA: < 24 HOURS', c: C.green, d: 1100 },
-      { t: '──────────────────────────────────', c: 'rgba(232,232,240,0.07)', d: 1350 },
-      { t: '', c: '', d: 1500 },
-      { t: '> IDENTIFY YOURSELF — Enter your name:', c: C.amber, d: 1700 },
+      { t: '  [SYS] UPTIME: 4y 2m · SKILLS: 18 ACTIVE NODES', c: 'rgba(232,232,240,0.3)', d: 1250 },
+      { t: '  [SYS] PROJECTS: 3 DEPLOYED · COMMITS: 500+', c: 'rgba(232,232,240,0.3)', d: 1350 },
+      { t: '  [NET] LOCATION: Bangalore, India · TZ: IST (UTC+5:30)', c: 'rgba(232,232,240,0.25)', d: 1450 },
+      { t: '──────────────────────────────────', c: 'rgba(232,232,240,0.07)', d: 1550 },
+      { t: '', c: '', d: 1650 },
+      { t: '> IDENTIFY YOURSELF — Enter your name:', c: C.amber, d: 1850 },
     ];
     seq.forEach(({ t, c, d }) => setTimeout(() => push(t, c), d + 200));
     setTimeout(() => { setStep('name'); setTimeout(() => inputRef.current?.focus(), 80); }, 2100);

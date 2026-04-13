@@ -212,9 +212,9 @@ export default function ResumePage() {
                   <strong style={{ fontSize: '11pt' }}>
                     {project.title}
                     {project.liveUrl && (
-                      <span style={{ fontWeight: 400, fontSize: '9pt', color: '#0066cc' }}>
+                      <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 400, fontSize: '9pt', color: '#0066cc', textDecoration: 'underline' }}>
                         {' '}— {project.liveUrl.replace('https://', '').replace('http://', '')}
-                      </span>
+                      </a>
                     )}
                   </strong>
                   <span style={{ fontSize: '9pt', color: '#555' }}>{project.year}</span>
@@ -269,16 +269,16 @@ export default function ResumePage() {
             <div style={{ marginTop: '6px' }}>
               <p style={{ margin: '3px 0', fontSize: '10pt' }}>
                 <strong>LeetCode:</strong>{' '}
-                <span style={{ color: '#0066cc' }}>{OWNER.leetcode?.replace('https://', '')}</span>
+                <a href={OWNER.leetcode} target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc', textDecoration: 'underline' }}>{OWNER.leetcode?.replace('https://', '')}</a>
                 {' '}— {DSA_COUNT} problems solved across Arrays, Trees, Graphs, DP, Backtracking
               </p>
               <p style={{ margin: '3px 0', fontSize: '10pt' }}>
                 <strong>GeeksForGeeks:</strong>{' '}
-                <span style={{ color: '#0066cc' }}>{OWNER.gfg?.replace('https://www.', '')}</span>
+                <a href={OWNER.gfg} target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc', textDecoration: 'underline' }}>{OWNER.gfg?.replace('https://www.', '')}</a>
               </p>
               <p style={{ margin: '3px 0', fontSize: '10pt' }}>
                 <strong>GitHub:</strong>{' '}
-                <span style={{ color: '#0066cc' }}>{OWNER.github?.replace('https://', '')}</span>
+                <a href={OWNER.github} target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc', textDecoration: 'underline' }}>{OWNER.github?.replace('https://', '')}</a>
                 {' '}— Open-source projects and contributions
               </p>
             </div>

@@ -550,7 +550,16 @@ export default function AboutSection() {
           <style dangerouslySetInnerHTML={{ __html: '@media(max-width:768px){#about-hero{grid-template-columns:1fr!important;}}' }} />
 
           {/* ── LEFT: Photo + Identity + CV ── */}
-          <div>
+          <div
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width - 0.5) * 8;
+              const y = ((e.clientY - rect.top) / rect.height - 0.5) * 8;
+              e.currentTarget.style.transform = `perspective(800px) rotateY(${x}deg) rotateX(${-y}deg) translateZ(5px)`;
+            }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateZ(0)'; }}
+            style={{ transition: 'transform 0.3s ease-out', transformStyle: 'preserve-3d' }}
+          >
             <Reveal>
               <div
                 style={{
@@ -650,12 +659,29 @@ export default function AboutSection() {
             <div ref={statsRef} style={{ marginBottom: 48 }}>
               <Reveal delay={350}>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.6)', marginBottom: 16 }}>PROFICIENCY_MATRIX.sys</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center' }}>
-                  <ArcGauge label="JAVA / DSA" value={85} color="#00D4FF" delay={100} go={statsGo} />
-                  <ArcGauge label="BACKEND" value={68} color="#7B2FFF" delay={200} go={statsGo} />
-                  <ArcGauge label="FRONTEND" value={50} color="#39FF14" delay={300} go={statsGo} />
-                  <ArcGauge label="3D / WEBGL" value={35} color="#FFB800" delay={400} go={statsGo} />
-                  <ArcGauge label="DEVOPS" value={62} color="#00D4FF" delay={500} go={statsGo} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {([
+                    { label: 'JAVA / DSA', level: 'Advanced', value: 85, color: '#00D4FF' },
+                    { label: 'BACKEND', level: 'Strong', value: 68, color: '#7B2FFF' },
+                    { label: 'FRONTEND', level: 'Competent', value: 50, color: '#39FF14' },
+                    { label: '3D / WEBGL', level: 'Learning', value: 35, color: '#FFB800' },
+                    { label: 'DEVOPS', level: 'Competent', value: 62, color: '#00D4FF' },
+                  ] as const).map((s, i) => (
+                    <div key={i}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '2px', color: s.color, textShadow: `0 0 6px ${s.color}44` }}>{s.label}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.35)' }}>{s.level}</span>
+                      </div>
+                      <div style={{ height: 3, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', width: statsGo ? `${s.value}%` : '0%',
+                          background: `linear-gradient(90deg, ${s.color}88, ${s.color})`,
+                          boxShadow: `0 0 8px ${s.color}44`,
+                          transition: `width 1s cubic-bezier(0.16,1,0.3,1) ${i * 0.15}s`,
+                        }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </Reveal>
             </div>

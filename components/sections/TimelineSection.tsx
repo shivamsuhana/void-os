@@ -288,7 +288,7 @@ export default function TimelineSection() {
   return (
     <OSWindowFrame name="TIME" ext=".log" color="#39FF14">
     <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
-      <SectionAmbientBG color="#39FF14" particleCount={35} />
+      <SectionAmbientBG color="#39FF14" particleCount={20} />
       {/* CRT + vignette */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
@@ -340,7 +340,7 @@ export default function TimelineSection() {
         <div style={{ position: 'relative' }}>
           {/* Central beam */}
           <div style={{
-            position: 'absolute', left: isMobile ? 12 : 24, top: 0, bottom: 0, width: 2,
+            position: 'absolute', left: isMobile ? 12 : '50%', transform: isMobile ? 'none' : 'translateX(-50%)', top: 0, bottom: 0, width: 2,
             background: 'rgba(57,255,20,0.04)',
           }}>
             {/* Progress glow */}
@@ -375,7 +375,12 @@ export default function TimelineSection() {
                 key={entry.id}
                 ref={el => { nodeRefs.current[i] = el; }}
                 style={{
-                  paddingLeft: isMobile ? 40 : 60,
+                  ...(isMobile
+                    ? { paddingLeft: 40 }
+                    : i % 2 === 0
+                      ? { paddingRight: 'calc(50% + 30px)', paddingLeft: 0, textAlign: 'right' }
+                      : { paddingLeft: 'calc(50% + 30px)', paddingRight: 0, textAlign: 'left' }
+                  ),
                   marginBottom: i < TIMELINE.length - 1 ? 24 : 0,
                   position: 'relative',
                 }}
@@ -383,7 +388,8 @@ export default function TimelineSection() {
                 {/* Node on beam */}
                 <div style={{
                   position: 'absolute',
-                  left: isMobile ? 6 : 18,
+                  left: isMobile ? 6 : '50%',
+                  transform: isMobile ? 'none' : 'translateX(-50%)',
                   top: showYear ? 70 : 24,
                   width: 14, height: 14,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
