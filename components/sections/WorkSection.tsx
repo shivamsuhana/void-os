@@ -8,6 +8,7 @@ import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { PROJECTS, Project } from '@/lib/portfolio-data';
 import VoidPostProcessing from '@/components/shaders/VoidPostProcessing';
+import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 /* ═══════════════════════════════════════════
    NO-OP RAYCAST — prevents decorative meshes from stealing clicks
@@ -445,20 +446,8 @@ export default function WorkSection() {
   }, []);
 
   return (
-    <div ref={containerRef} style={{ position: 'fixed', inset: 0, background: '#050510', zIndex: 50, overflow: 'hidden' }}>
-      {/* Process bar */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(3,3,6,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(123,47,255,0.08)', padding: '12px 40px', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'var(--font-mono)' }}>
-        <button onClick={() => navigateTo('desktop')} style={{ background: 'none', border: '1px solid rgba(0,212,255,.15)', padding: '5px 14px', fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: '#00D4FF', cursor: 'pointer', transition: 'all .2s', borderRadius: 2 }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.5)'; e.currentTarget.style.background = 'rgba(0,212,255,.06)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.15)'; e.currentTarget.style.background = 'none'; }}
-        >← DESKTOP</button>
-        <div style={{ width: 1, height: 14, background: 'rgba(123,47,255,.12)' }} />
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7B2FFF', boxShadow: '0 0 8px #7B2FFF' }} />
-        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.55)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,.55)' }}>/</span>
-        <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#7B2FFF', textShadow: '0 0 8px rgba(123,47,255,.3)' }}>WORK.db</span>
-        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.4)' }}>DEPTH: {Math.round(scrollProgress * 100)}%</div>
-      </div>
+    <OSWindowFrame name="WORK" ext=".db" color="#7B2FFF">
+    <div ref={containerRef} style={{ position: 'relative', background: '#050510', height: '100%', overflow: 'hidden' }}>
 
       {/* 3D Tunnel */}
       <div style={{ position: 'absolute', inset: 0 }}>
@@ -507,5 +496,6 @@ export default function WorkSection() {
       {/* Case study modal */}
       {selectedProject && <CaseStudyOverlay project={selectedProject} onClose={() => setSelectedProject(null)} />}
     </div>
+    </OSWindowFrame>
   );
 }

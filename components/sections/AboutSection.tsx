@@ -6,6 +6,7 @@ import { useVoidStore } from '@/lib/store';
 import { OWNER, LOCATIONS } from '@/lib/portfolio-data';
 import { enableMagneticHover } from '@/lib/animations';
 import SectionAmbientBG from '@/components/global/SectionAmbientBG';
+import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 /* ═══════════════════════════════════════════
    HEX GRID BACKGROUND
@@ -509,29 +510,12 @@ export default function AboutSection() {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#050510', overflowY: 'auto', zIndex: 50 }}>
+    <OSWindowFrame name="ABOUT" ext=".exe" color="#00D4FF">
+    <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
       <HexGridBG />
-      <SectionAmbientBG color="#00D4FF" particleCount={40} />
+      <SectionAmbientBG color="#00D4FF" particleCount={80} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)' }} />
-
-      {/* Process bar with back button */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(3,3,6,.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,212,255,.15)', padding: '12px 40px', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'var(--font-mono)' }}>
-        <button onClick={() => navigateTo('desktop')} style={{
-          background: 'none', border: '1px solid rgba(0,212,255,.15)', padding: '5px 14px',
-          fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: '#00D4FF',
-          cursor: 'pointer', transition: 'all .2s', borderRadius: 2,
-        }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.5)'; e.currentTarget.style.background = 'rgba(0,212,255,.06)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.15)'; e.currentTarget.style.background = 'none'; }}
-        >← DESKTOP</button>
-        <div style={{ width: 1, height: 14, background: 'rgba(0,212,255,.2)' }} />
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 8px #39FF14' }} />
-        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.55)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,.55)' }}>/</span>
-        <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#00D4FF', textShadow: '0 0 8px rgba(0,212,255,.3)' }}>ABOUT.exe</span>
-        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.4)' }}>PID: 1337 · RUNNING</div>
-      </div>
 
       {/* ─── HERO SPLIT ─── */}
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -724,5 +708,6 @@ export default function AboutSection() {
         </div>
       </div>
     </div>
+    </OSWindowFrame>
   );
 }

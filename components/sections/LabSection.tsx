@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { TERMINAL_COMMANDS, OWNER } from '@/lib/portfolio-data';
 import SectionAmbientBG from '@/components/global/SectionAmbientBG';
+import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 type LabTab = 'music' | 'particles' | 'terminal';
 
@@ -403,19 +404,20 @@ export default function LabSection() {
 
   if (!labUnlocked) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', zIndex: 50 }}>
-        <button className="back-button" onClick={() => navigateTo('desktop')}>← VOID DESKTOP</button>
+      <OSWindowFrame name="LAB" ext=".beta" color="#39FF14">
+      <div style={{ position: 'relative', background: 'var(--void)', height: '100%' }}>
         <LockScreen onUnlock={() => setLabUnlocked(true)} />
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%)' }} />
       </div>
+      </OSWindowFrame>
     );
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'var(--void)', overflow: 'auto', zIndex: 50 }}>
-      <SectionAmbientBG color="#7B2FFF" particleCount={30} />
-      <button ref={backRef} className="back-button" onClick={() => navigateTo('desktop')} style={{ opacity: 0 }}>← VOID DESKTOP</button>
+    <OSWindowFrame name="LAB" ext=".beta" color="#39FF14">
+    <div style={{ position: 'relative', background: 'var(--void)', overflow: 'auto', height: '100%' }}>
+      <SectionAmbientBG color="#7B2FFF" particleCount={70} />
 
       {/* CLASSIFIED watermark */}
       <div style={{
@@ -487,5 +489,6 @@ export default function LabSection() {
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)' }} />
     </div>
+    </OSWindowFrame>
   );
 }

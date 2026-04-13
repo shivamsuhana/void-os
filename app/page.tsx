@@ -22,6 +22,7 @@ const AITwinChat = dynamic(() => import('@/components/global/AITwinChat'), { ssr
 const CommandPalette = dynamic(() => import('@/components/global/CommandPalette'), { ssr: false });
 const AchievementSystem = dynamic(() => import('@/components/global/AchievementSystem'), { ssr: false });
 const TimeTheme = dynamic(() => import('@/components/global/TimeTheme'), { ssr: false });
+const OSTaskbar = dynamic(() => import('@/components/global/OSTaskbar'), { ssr: false });
 
 /* ═══════════════════════════════════════════
    SECTOR LOADING — Brief terminal-style loader
@@ -153,6 +154,7 @@ export default function VoidOS() {
           <CommandPalette />
           <AchievementSystem />
           <TimeTheme />
+          <OSTaskbar />
         </>
       )}
     </main>

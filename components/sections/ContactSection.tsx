@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useVoidStore } from '@/lib/store';
 import { OWNER } from '@/lib/portfolio-data';
+import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 /* ═══════════════════════════════════════════
    COLORS
@@ -446,7 +447,8 @@ export default function ContactSection() {
   const promptLabel = promptLabels[step] || '';
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: C.void, overflow: 'hidden', zIndex: 50, fontFamily: 'var(--font-mono)', color: C.white }}>
+    <OSWindowFrame name="CONTACT" ext=".net" color="#FF3366">
+    <div style={{ position: 'relative', background: C.void, overflow: 'hidden', height: '100%', fontFamily: 'var(--font-mono)', color: C.white }}>
       <style dangerouslySetInnerHTML={{ __html: `
         input::placeholder,textarea::placeholder{color:rgba(232,232,240,0.25);}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
@@ -461,43 +463,7 @@ export default function ContactSection() {
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(0,212,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)' }} />
 
-      {/* Header */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'rgba(3,3,6,0.9)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(0,212,255,0.1)',
-        padding: '13px clamp(16px,3vw,40px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        opacity: headerIn ? 1 : 0, transition: 'opacity 0.8s ease',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button onClick={() => navigateTo('desktop')} style={{
-            background: 'none', border: '1px solid rgba(0,212,255,0.2)', padding: '5px 14px',
-            fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: C.blue,
-            cursor: 'pointer', transition: 'all 0.2s', borderRadius: 2,
-          }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.5)'; e.currentTarget.style.background = 'rgba(0,212,255,0.06)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.2)'; e.currentTarget.style.background = 'none'; }}
-          >← DESKTOP</button>
-          <div style={{ width: 1, height: 14, background: 'rgba(0,212,255,0.15)' }} />
-          <div style={{ position: 'relative' }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, boxShadow: `0 0 8px ${C.green}` }} />
-            <div style={{ position: 'absolute', inset: -3, borderRadius: '50%', border: `1px solid ${C.green}`, animation: 'pulseRing 2s ease infinite' }} />
-          </div>
-          <span style={{ fontSize: '9px', letterSpacing: '3px', color: 'rgba(232,232,240,0.45)' }}>VOID_OS</span>
-          <span style={{ color: 'rgba(232,232,240,0.2)' }}>/</span>
-          <span style={{ fontSize: '9px', letterSpacing: '2px', color: C.blue, textShadow: `0 0 8px ${C.blue}40` }}>CONTACT.net</span>
-        </div>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <div style={{ width: 5, height: 5, borderRadius: '50%', background: C.green, boxShadow: `0 0 6px ${C.green}` }} />
-            <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: C.green }}>ONLINE</span>
-          </div>
-          <span style={{ fontSize: '8px', color: 'rgba(232,232,240,0.3)', letterSpacing: '1.5px' }}>
-            {clock.toLocaleTimeString('en-US', { hour12: false })}
-          </span>
-        </div>
-      </div>
+
 
       {/* BODY: Centered floating layout */}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 20, padding: '60px 30px 20px' }}>
@@ -652,5 +618,6 @@ export default function ContactSection() {
 
       {showSuccess && <SuccessPopup name={form.name} onBack={() => { setShowSuccess(false); setStep('name'); setLines([]); setForm({ name: '', email: '', subject: '', message: '' }); setInput(''); setSendProgress(0); setTimeout(() => { addLine('VOID OS CONTACT TERMINAL v3.0.1', C.blue); addLine('Secure channel established.', 'rgba(232,232,240,0.5)'); addLine('', ''); addLine('> IDENTIFY YOURSELF — Enter your name:', C.amber); }, 100); }} />}
     </div>
+    </OSWindowFrame>
   );
 }

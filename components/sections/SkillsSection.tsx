@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { SKILLS, SKILL_CATEGORIES, Skill } from '@/lib/portfolio-data';
 import { audioEngine } from '@/lib/audio-engine';
+import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 /* ═══════════════════════════════════════════
    COLOR MAP
@@ -633,39 +634,13 @@ export default function SkillsSection() {
   }, []);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#050510', overflow: 'hidden', zIndex: 50, fontFamily: 'var(--font-mono)', color: '#EEEEF5' }}>
+    <OSWindowFrame name="SKILLS" ext=".sys" color="#FFB800">
+    <div style={{ position: 'relative', background: '#050510', overflow: 'hidden', height: '100%', fontFamily: 'var(--font-mono)', color: '#EEEEF5' }}>
       <LiquidMetalBG />
 
       {/* CRT overlay */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.45) 100%)' }} />
-
-      {/* Top bar */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
-        padding: '14px clamp(16px, 3vw, 40px)',
-        background: 'rgba(5,5,16,0.75)', backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(0,212,255,0.1)',
-        display: 'flex', alignItems: 'center', gap: 14,
-      }}>
-        <button onClick={() => navigateTo('desktop')} style={{
-          background: 'none', border: '1px solid rgba(0,212,255,0.2)', padding: '5px 14px',
-          fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: '#00D4FF',
-          cursor: 'pointer', transition: 'all 0.2s', borderRadius: 2,
-        }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.5)'; e.currentTarget.style.background = 'rgba(0,212,255,0.06)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.2)'; e.currentTarget.style.background = 'none'; }}
-        >← DESKTOP</button>
-        <div style={{ width: 1, height: 14, background: 'rgba(0,212,255,0.15)' }} />
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 8px rgba(57,255,20,0.6)' }} />
-        <span style={{ fontSize: '9px', letterSpacing: '3px', color: 'rgba(232,232,240,0.55)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,0.2)' }}>/</span>
-        <span style={{ fontSize: '9px', letterSpacing: '2px', color: '#FFB800', textShadow: '0 0 8px rgba(255,184,0,0.3)' }}>SKILLS.sys</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 20 }}>
-          <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)', display: isMobile ? 'none' : 'inline' }}>{SKILLS.length} NODES</span>
-          <span style={{ fontSize: '8px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.4)' }}>{LINKS.length} CONNECTIONS</span>
-        </div>
-      </div>
 
       {/* Right sidebar */}
       {!isMobile && (
@@ -743,5 +718,6 @@ export default function SkillsSection() {
         </div>
       </div>
     </div>
+    </OSWindowFrame>
   );
 }

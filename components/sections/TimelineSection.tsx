@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 import { TIMELINE, TimelineEntry } from '@/lib/portfolio-data';
 import SectionAmbientBG from '@/components/global/SectionAmbientBG';
+import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 /* ═══════════════════════════════════════════
    NEURAL PATHWAY BACKGROUND
@@ -205,31 +206,11 @@ export default function TimelineSection() {
   }, []);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#050510', overflowY: 'auto', zIndex: 50 }}>
-      {/* CRT */}
-      <SectionAmbientBG color="#39FF14" particleCount={30} />
+    <OSWindowFrame name="TIME" ext=".log" color="#39FF14">
+    <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
+      <SectionAmbientBG color="#39FF14" particleCount={70} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
-
-      {/* Process bar */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(3,3,6,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(57,255,20,0.08)', padding: '12px 40px', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'var(--font-mono)' }}>
-        <button onClick={() => navigateTo('desktop')} style={{
-          background: 'none', border: '1px solid rgba(0,212,255,.15)', padding: '5px 14px',
-          fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '1.5px', color: '#00D4FF',
-          cursor: 'pointer', transition: 'all .2s', borderRadius: 2,
-        }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.5)'; e.currentTarget.style.background = 'rgba(0,212,255,.06)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,.15)'; e.currentTarget.style.background = 'none'; }}
-        >← DESKTOP</button>
-        <div style={{ width: 1, height: 14, background: 'rgba(57,255,20,.12)' }} />
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#39FF14', boxShadow: '0 0 8px #39FF14' }} />
-        <span style={{ fontSize: '8px', letterSpacing: '3px', color: 'rgba(232,232,240,.55)' }}>VOID_OS</span>
-        <span style={{ color: 'rgba(232,232,240,.55)' }}>/</span>
-        <span style={{ fontSize: '8px', letterSpacing: '2px', color: '#39FF14', textShadow: '0 0 8px rgba(57,255,20,.3)' }}>TIME.log</span>
-        <div style={{ marginLeft: 'auto', fontSize: '7px', letterSpacing: '1.5px', color: 'rgba(232,232,240,.4)' }}>
-          {activeIdx >= 0 ? `NODE ${activeIdx + 1}/${TIMELINE.length}` : 'SCROLL TO BEGIN'}
-        </div>
-      </div>
 
       <div ref={containerRef} style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(40px,6vw,80px) clamp(20px,5vw,60px)', position: 'relative', zIndex: 1 }}>
         {/* Header */}
@@ -347,5 +328,6 @@ export default function TimelineSection() {
         </div>
       </div>
     </div>
+    </OSWindowFrame>
   );
 }
