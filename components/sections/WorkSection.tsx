@@ -27,6 +27,7 @@ function ProjectCard3D({ project, position, index, onSelect }: {
   const { pointer } = useThree();
   const glowOpacity = useRef(0.015);
   const edgeOpacity = useRef(0.08);
+  const scanRef = useRef<THREE.Mesh>(null);
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -51,8 +52,8 @@ function ProjectCard3D({ project, position, index, onSelect }: {
     groupRef.current.scale.y = THREE.MathUtils.lerp(groupRef.current.scale.y, s, 0.06);
 
     // Update child material opacities
-    glowOpacity.current = hovered ? 0.1 + Math.sin(t * 3) * 0.03 : 0.015;
-    edgeOpacity.current = hovered ? 0.35 : 0.06;
+    glowOpacity.current = hovered ? 0.12 + Math.sin(t * 3) * 0.04 : 0.02;
+    edgeOpacity.current = hovered ? 0.4 : 0.1;
     groupRef.current.children.forEach((child) => {
       if (child.userData.isGlow && (child as THREE.Mesh).material) {
         ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = glowOpacity.current;
@@ -61,6 +62,14 @@ function ProjectCard3D({ project, position, index, onSelect }: {
         ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = edgeOpacity.current;
       }
     });
+
+    // Animate scanning line
+    if (scanRef.current) {
+      scanRef.current.position.y = Math.sin(t * 1.5) * 0.7;
+      if ((scanRef.current.material as THREE.MeshBasicMaterial)) {
+        (scanRef.current.material as THREE.MeshBasicMaterial).opacity = hovered ? 0.25 + Math.sin(t * 4) * 0.05 : 0.04;
+      }
+    }
   });
 
   return (
@@ -102,10 +111,10 @@ function ProjectCard3D({ project, position, index, onSelect }: {
         <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.8 : 0.2} />
       </mesh>
 
-      {/* Scanning line — sweeps horizontally on hover */}
-      <mesh position={[0, Math.sin(Date.now() * 0.002) * 0.7, 0.008]} raycast={noRaycast}>
-        <planeGeometry args={[2.6, 0.015]} />
-        <meshBasicMaterial color={project.color} transparent opacity={hovered ? 0.2 : 0} />
+      {/* Scanning line — sweeps vertically, animated in useFrame */}
+      <mesh ref={scanRef} position={[0, 0, 0.008]} raycast={noRaycast}>
+        <planeGeometry args={[2.6, 0.02]} />
+        <meshBasicMaterial color={project.color} transparent opacity={0.04} />
       </mesh>
 
       {/* Wireframe edge — glass border */}

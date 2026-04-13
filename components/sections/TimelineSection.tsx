@@ -8,6 +8,87 @@ import SectionAmbientBG from '@/components/global/SectionAmbientBG';
 import OSWindowFrame from '@/components/global/OSWindowFrame';
 
 /* ═══════════════════════════════════════════
+   NEURAL NETWORK BG — floating nodes + connections
+   ═══════════════════════════════════════════ */
+function NeuralNetBG() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext('2d')!;
+    let W = c.width = window.innerWidth, H = c.height = window.innerHeight;
+    const resize = () => { W = c.width = window.innerWidth; H = c.height = window.innerHeight; };
+    window.addEventListener('resize', resize);
+
+    const nodes: { x: number; y: number; vx: number; vy: number; r: number; pulse: number }[] = [];
+    for (let i = 0; i < 45; i++) {
+      nodes.push({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 2 + 1, pulse: Math.random() * Math.PI * 2,
+      });
+    }
+
+    let frame: number;
+    const draw = () => {
+      ctx.fillStyle = 'rgba(5,5,16,0.08)';
+      ctx.fillRect(0, 0, W, H);
+
+      const t = Date.now() * 0.001;
+
+      // Draw connections
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 180) {
+            const alpha = (1 - dist / 180) * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(57,255,20,${alpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+
+            // Traveling pulse on connection
+            const pulsePos = (Math.sin(t * 2 + i * 0.5) + 1) / 2;
+            const px = nodes[i].x + (nodes[j].x - nodes[i].x) * pulsePos;
+            const py = nodes[i].y + (nodes[j].y - nodes[i].y) * pulsePos;
+            ctx.beginPath();
+            ctx.arc(px, py, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(57,255,20,${alpha * 2.5})`;
+            ctx.fill();
+          }
+        }
+      }
+
+      // Draw & update nodes
+      for (const n of nodes) {
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < 0 || n.x > W) n.vx *= -1;
+        if (n.y < 0 || n.y > H) n.vy *= -1;
+
+        const glow = 0.3 + Math.sin(t * 1.5 + n.pulse) * 0.15;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(57,255,20,${glow * 0.06})`;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(57,255,20,${glow})`;
+        ctx.fill();
+      }
+
+      frame = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); };
+  }, []);
+  return <canvas ref={ref} style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }} />;
+}
+
+/* ═══════════════════════════════════════════
    GLITCH DECODE TEXT — Characters randomize then settle
    ═══════════════════════════════════════════ */
 function GlitchReveal({ text, active, color = '#39FF14', size = '14px' }: { text: string; active: boolean; color?: string; size?: string }) {
@@ -99,23 +180,27 @@ function HoloCard({ entry, active, index }: { entry: TimelineEntry; active: bool
     <div
       ref={cardRef}
       onMouseEnter={() => setHov(true)}
-      onMouseLeave={(e) => { setHov(false); e.currentTarget.style.background = 'rgba(8,8,20,0.9)'; }}
+      onMouseLeave={(e) => { setHov(false); e.currentTarget.style.background = 'rgba(8,8,20,0.35)'; }}
       onMouseMove={handleMouseMove}
       style={{
         position: 'relative',
         width: '100%',
         padding: '24px 28px',
-        background: 'rgba(8,8,20,0.9)',
-        borderTop: `1px solid rgba(${rgb},${active ? (hov ? 0.5 : 0.2) : 0.05})`,
-        borderBottom: `1px solid rgba(${rgb},${active ? (hov ? 0.5 : 0.2) : 0.05})`,
+        background: 'rgba(8,8,20,0.35)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderTop: `1px solid rgba(${rgb},${active ? (hov ? 0.6 : 0.25) : 0.05})`,
+        borderBottom: `1px solid rgba(${rgb},${active ? (hov ? 0.6 : 0.25) : 0.05})`,
         borderLeft: `2px solid ${active ? entry.color : `rgba(${rgb},0.1)`}`,
-        borderRight: `1px solid rgba(${rgb},${active ? 0.1 : 0.03})`,
+        borderRight: `1px solid rgba(${rgb},${active ? 0.12 : 0.03})`,
         opacity: active ? 1 : 0.15,
-        transform: hov ? 'translateX(8px) scale(1.01)' : 'translateX(0)',
+        transform: hov ? 'translateX(8px) scale(1.02)' : 'translateX(0)',
         transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
         overflow: 'hidden',
         cursor: 'default',
-        boxShadow: hov ? `0 8px 40px rgba(${rgb},0.12), inset 0 0 60px rgba(${rgb},0.03)` : 'none',
+        boxShadow: hov
+          ? `0 8px 40px rgba(${rgb},0.15), inset 0 0 80px rgba(${rgb},0.04), 0 0 1px rgba(${rgb},0.3)`
+          : `inset 0 0 30px rgba(${rgb},0.01)`,
       }}
     >
       {/* Scanline overlay */}
@@ -288,7 +373,7 @@ export default function TimelineSection() {
   return (
     <OSWindowFrame name="TIME" ext=".log" color="#39FF14">
     <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
-      <SectionAmbientBG color="#39FF14" particleCount={20} />
+      <NeuralNetBG />
       {/* CRT + vignette */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />

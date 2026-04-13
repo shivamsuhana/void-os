@@ -61,7 +61,7 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
     const rect = card.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}20, ${color}08 50%, rgba(8,8,20,.85))`;
+    card.style.background = `radial-gradient(circle at ${x}% ${y}%, ${color}25, ${color}0a 50%, rgba(8,8,20,.4))`;
     card.style.borderColor = `${color}88`;
     card.style.boxShadow = `0 0 30px ${color}18, inset 0 0 40px ${color}08, 0 4px 20px rgba(0,0,0,.3)`;
   }, [color]);
@@ -71,8 +71,10 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
       ref={cardRef}
       style={{
         position: 'relative',
-        background: `linear-gradient(160deg, rgba(8,6,22,.95), rgba(4,3,14,.9))`,
-        border: `1px solid ${color}20`,
+        background: `rgba(8,6,22,0.35)`,
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: `1px solid ${color}25`,
         transition: 'border-color .3s, background .5s, box-shadow .3s, transform .3s',
         overflow: 'hidden',
         ...style
@@ -83,8 +85,8 @@ function GlowCard({ children, color = '#00D4FF', style = {}, className = '', ...
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = `${color}20`;
-        el.style.background = `linear-gradient(160deg, rgba(8,6,22,.95), rgba(4,3,14,.9))`;
+        el.style.borderColor = `${color}25`;
+        el.style.background = `rgba(8,6,22,0.35)`;
         el.style.boxShadow = 'none';
         el.style.transform = 'translateY(0) scale(1)';
       }}
