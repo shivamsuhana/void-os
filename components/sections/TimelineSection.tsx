@@ -101,7 +101,7 @@ function TimelineCard({ entry, index, active, side }: { entry: TimelineEntry; in
   const onLeave = (e: React.MouseEvent) => {
     setHov(false);
     if (cardRef.current) cardRef.current.style.transform = active ? 'translateY(0)' : 'translateY(14px)';
-    e.currentTarget.style.background = 'none';
+    (e.currentTarget as HTMLElement).style.background = 'none';
   };
 
   return (
