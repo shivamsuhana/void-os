@@ -1,12 +1,20 @@
 'use client';
 
 import { useCallback } from 'react';
-import { OWNER, PROJECTS, SKILLS, TIMELINE, SKILL_CATEGORIES, DSA_COUNT } from '@/lib/portfolio-data';
+import { OWNER, PROJECTS, SKILLS, SKILL_CATEGORIES, DSA_COUNT } from '@/lib/portfolio-data';
 
 /**
  * ATS-Optimized Resume — Auto-generated from portfolio-data.ts
  * Uses ONLY inline styles for guaranteed print compatibility.
  * No styled-jsx, no CSS modules — pure inline for PDF reliability.
+ *
+ * ✅ ATS checklist:
+ * - Plain text, no images/icons, no tables for layout
+ * - Standard section headings (OBJECTIVE, EDUCATION, SKILLS, PROJECTS, etc.)
+ * - Action verbs in bullet points
+ * - Quantifiable achievements
+ * - Contact: Name, Phone, Email, Location, GitHub, LinkedIn, LeetCode, GFG
+ * - Keywords mapped to JD requirements
  */
 export default function ResumePage() {
   const handleDownload = useCallback(() => {
@@ -91,13 +99,16 @@ export default function ResumePage() {
             }}>
               {(OWNER.fullName || OWNER.name).toUpperCase()}
             </h1>
-            <p style={{ fontSize: '11pt', color: '#333', margin: '0 0 8px', fontWeight: 500 }}>
+            <p style={{ fontSize: '11pt', color: '#333', margin: '0 0 6px', fontWeight: 500 }}>
               {OWNER.role}
             </p>
-            <p style={{
-              fontSize: '9pt', color: '#555', margin: 0,
-            }}>
-              {OWNER.email} | {OWNER.location} | {OWNER.github?.replace('https://', '')} | {OWNER.linkedin?.replace('https://', '')}
+            {/* Contact Line 1: Phone | Email | Location */}
+            <p style={{ fontSize: '9pt', color: '#555', margin: '0 0 2px' }}>
+              {OWNER.phone} | {OWNER.email} | {OWNER.location}
+            </p>
+            {/* Contact Line 2: GitHub | LinkedIn | LeetCode | GFG */}
+            <p style={{ fontSize: '9pt', color: '#555', margin: 0 }}>
+              {OWNER.github?.replace('https://', '')} | {OWNER.linkedin?.replace('https://', '')} | {OWNER.leetcode?.replace('https://', '')} | {OWNER.gfg?.replace('https://www.', '')}
             </p>
           </header>
 
@@ -108,9 +119,9 @@ export default function ResumePage() {
             <h2 style={sectionTitle}>OBJECTIVE</h2>
             <p style={{ margin: '4px 0 0', fontSize: '10pt', color: '#333' }}>
               Passionate B.Tech CSE student seeking opportunities in Java Backend Development.
-              Strong foundation in Data Structures &amp; Algorithms with {DSA_COUNT} problems solved.
+              Strong foundation in Data Structures &amp; Algorithms with {DSA_COUNT} problems solved on LeetCode and GeeksForGeeks.
               Experienced in building full-stack web applications with PHP/MySQL and modern JavaScript frameworks.
-              Eager to contribute to backend engineering, system design, and data-driven solutions.
+              Eager to contribute to backend engineering, REST API development, system design, and data-driven solutions.
             </p>
           </section>
 
@@ -146,6 +157,13 @@ export default function ResumePage() {
                   <span style={{ color: '#333' }}>{cat.skills.map(s => s.name).join(', ')}</span>
                 </p>
               ))}
+              {/* ATS keyword row — additional skills that AI parsers scan for */}
+              {OWNER.atsKeywords && OWNER.atsKeywords.length > 0 && (
+                <p style={{ margin: '3px 0', fontSize: '10pt' }}>
+                  <strong>Additional Skills:</strong>{' '}
+                  <span style={{ color: '#333' }}>{OWNER.atsKeywords.join(', ')}</span>
+                </p>
+              )}
             </div>
           </section>
 
@@ -182,15 +200,68 @@ export default function ResumePage() {
 
           <hr style={divider} />
 
+          {/* ===== CERTIFICATIONS ===== (auto-renders when certificates added to portfolio-data.ts) */}
+          {OWNER.certificates && OWNER.certificates.length > 0 && (
+            <>
+              <section style={{ marginBottom: '14px' }}>
+                <h2 style={sectionTitle}>CERTIFICATIONS</h2>
+                <div style={{ marginTop: '6px' }}>
+                  {OWNER.certificates.map((cert, i) => (
+                    <div key={i} style={{ marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <strong style={{ fontSize: '10pt' }}>
+                          {cert.name}
+                          {cert.url && (
+                            <span style={{ fontWeight: 400, fontSize: '9pt', color: '#0066cc' }}>
+                              {' '}— Verify
+                            </span>
+                          )}
+                        </strong>
+                        <span style={{ fontSize: '9pt', color: '#555' }}>{cert.date}</span>
+                      </div>
+                      <p style={{ margin: '0', fontSize: '9.5pt', color: '#555' }}>
+                        Issued by {cert.issuer}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <hr style={divider} />
+            </>
+          )}
+
+          {/* ===== CODING PROFILES ===== */}
+          <section style={{ marginBottom: '14px' }}>
+            <h2 style={sectionTitle}>CODING PROFILES</h2>
+            <div style={{ marginTop: '6px' }}>
+              <p style={{ margin: '3px 0', fontSize: '10pt' }}>
+                <strong>LeetCode:</strong>{' '}
+                <span style={{ color: '#0066cc' }}>{OWNER.leetcode?.replace('https://', '')}</span>
+                {' '}— {DSA_COUNT} problems solved across Arrays, Trees, Graphs, DP, Backtracking
+              </p>
+              <p style={{ margin: '3px 0', fontSize: '10pt' }}>
+                <strong>GeeksForGeeks:</strong>{' '}
+                <span style={{ color: '#0066cc' }}>{OWNER.gfg?.replace('https://www.', '')}</span>
+              </p>
+              <p style={{ margin: '3px 0', fontSize: '10pt' }}>
+                <strong>GitHub:</strong>{' '}
+                <span style={{ color: '#0066cc' }}>{OWNER.github?.replace('https://', '')}</span>
+                {' '}— Open-source projects and contributions
+              </p>
+            </div>
+          </section>
+
+          <hr style={divider} />
+
           {/* ===== KEY HIGHLIGHTS ===== */}
           <section style={{ marginBottom: '14px' }}>
             <h2 style={sectionTitle}>KEY HIGHLIGHTS</h2>
             <ul style={{ margin: '6px 0 0', paddingLeft: '18px', fontSize: '10pt', color: '#333' }}>
-              <li style={{ marginBottom: '3px' }}>Solved <strong>{DSA_COUNT} DSA problems</strong> in Java across arrays, trees, graphs, dynamic programming, and backtracking.</li>
-              <li style={{ marginBottom: '3px' }}>Built and deployed <strong>RaktSetu</strong> — a live emergency blood donation platform serving real users.</li>
-              <li style={{ marginBottom: '3px' }}>Developed <strong>CampusNexus</strong> — an 8-module campus management system with 13 database tables as capstone project.</li>
-              <li style={{ marginBottom: '3px' }}>Self-taught <strong>Next.js, Three.js, GSAP</strong> to build an immersive 3D portfolio with holographic UI and AI integration.</li>
-              <li style={{ marginBottom: '3px' }}>Proficient in <strong>secure backend practices</strong>: bcrypt hashing, PDO prepared statements, role-based access control (RBAC).</li>
+              <li style={{ marginBottom: '3px' }}>Solved <strong>{DSA_COUNT} DSA problems</strong> in Java across arrays, trees, graphs, dynamic programming, and backtracking on LeetCode and GeeksForGeeks.</li>
+              <li style={{ marginBottom: '3px' }}>Built and deployed <strong>RaktSetu</strong> — a live emergency blood donation platform serving real users with real-time SOS matching.</li>
+              <li style={{ marginBottom: '3px' }}>Developed <strong>CampusNexus</strong> — an 8-module campus management system with 13 database tables and 3 user roles as capstone project.</li>
+              <li style={{ marginBottom: '3px' }}>Self-taught <strong>Next.js, Three.js, GSAP</strong> to build an immersive 3D portfolio (VOID OS) with holographic UI, AI chatbot integration, and WebGL rendering.</li>
+              <li style={{ marginBottom: '3px' }}>Proficient in <strong>secure backend practices</strong>: bcrypt hashing, PDO prepared statements, role-based access control (RBAC), and REST API design.</li>
             </ul>
           </section>
 
@@ -199,7 +270,7 @@ export default function ResumePage() {
             marginTop: '20px', paddingTop: '8px', borderTop: '1px solid #ddd',
             fontSize: '8pt', color: '#999', textAlign: 'center',
           }}>
-            Auto-generated from portfolio · github.com/shivamsuhana
+            Auto-generated from portfolio · {OWNER.github?.replace('https://', '')} · Portfolio: portfolio-void-os.vercel.app
           </footer>
         </div>
       </div>
@@ -229,20 +300,20 @@ function getProjectBullets(projectId: string): string[] {
       return [
         'Engineered a full-stack portfolio as an interactive 3D operating system using Next.js 14, Three.js, and GSAP.',
         'Implemented real-time WebGL rendering with custom canvas post-processing (film grain, scanlines, chromatic aberration).',
-        'Integrated Gemini AI API for an intelligent chatbot with multi-turn conversation history.',
-        'Built holographic 3D desktop interface with drag-rotate controls, orbital animations, and particle systems.',
+        'Integrated Gemini AI API for an intelligent chatbot with multi-turn conversation history and context-aware responses.',
+        'Built holographic 3D desktop interface with drag-rotate controls, orbital animations, particle systems, and spatial audio.',
       ];
     case 'raktsetu':
       return [
-        'Developed a real-time emergency blood donor matching platform with PHP 8 and MySQL.',
+        'Developed a real-time emergency blood donor matching platform with PHP 8 and MySQL, deployed for live use.',
         'Implemented smart donor eligibility engine with 90-day health cooldown tracking to ensure donor safety.',
-        'Built live auto-refreshing emergency dashboard using asynchronous AJAX polling for instant updates.',
+        'Built live auto-refreshing emergency dashboard using asynchronous AJAX polling for instant SOS updates.',
         'Designed multi-user portal system with 3 roles (Donor, Hospital, Admin) and role-based access control (RBAC).',
         'Secured application with bcrypt password hashing and PDO prepared statements against SQL injection.',
       ];
     case 'campusnexus':
       return [
-        'Architected an 8-module campus management platform handling attendance, resources, grievances, marketplace, events, lost and found, mess feedback, and announcements.',
+        'Architected an 8-module campus management platform: attendance, resources, grievances, marketplace, events, lost & found, mess feedback, announcements.',
         'Designed normalized MySQL database schema with 13 tables supporting 3 user roles (Student, Faculty, Admin).',
         'Implemented anti-proxy smart attendance system with session-code generation and real-time verification.',
         'Built interactive analytics dashboards using Chart.js for admin-level insights and data visualization.',

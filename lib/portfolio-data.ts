@@ -13,9 +13,12 @@ export const OWNER = {
   fullName: 'Shiv Charan',
   role: 'Java Developer & Backend Enthusiast',
   tagline: 'DSA grinder. Backend dreamer. Accidental full-stack builder.',
+  phone: '+91 9101870245',
   email: 'shivamsuhana649@gmail.com',
   github: 'https://github.com/shivamsuhana',
   linkedin: 'https://linkedin.com/in/shivamsuhana',
+  leetcode: 'https://leetcode.com/u/shivamsuhana',
+  gfg: 'https://www.geeksforgeeks.org/profile/krishuji',
   location: 'Bangalore, India',
   university: 'Jain (Deemed-to-be University) — Global Campus',
   degree: 'B.Tech CSE — 4th Semester',
@@ -48,6 +51,15 @@ Backend engineering is the goal. Java is the weapon. The grind never stops.`,
     'HTML', 'CSS', 'JavaScript', 'React',
     'Next.js', 'Three.js', 'GSAP', 'Git',
   ],
+  // ATS-optimized keyword list — these appear in resume's "Additional Skills" row
+  atsKeywords: [
+    'REST API', 'JDBC', 'Data Structures', 'Algorithms',
+    'Problem Solving', 'Agile', 'Linux', 'VS Code', 'IntelliJ IDEA',
+    'Responsive Design', 'Version Control',
+  ],
+  // Certificates — add entries here and they auto-appear on resume
+  // { name: 'Certificate Name', issuer: 'Issuing Org', date: 'Month Year', url: 'optional link' }
+  certificates: [] as Array<{ name: string; issuer: string; date: string; url?: string }>,
 };
 
 export interface Project {
@@ -72,7 +84,7 @@ export const PROJECTS: Project[] = [
     longDescription: 'The most over-engineered portfolio in existence — and I regret nothing. Features a BIOS boot sequence, holographic 3D desktop with orbiting cards around a breathing icosahedron, a fly-through work tunnel, force-directed neural skill graph, hacker-style contact terminal, and an AI twin powered by Gemini. Built with Next.js, Three.js, GSAP, and custom canvas shaders. This project was my way of proving that if I can imagine it, I can build it (Fully optimized for fluid cross-device 3D mobile responsiveness).',
     tags: ['Next.js', 'Three.js', 'GSAP', 'React', 'Gemini AI'],
     liveUrl: 'https://portfolio-void-os.vercel.app/',
-    githubUrl: 'https://github.com/shivamsuhana',
+    // githubUrl: 'https://github.com/shivamsuhana',
     image: '/projects/void-os.png',
     featured: true,
     color: '#00D4FF',
