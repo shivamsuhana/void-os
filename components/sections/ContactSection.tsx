@@ -460,8 +460,11 @@ export default function ContactSection() {
 
       {/* BG layers */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px)' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(0,212,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.03, backgroundImage: 'linear-gradient(rgba(255,51,102,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(255,51,102,0.8) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)' }} />
+      {/* Animated scan line */}
+      <div style={{ position: 'fixed', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(255,51,102,0.12), transparent)', pointerEvents: 'none', zIndex: 56, animation: 'contactScan 6s linear infinite' }} />
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes contactScan{0%{top:-2px}100%{top:100vh}}' }} />
 
 
 
@@ -473,21 +476,21 @@ export default function ContactSection() {
         <div style={{
           width: '100%', maxWidth: 560,
           display: 'flex', flexDirection: 'column',
-          border: '1px solid rgba(0,212,255,0.15)',
-          background: 'rgba(5,5,16,0.85)',
-          backdropFilter: 'blur(16px)',
-          borderRadius: 8,
-          boxShadow: '0 0 40px rgba(0,212,255,0.06), 0 20px 60px rgba(0,0,0,0.4)',
+          border: '1px solid rgba(255,51,102,0.2)',
+          background: 'rgba(5,5,16,0.9)',
+          borderRadius: 4,
+          boxShadow: '0 0 50px rgba(255,51,102,0.06), 0 0 100px rgba(0,0,0,0.4), inset 0 0 30px rgba(255,51,102,0.02)',
           overflow: 'hidden',
           marginTop: 'auto', marginBottom: 'auto',
           maxHeight: '80vh',
         }}>
           {/* Tab bar */}
-          <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(0,212,255,0.1)', background: 'rgba(0,212,255,0.02)', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+          <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,51,102,0.12)', background: 'rgba(255,51,102,0.03)', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
             {['#FF3B5C', '#FFB800', '#39FF14'].map((c, i) => (
               <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: c, opacity: 0.7 }} />
             ))}
-            <span style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'rgba(232,232,240,0.5)', marginLeft: 6 }}>CONTACT.net</span>
+            <span style={{ fontSize: '10px', letterSpacing: '1.5px', color: 'rgba(255,51,102,0.7)', marginLeft: 6, textShadow: '0 0 8px rgba(255,51,102,0.3)' }}>CONTACT.net</span>
+            <span style={{ marginLeft: 'auto', fontSize: '8px', color: 'rgba(57,255,20,0.5)', letterSpacing: '1px' }}>● CONNECTED</span>
           </div>
 
           {/* Terminal output */}
