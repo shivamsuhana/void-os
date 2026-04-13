@@ -278,7 +278,7 @@ function ForceGraph({ onSelect, selected, filter }: {
         const dimmed = activeId ? !isActive : false;
         const alpha = dimmed ? 0.04 : (isActive ? 0.6 : 0.15);
 
-        // Animated pulse along active links
+        // Animated pulse along active links — double-dot traveling pulse
         if (isActive) {
           const progress = (t * 0.6) % 1;
           const px = na.x + (nb.x - na.x) * progress;
@@ -289,7 +289,6 @@ function ForceGraph({ onSelect, selected, filter }: {
           ctx.globalAlpha = 0.9;
           ctx.fill();
 
-          // Reverse pulse
           const progress2 = (t * 0.6 + 0.5) % 1;
           const px2 = na.x + (nb.x - na.x) * progress2;
           const py2 = na.y + (nb.y - na.y) * progress2;
@@ -297,6 +296,24 @@ function ForceGraph({ onSelect, selected, filter }: {
           ctx.arc(px2, py2, 1.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.globalAlpha = 1;
+        }
+
+        // PASSIVE PULSE — subtle electric current on ALL visible links
+        if (!dimmed && !isActive) {
+          const linkIdx = LINKS.indexOf([a, b]) || (LINKS.findIndex(l => l[0] === a && l[1] === b));
+          const speed = 0.2 + (linkIdx % 5) * 0.05;
+          const p1 = ((t * speed + linkIdx * 0.3) % 1.5);
+          if (p1 < 1) {
+            const px = na.x + (nb.x - na.x) * p1;
+            const py = na.y + (nb.y - na.y) * p1;
+            const fadeAlpha = p1 < 0.1 ? p1 / 0.1 : p1 > 0.9 ? (1 - p1) / 0.1 : 1;
+            ctx.beginPath();
+            ctx.arc(px, py, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = `${CAT_COLORS[na.category] || '#FFB800'}`;
+            ctx.globalAlpha = fadeAlpha * 0.35;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
         }
 
         // Link line with gradient

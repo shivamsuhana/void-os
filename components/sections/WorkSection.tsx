@@ -471,6 +471,20 @@ export default function WorkSection() {
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'rgba(232,232,240,.65)', letterSpacing: '1px' }}>SCROLL TO FLY · CLICK CARD TO EXPLORE</p>
         </div>
 
+        {/* Left data stream */}
+        <div style={{ position: 'absolute', left: 12, top: 80, bottom: 80, width: 18, overflow: 'hidden', opacity: 0.2 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#7B2FFF', letterSpacing: '1px', lineHeight: 1.8, writingMode: 'vertical-rl', textOrientation: 'mixed', animation: 'dataStream 20s linear infinite', whiteSpace: 'nowrap' }}>
+            {'VOID::RENDER▸PIPELINE▸ACTIVE▸MESH_COUNT:1247▸FPS:60▸DRAW_CALLS:38▸SHADER▸COMPILED▸BUFFER▸ALLOCATED▸TEXTURE▸SAMPLER▸UNIFORM▸BINDING▸VERTEX▸FRAGMENT▸GEOMETRY▸RASTERIZE▸DEPTH▸TEST▸STENCIL▸BLEND▸CLAMP▸FILTER▸MIPMAP'.split('▸').join(' ░ ')}
+          </div>
+        </div>
+        {/* Right data stream */}
+        <div style={{ position: 'absolute', right: 35, top: 120, bottom: 120, width: 18, overflow: 'hidden', opacity: 0.12 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: '#00D4FF', letterSpacing: '1px', lineHeight: 1.8, writingMode: 'vertical-rl', textOrientation: 'mixed', animation: 'dataStream 28s linear infinite reverse', whiteSpace: 'nowrap' }}>
+            {'NODE▸SCAN▸CLASSIFY▸RENDER▸LIGHT▸SHADOW▸AMBIENT▸OCCLUSION▸BLOOM▸CHROMATIC▸ABERRATION▸VIGNETTE▸GRAIN▸NOISE▸DITHER▸TONEMAP▸GAMMA▸EXPOSURE'.split('▸').join(' ░ ')}
+          </div>
+        </div>
+        <style dangerouslySetInnerHTML={{ __html: '@keyframes dataStream{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}' }} />
+
         {/* Center crosshair */}
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}>
           <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, rgba(123,47,255,0.15), transparent)', position: 'absolute', top: 0, left: -20 }} />

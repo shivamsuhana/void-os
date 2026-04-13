@@ -120,8 +120,12 @@ function HoloCard({ entry, active, index }: { entry: TimelineEntry; active: bool
     >
       {/* Scanline overlay */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,.005) 3px, rgba(255,255,255,.005) 6px)', zIndex: 0 }} />
+      {/* Animated scanning line */}
+      <div style={{ position: 'absolute', left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${entry.color}${active ? '30' : '08'}, transparent)`, pointerEvents: 'none', zIndex: 1, animation: active ? 'holoScan 3s ease-in-out infinite' : 'none' }} />
       {/* Top glow line */}
       <div style={{ position: 'absolute', top: 0, left: '5%', right: '5%', height: 1, background: `linear-gradient(90deg, transparent, ${entry.color}${hov ? '66' : '22'}, transparent)`, transition: 'all 0.3s', zIndex: 1 }} />
+      {/* Bottom glow line */}
+      <div style={{ position: 'absolute', bottom: 0, left: '10%', right: '10%', height: 1, background: `linear-gradient(90deg, transparent, ${entry.color}15, transparent)`, zIndex: 1 }} />
       {/* Left accent glow */}
       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 30, background: `linear-gradient(90deg, rgba(${rgb},${hov ? 0.08 : 0.02}), transparent)`, pointerEvents: 'none', transition: 'all 0.3s', zIndex: 0 }} />
       {/* Corner bracket accents */}
@@ -452,6 +456,7 @@ export default function TimelineSection() {
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes nodePulse{0%{transform:scale(1);opacity:0.4;}50%{transform:scale(1.8);opacity:0;}100%{transform:scale(1);opacity:0.4;}}
         @keyframes timelineScan{0%{top:-2px}100%{top:100vh}}
+        @keyframes holoScan{0%{top:0}50%{top:100%}100%{top:0}}
       ` }} />
     </div>
     </OSWindowFrame>

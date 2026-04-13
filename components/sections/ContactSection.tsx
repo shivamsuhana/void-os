@@ -300,7 +300,10 @@ export default function ContactSection() {
     setTimeout(() => { if (termRef.current) termRef.current.scrollTop = termRef.current.scrollHeight; }, 30);
   }, []);
 
+  const didBootRef = useRef(false);
   useEffect(() => {
+    if (didBootRef.current) return;
+    didBootRef.current = true;
     const seq = [
       { t: '> CONTACT.net v2045 — INITIALIZING NEURAL CHANNEL', c: C.cyan, d: 0 },
       { t: '  Establishing quantum-encrypted tunnel...', c: 'rgba(232,232,240,0.4)', d: 280 },

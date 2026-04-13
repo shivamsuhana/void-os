@@ -83,8 +83,8 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
       y: Math.random() * H,
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5,
-      size: 1 + Math.random() * 2.5,
-      alpha: 0.15 + Math.random() * 0.25,
+      size: 1.2 + Math.random() * 3,
+      alpha: 0.2 + Math.random() * 0.3,
       phase: Math.random() * Math.PI * 2,
     }));
 
@@ -141,8 +141,30 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, W, H);
 
-      // Subtle grid
-      ctx.strokeStyle = `rgba(${r},${g},${b},0.035)`;
+      // ── PERSPECTIVE GRID ──
+      // Horizon line
+      const horizon = H * 0.45;
+      ctx.strokeStyle = `rgba(${r},${g},${b},0.025)`;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, horizon); ctx.lineTo(W, horizon); ctx.stroke();
+
+      // Converging lines from horizon (floor)
+      ctx.lineWidth = 0.5;
+      for (let i = -10; i <= 10; i++) {
+        const dx = (i / 10) * W * 0.7;
+        ctx.strokeStyle = `rgba(${r},${g},${b},${0.015 + Math.abs(i) * 0.001})`;
+        ctx.beginPath(); ctx.moveTo(W / 2 + dx, horizon); ctx.lineTo(W / 2 + dx * 4, H + 100); ctx.stroke();
+      }
+      // Horizontal depth lines
+      for (let i = 0; i < 6; i++) {
+        const pct = (i / 6) ** 1.3;
+        const y = horizon + (H - horizon + 100) * pct;
+        ctx.strokeStyle = `rgba(${r},${g},${b},${0.02 - i * 0.002})`;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // Subtle overlay grid
+      ctx.strokeStyle = `rgba(${r},${g},${b},0.02)`;
       ctx.lineWidth = 0.5;
       const gridSize = 80;
       for (let x = 0; x < W; x += gridSize) {
@@ -151,6 +173,15 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
       for (let y = 0; y < H; y += gridSize) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
+
+      // ── NEBULA GLOW ──
+      const nebX = W * 0.5 + Math.sin(t * 0.8) * W * 0.1;
+      const nebY = horizon + Math.cos(t * 0.5) * 40;
+      const neb = ctx.createRadialGradient(nebX, nebY, 0, nebX, nebY, W * 0.4);
+      neb.addColorStop(0, `rgba(${r},${g},${b},${0.025 + Math.sin(t * 0.6) * 0.01})`);
+      neb.addColorStop(0.5, `rgba(${r},${g},${b},0.008)`);
+      neb.addColorStop(1, 'transparent');
+      ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
 
       // Click ripple shockwaves
       const ripples = clickRipples.current;
@@ -216,11 +247,11 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
         ctx.fillStyle = `rgba(${r},${g},${b},${proxAlpha})`;
         ctx.fill();
 
-        // Glow halo
-        if (p.size > 1.2) {
+        // Glow halo — bigger and brighter
+        if (p.size > 1) {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 3.5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r},${g},${b},${proxAlpha * 0.2})`;
+          ctx.arc(p.x, p.y, p.size * 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${r},${g},${b},${proxAlpha * 0.25})`;
           ctx.fill();
         }
       }
