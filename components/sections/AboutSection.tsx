@@ -512,8 +512,7 @@ export default function AboutSection() {
   return (
     <OSWindowFrame name="ABOUT" ext=".exe" color="#00D4FF">
     <div style={{ position: 'relative', background: '#050510', overflowY: 'auto', height: '100%' }}>
-      <HexGridBG />
-      <SectionAmbientBG color="#00D4FF" particleCount={80} />
+      <SectionAmbientBG color="#00D4FF" particleCount={40} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 55, background: 'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 54, background: 'radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.5) 100%)' }} />
 
