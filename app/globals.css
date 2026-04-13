@@ -445,3 +445,65 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
 }
 
+/* ═══════════════════════════════════════════
+   ALIVE TEXT — Heading hover effects
+   Makes all section headings feel reactive
+   ═══════════════════════════════════════════ */
+
+/* Shimmer on hover for all headings */
+h1, h2, h3 {
+  position: relative;
+  transition: text-shadow 0.3s ease, letter-spacing 0.4s var(--ease-out-expo);
+}
+
+h1:hover, h2:hover, h3:hover {
+  text-shadow:
+    0 0 10px currentColor,
+    2px 0 rgba(0, 212, 255, 0.3),
+    -2px 0 rgba(255, 51, 102, 0.2);
+  letter-spacing: 0.02em;
+}
+
+/* Holographic shimmer sweep on hover */
+h1::after, h2::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(0, 212, 255, 0.08) 45%,
+    rgba(123, 47, 255, 0.06) 50%,
+    rgba(255, 184, 0, 0.05) 55%,
+    transparent 65%
+  );
+  background-size: 250% 100%;
+  background-position: 200% center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+h1:hover::after, h2:hover::after {
+  opacity: 1;
+  animation: shimmer-sweep 0.8s ease forwards;
+}
+
+@keyframes shimmer-sweep {
+  from { background-position: 200% center; }
+  to   { background-position: -50% center; }
+}
+
+/* Subtle pulse glow for interactive elements */
+span[style*="letterSpacing"]:hover,
+div[style*="letterSpacing"]:hover {
+  text-shadow: 0 0 6px currentColor;
+  transition: text-shadow 0.2s ease;
+}
+
+/* Global alive micro-interaction: buttons breathe */
+@keyframes subtle-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
+  50%      { box-shadow: 0 0 8px 0 rgba(0, 212, 255, 0.08); }
+}
+

@@ -5,17 +5,30 @@ import gsap from 'gsap';
 import { useVoidStore } from '@/lib/store';
 
 /**
- * TransitionManager v2 — GSAP cinematic transitions
- * 
- * Orchestrates a multi-phase glitch animation between sections:
- * 1. Horizontal tear bars flash across screen
- * 2. RGB chromatic shift bands
- * 3. Screen collapses to center line (CRT shutdown)
- * 4. Quick white flash
- * 5. New section fades in
+ * TransitionManager v3 — Section-specific cinematic transitions
+ *
+ * Each section has its own unique visual:
+ * - ABOUT: Cyan horizontal data-scan
+ * - WORK:  Purple vertical wipe
+ * - SKILLS: Amber radial burst from center
+ * - TIMELINE: Green matrix column rain
+ * - CONTACT: Red heartbeat pulse
+ * - LAB: Green static noise
+ * - DESKTOP: Standard CRT collapse
  */
+
+const SECTION_COLORS: Record<string, { r: number; g: number; b: number; hex: string }> = {
+  about:    { r: 0, g: 212, b: 255, hex: '#00D4FF' },
+  work:     { r: 123, g: 47, b: 255, hex: '#7B2FFF' },
+  skills:   { r: 255, g: 184, b: 0, hex: '#FFB800' },
+  timeline: { r: 57, g: 255, b: 20, hex: '#39FF14' },
+  contact:  { r: 255, g: 51, b: 102, hex: '#FF3366' },
+  lab:      { r: 57, g: 255, b: 20, hex: '#39FF14' },
+  desktop:  { r: 0, g: 212, b: 255, hex: '#00D4FF' },
+};
+
 export default function TransitionManager() {
-  const { isTransitioning } = useVoidStore();
+  const { isTransitioning, transitionTarget } = useVoidStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
@@ -32,10 +45,11 @@ export default function TransitionManager() {
     canvas.height = H;
     canvas.style.opacity = '1';
 
+    const target = transitionTarget || 'desktop';
+    const col = SECTION_COLORS[target] || SECTION_COLORS.desktop;
+
     const state = {
-      tearProgress: 0,
-      rgbShift: 0,
-      collapseProgress: 0,
+      progress: 0,
       flashOpacity: 0,
       noiseIntensity: 0,
     };
@@ -43,99 +57,137 @@ export default function TransitionManager() {
     const tl = gsap.timeline();
     tlRef.current = tl;
 
-    // Phase 1: Tear bars + noise (0 - 200ms)
-    tl.to(state, {
-      tearProgress: 1,
-      noiseIntensity: 1,
-      duration: 0.2,
-      ease: 'power2.in',
-    }, 0);
+    // Phase 1: Section-specific effect (0-350ms)
+    tl.to(state, { progress: 1, noiseIntensity: 0.8, duration: 0.35, ease: 'power2.in' }, 0);
+    // Phase 2: Flash (350-450ms)
+    tl.to(state, { flashOpacity: 0.12, duration: 0.05 }, 0.35);
+    tl.to(state, { flashOpacity: 0, duration: 0.1 }, 0.4);
+    // Phase 3: Fade out (450-600ms)
+    tl.to(canvas, { opacity: 0, duration: 0.15, ease: 'power2.out' }, 0.45);
 
-    // Phase 2: RGB chromatic shift (100 - 300ms)
-    tl.to(state, {
-      rgbShift: 1,
-      duration: 0.2,
-      ease: 'power1.inOut',
-    }, 0.1);
-    tl.to(state, { rgbShift: 0, duration: 0.1 }, 0.3);
-
-    // Phase 3: CRT collapse (200 - 450ms)
-    tl.to(state, {
-      collapseProgress: 1,
-      duration: 0.25,
-      ease: 'power3.in',
-    }, 0.2);
-
-    // Phase 4: Flash (400 - 500ms)
-    tl.to(state, { flashOpacity: 0.15, duration: 0.05 }, 0.4);
-    tl.to(state, { flashOpacity: 0, duration: 0.1 }, 0.45);
-
-    // Phase 5: Fade out (500 - 600ms)
-    tl.to(canvas, { opacity: 0, duration: 0.15, ease: 'power2.out' }, 0.5);
-
-    // Render loop
     let frame: number;
-    const tearBars = Array.from({ length: 15 }, () => ({
-      y: Math.random() * H,
-      height: 1 + Math.random() * 6,
-      speed: (Math.random() - 0.5) * 80,
-      color: Math.random() > 0.5 ? 'rgba(0,212,255,' : 'rgba(123,47,255,',
-    }));
 
     const render = () => {
       ctx.clearRect(0, 0, W, H);
 
-      // Background darken
-      const alpha = Math.min(0.95, state.collapseProgress * 0.95);
+      const p = state.progress;
+      const alpha = Math.min(0.95, p * 0.95);
+
+      // Base darkening
       ctx.fillStyle = `rgba(3,3,6,${alpha})`;
       ctx.fillRect(0, 0, W, H);
 
-      // Tear bars
-      if (state.tearProgress > 0 && state.tearProgress < 1) {
-        for (const bar of tearBars) {
-          const opacity = (1 - Math.abs(state.tearProgress - 0.5) * 2) * 0.6;
-          ctx.fillStyle = `${bar.color}${opacity.toFixed(2)})`;
-          const offsetX = bar.speed * state.tearProgress;
-          ctx.fillRect(offsetX, bar.y, W, bar.height);
+      // ═══ SECTION-SPECIFIC EFFECTS ═══
+      if (target === 'about' || target === 'desktop') {
+        // ABOUT: Horizontal scan lines sweeping top to bottom
+        const scanY = p * H;
+        for (let i = 0; i < 8; i++) {
+          const y = (scanY + i * H / 8) % H;
+          const lineAlpha = (1 - Math.abs(p - 0.5) * 2) * 0.4;
+          ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${lineAlpha})`;
+          ctx.fillRect(0, y, W, 2);
+          // Glow
+          ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${lineAlpha * 0.3})`;
+          ctx.fillRect(0, y - 4, W, 10);
+        }
+      } else if (target === 'work') {
+        // WORK: Vertical wipe with purple columns
+        const cols = 12;
+        for (let i = 0; i < cols; i++) {
+          const colW = W / cols;
+          const delay = i * 0.06;
+          const colP = Math.max(0, Math.min(1, (p - delay) / (1 - delay)));
+          const colAlpha = Math.sin(colP * Math.PI) * 0.5;
+          ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${colAlpha})`;
+          ctx.fillRect(i * colW, 0, colW * 0.6, H);
+        }
+      } else if (target === 'skills') {
+        // SKILLS: Radial burst from center
+        const maxR = Math.sqrt(W * W + H * H) / 2;
+        const r = p * maxR;
+        const gradient = ctx.createRadialGradient(W / 2, H / 2, r * 0.8, W / 2, H / 2, r);
+        gradient.addColorStop(0, 'rgba(0,0,0,0)');
+        gradient.addColorStop(0.5, `rgba(${col.r},${col.g},${col.b},${(1 - p) * 0.3})`);
+        gradient.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, W, H);
+        // Ring
+        ctx.beginPath();
+        ctx.arc(W / 2, H / 2, r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${(1 - p) * 0.5})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      } else if (target === 'timeline') {
+        // TIMELINE: Vertical matrix rain columns
+        const colCount = 20;
+        for (let i = 0; i < colCount; i++) {
+          const x = (i / colCount) * W + Math.random() * 10;
+          const colH = p * H * (0.5 + Math.random() * 0.5);
+          const colAlpha = Math.sin(p * Math.PI) * 0.4;
+          ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${colAlpha})`;
+          ctx.fillRect(x, 0, 1.5, colH);
+          // Head dot
+          ctx.beginPath();
+          ctx.arc(x, colH, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${colAlpha * 2})`;
+          ctx.fill();
+        }
+      } else if (target === 'contact') {
+        // CONTACT: Heartbeat pulse — horizontal line expanding from center
+        const lineW = p * W;
+        const lineH = 2 + Math.sin(p * Math.PI * 3) * 20;
+        const pulseAlpha = Math.sin(p * Math.PI) * 0.6;
+        ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${pulseAlpha})`;
+        ctx.fillRect(W / 2 - lineW / 2, H / 2 - lineH / 2, lineW, lineH);
+        // Glow
+        const grd = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, lineW / 2);
+        grd.addColorStop(0, `rgba(${col.r},${col.g},${col.b},${pulseAlpha * 0.2})`);
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, W, H);
+      } else if (target === 'lab') {
+        // LAB: Heavy static noise
+        if (p > 0.1) {
+          const w = Math.ceil(W / 4);
+          const h = Math.ceil(H / 4);
+          const imageData = ctx.createImageData(w, h);
+          const data = imageData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            const v = Math.random() * 255;
+            data[i] = v * (col.r / 255);
+            data[i + 1] = v * (col.g / 255);
+            data[i + 2] = v * (col.b / 255);
+            data[i + 3] = Math.sin(p * Math.PI) * 30;
+          }
+          ctx.putImageData(imageData, 0, 0);
         }
       }
 
-      // RGB shift bands
-      if (state.rgbShift > 0) {
-        const shift = state.rgbShift * 8;
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = `rgba(255,0,0,${state.rgbShift * 0.1})`;
-        ctx.fillRect(-shift, 0, W + shift * 2, H);
-        ctx.fillStyle = `rgba(0,255,0,${state.rgbShift * 0.08})`;
-        ctx.fillRect(0, -shift * 0.5, W, H + shift);
-        ctx.fillStyle = `rgba(0,0,255,${state.rgbShift * 0.1})`;
-        ctx.fillRect(shift, 0, W - shift * 2, H);
-        ctx.globalCompositeOperation = 'source-over';
-      }
-
-      // Noise
-      if (state.noiseIntensity > 0.3) {
-        const imageData = ctx.createImageData(W / 4, H / 4);
+      // Noise overlay (subtle, all sections)
+      if (state.noiseIntensity > 0.4) {
+        const nW = Math.ceil(W / 6);
+        const nH = Math.ceil(H / 6);
+        const imageData = ctx.createImageData(nW, nH);
         const data = imageData.data;
         for (let i = 0; i < data.length; i += 4) {
           const v = Math.random() * 255;
           data[i] = data[i + 1] = data[i + 2] = v;
-          data[i + 3] = state.noiseIntensity * 15;
+          data[i + 3] = state.noiseIntensity * 8;
         }
         ctx.putImageData(imageData, 0, 0);
       }
 
-      // CRT collapse line
-      if (state.collapseProgress > 0.5) {
-        const lineH = Math.max(1, (1 - state.collapseProgress) * H);
+      // CRT collapse line (all sections)
+      if (p > 0.6) {
+        const lineH = Math.max(1, (1 - p) * H * 0.5);
         const lineY = H / 2 - lineH / 2;
-        ctx.fillStyle = `rgba(0,212,255,${(state.collapseProgress - 0.5) * 0.4})`;
+        ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${(p - 0.6) * 0.6})`;
         ctx.fillRect(0, lineY, W, lineH);
       }
 
       // Flash
       if (state.flashOpacity > 0) {
-        ctx.fillStyle = `rgba(232,232,240,${state.flashOpacity})`;
+        ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${state.flashOpacity})`;
         ctx.fillRect(0, 0, W, H);
       }
 
@@ -147,7 +199,7 @@ export default function TransitionManager() {
       cancelAnimationFrame(frame);
       if (tlRef.current) tlRef.current.kill();
     };
-  }, [isTransitioning]);
+  }, [isTransitioning, transitionTarget]);
 
   if (!isTransitioning) return null;
 
