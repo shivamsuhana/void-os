@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🌌 VOID OS — The Portfolio That Boots Like an Operating System
 
@@ -309,4 +309,3 @@ _"I don't just solve problems. I engineer experiences."_
 ⭐ **Star this repo if you liked how it boots!**
 
 </div>
-]]>
