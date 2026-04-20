@@ -151,10 +151,10 @@ export default function ResumePage() {
           <section style={{ marginBottom: '14px' }}>
             <h2 style={sectionTitle}>OBJECTIVE</h2>
             <p style={{ margin: '4px 0 0', fontSize: '10pt', color: '#333' }}>
-              Passionate B.Tech CSE student seeking opportunities in Java Backend Development.
+              Passionate B.Tech CSE student seeking opportunities in Software Development.
               Strong foundation in Data Structures &amp; Algorithms with {DSA_COUNT} problems solved on LeetCode and GeeksForGeeks.
-              Experienced in building full-stack web applications with PHP/MySQL and modern JavaScript frameworks.
-              Eager to contribute to backend engineering, REST API development, system design, and data-driven solutions.
+              Experienced in building end-to-end web applications — backend systems with PHP/MySQL, and modern frontends with Next.js, React, and Three.js.
+              Eager to contribute to software engineering, full-stack development, REST API design, and data-driven solutions.
             </p>
           </section>
 

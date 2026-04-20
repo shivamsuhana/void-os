@@ -32,7 +32,7 @@ export const PROJECT_COUNT = '5+';     // ← Update when you ship more
 export const OWNER = {
   name: 'KRISHU',
   fullName: 'Shiv Charan',
-  role: 'Java Developer & Backend Enthusiast',
+  role: 'Software Developer | Java · DSA · Full-Stack Web',
   tagline: 'DSA grinder. Backend dreamer. Accidental full-stack builder.',
   phone: '+91 9101870245',
   email: 'shivamsuhana649@gmail.com',
