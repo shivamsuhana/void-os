@@ -12,11 +12,13 @@ export default function AITwinChat() {
   const { activeSection } = useVoidStore();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'system', content: "VOID AI TWIN v3.0 — Ask me anything about Krishu's skills, projects, or DSA journey." },
+    { role: 'system', content: "VOID AI TWIN v3.0 — I know everything about Krishu. Ask me anything — projects, skills, career goals, or how this portfolio was built." },
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [pulseCount, setPulseCount] = useState(0);
+  const [hasAsked, setHasAsked] = useState(false);
+  const [lastMode, setLastMode] = useState<'ai' | 'fallback' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,38 +40,80 @@ export default function AITwinChat() {
     return () => clearInterval(interval);
   }, [isOpen]);
 
-  const sendMessage = useCallback(async () => {
-    if (!input.trim() || isTyping) return;
-    const userMsg = input.trim();
+  const sendMessage = useCallback(async (overrideMsg?: string) => {
+    const msgText = overrideMsg || input.trim();
+    if (!msgText || isTyping) return;
     setInput('');
+    setHasAsked(true);
 
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    const historyForAPI = messages
+      .filter(m => m.role !== 'system')
+      .slice(-20)
+      .map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.content }));
+
+    setMessages(prev => [...prev, { role: 'user', content: msgText }]);
     setIsTyping(true);
 
     try {
+      // Try streaming first for ChatGPT-like word-by-word effect
       const res = await fetch('/api/ai-twin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMsg,
+          message: msgText,
           section: activeSection,
-          history: messages
-            .filter(m => m.role !== 'system')
-            .slice(-10)
-            .map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.content })),
+          history: historyForAPI,
+          stream: true,
         }),
       });
 
-      const data = await res.json();
-      // Simulate typing delay
-      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
-      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
-    } catch {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setMessages(prev => [...prev, { role: 'assistant', content: "Connection issue — try again in a moment. The matrix is glitching. 🔌" }]);
-    }
+      if (res.headers.get('content-type')?.includes('text/event-stream')) {
+        // Streaming response — add empty assistant message and fill it
+        setLastMode('ai');
+        setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+        setIsTyping(false);
 
-    setIsTyping(false);
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+
+            for (const line of lines) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.done) break;
+                if (data.text) {
+                  fullText += data.text;
+                  // Update the last message progressively
+                  setMessages(prev => {
+                    const updated = [...prev];
+                    updated[updated.length - 1] = { role: 'assistant', content: fullText };
+                    return updated;
+                  });
+                }
+              } catch { /* skip malformed chunks */ }
+            }
+          }
+        }
+      } else {
+        // Non-streaming fallback
+        const data = await res.json();
+        setLastMode(data.mode || 'fallback');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+        setIsTyping(false);
+      }
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: "Connection issue — try again in a moment. 🔌" }]);
+      setIsTyping(false);
+    }
   }, [input, isTyping, activeSection, messages]);
 
   return (
@@ -203,6 +247,40 @@ export default function AITwinChat() {
               </div>
             )}
             <div ref={messagesEndRef} />
+
+            {/* Quick-ask suggestions — shown before first message */}
+            {!hasAsked && !isTyping && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                {[
+                  'Tell me about RaktSetu',
+                  'Why Java?',
+                  'How did you build this?',
+                  'Available for internships?',
+                  'What\'s your tech stack?',
+                ].map((q, i) => (
+                  <button
+                    key={i}
+                    onClick={() => sendMessage(q)}
+                    style={{
+                      fontFamily: 'var(--font-mono)', fontSize: '8px',
+                      color: 'rgba(0,212,255,0.6)', padding: '4px 10px',
+                      border: '1px solid rgba(0,212,255,0.12)',
+                      background: 'rgba(0,212,255,0.03)',
+                      cursor: 'pointer', transition: 'all 0.2s',
+                      letterSpacing: '0.3px',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = 'rgba(0,212,255,0.3)';
+                      e.currentTarget.style.background = 'rgba(0,212,255,0.06)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = 'rgba(0,212,255,0.12)';
+                      e.currentTarget.style.background = 'rgba(0,212,255,0.03)';
+                    }}
+                  >{q}</button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Input */}
@@ -224,7 +302,7 @@ export default function AITwinChat() {
                 color: 'var(--white)', caretColor: 'var(--blue)',
               }}
             />
-            <button onClick={sendMessage} style={{
+            <button onClick={() => sendMessage()} style={{
               fontFamily: 'var(--font-mono)', fontSize: '10px',
               color: 'var(--blue)', cursor: 'pointer', padding: '4px 8px',
               borderRadius: '2px', border: '1px solid rgba(0,212,255,0.15)',
@@ -242,8 +320,12 @@ export default function AITwinChat() {
             fontFamily: 'var(--font-mono)', fontSize: '8px',
             color: 'var(--text-muted)', letterSpacing: '1px',
             borderTop: '1px solid rgba(255,255,255,0.02)',
+            display: 'flex', justifyContent: 'space-between',
           }}>
-            CONTEXT: {activeSection.toUpperCase()} · GEMINI AI
+            <span>CONTEXT: {activeSection.toUpperCase()}</span>
+            <span style={{ color: lastMode === 'ai' ? 'rgba(57,255,20,0.5)' : 'rgba(255,184,0,0.4)' }}>
+              {lastMode === 'ai' ? '● GEMINI AI' : lastMode === 'fallback' ? '○ LOCAL' : '● READY'}
+            </span>
           </div>
         </div>
       )}
