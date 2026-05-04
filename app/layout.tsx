@@ -17,9 +17,9 @@ export const metadata: Metadata = {
     siteName: 'VOID OS',
     images: [
       {
-        url: '/projects/void-os.png',
-        width: 1440,
-        height: 900,
+        url: '/og-image.png',
+        width: 1024,
+        height: 1024,
         alt: 'VOID OS — 3D Holographic Desktop Portfolio',
       },
     ],
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'VOID OS — Krishu\'s Portfolio',
     description: 'A 3D holographic OS portfolio — cinematic boot, AI twin, force-directed skill graph, project tunnel.',
-    images: ['/projects/void-os.png'],
+    images: ['/og-image.png'],
   },
   robots: { index: true, follow: true },
   icons: {
@@ -48,6 +48,24 @@ export default function RootLayout({
         <meta name="theme-color" content="#030306" />
         <meta name="color-scheme" content="dark" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Person',
+              name: 'Krishu (Shiv Charan)',
+              url: 'https://portfolio-void-os.vercel.app',
+              jobTitle: 'Software Developer',
+              knowsAbout: ['Java', 'Data Structures', 'React', 'Next.js', 'Three.js', 'Backend Development'],
+              sameAs: [
+                'https://github.com/shivamsuhana',
+                'https://linkedin.com/in/shivamsuhana',
+                'https://leetcode.com/shivamsuhana',
+              ],
+            }),
+          }}
+        />
       </head>
       <body>
         {children}

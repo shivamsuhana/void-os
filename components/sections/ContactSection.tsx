@@ -291,6 +291,7 @@ export default function ContactSection() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
   const [clock, setClock] = useState(new Date());
+  const [isMobile, setIsMobile] = useState(false);
   const termRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -320,7 +321,10 @@ export default function ContactSection() {
     seq.forEach(({ t, c, d }) => setTimeout(() => push(t, c), d + 200));
     setTimeout(() => { setStep('name'); setTimeout(() => inputRef.current?.focus(), 80); }, 2100);
     const ti = setInterval(() => setClock(new Date()), 1000);
-    return () => clearInterval(ti);
+    const handleResize = () => setIsMobile(window.innerWidth < 700);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => { clearInterval(ti); window.removeEventListener('resize', handleResize); };
   }, [push]);
 
   useEffect(() => {
@@ -410,10 +414,10 @@ export default function ContactSection() {
       <div style={{ position: 'absolute', left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg,transparent,rgba(255,51,102,0.18),transparent)', pointerEvents: 'none', zIndex: 61, animation: 'contact-scan 6s linear infinite' }} />
 
       {/* ── MAIN LAYOUT ── */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 12, padding: '44px 10px 10px', zIndex: 2 }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: 12, padding: '44px 10px 10px', zIndex: 2, flexDirection: isMobile ? 'column' : 'row' }}>
 
         {/* ══ LEFT: TERMINAL ══ */}
-        <div style={{ flex: '0 1 auto', width: '56%', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
           {/* Terminal header */}
           <div style={{
@@ -496,6 +500,7 @@ export default function ContactSection() {
         </div>
 
         {/* ══ RIGHT: SCANNER + CHANNELS ══ */}
+        {!isMobile && (
         <div style={{ width: 218, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
 
           {/* SCANNER PANEL — top */}
@@ -565,6 +570,7 @@ export default function ContactSection() {
             </div>
           </div>
         </div>
+        )}
 
       </div>
 

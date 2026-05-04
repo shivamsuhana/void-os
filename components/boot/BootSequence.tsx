@@ -57,26 +57,26 @@ function Diagnostics({ onComplete }: { onComplete: () => void }) {
 
   const LINES = [
     { text: '> VOID OS BOOT PROTOCOL v3.0.1', color: C.cyan, delay: 0 },
-    { text: '> Initializing quantum cores...', color: C.white, delay: 0.3 },
-    { text: '  ├ Core 0 ████████████ [OK]', color: C.green, delay: 0.7 },
-    { text: '  ├ Core 1 ████████████ [OK]', color: C.green, delay: 0.95 },
-    { text: '  ├ Core 2 ████████████ [OK]', color: C.green, delay: 1.2 },
-    { text: '  └ Core 3 ████████████ [OK]', color: C.green, delay: 1.4 },
-    { text: '> Neural stack............ ACTIVE', color: C.cyan, delay: 1.8 },
-    { text: '> Memory fabric........... 64 TB', color: C.amber, delay: 2.2 },
-    { text: '> GPU mesh................ LINKED', color: C.green, delay: 2.5 },
-    { text: '> Holographic engine...... READY', color: C.green, delay: 2.8 },
-    { text: '> AI subsystem............ ONLINE', color: C.cyan, delay: 3.2 },
-    { text: '> Identity module......... LOADING', color: C.amber, delay: 3.5 },
-    { text: '', color: '', delay: 3.9 },
-    { text: '> ALL SYSTEMS NOMINAL', color: C.green, delay: 4.0 },
+    { text: '> Initializing quantum cores...', color: C.white, delay: 0.2 },
+    { text: '  ├ Core 0 ████████████ [OK]', color: C.green, delay: 0.45 },
+    { text: '  ├ Core 1 ████████████ [OK]', color: C.green, delay: 0.6 },
+    { text: '  ├ Core 2 ████████████ [OK]', color: C.green, delay: 0.75 },
+    { text: '  └ Core 3 ████████████ [OK]', color: C.green, delay: 0.88 },
+    { text: '> Neural stack............ ACTIVE', color: C.cyan, delay: 1.15 },
+    { text: '> Memory fabric........... 64 TB', color: C.amber, delay: 1.4 },
+    { text: '> GPU mesh................ LINKED', color: C.green, delay: 1.6 },
+    { text: '> Holographic engine...... READY', color: C.green, delay: 1.8 },
+    { text: '> AI subsystem............ ONLINE', color: C.cyan, delay: 2.0 },
+    { text: '> Identity module......... LOADING', color: C.amber, delay: 2.2 },
+    { text: '', color: '', delay: 2.5 },
+    { text: '> ALL SYSTEMS NOMINAL', color: C.green, delay: 2.6 },
   ];
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const tl = gsap.timeline({ onComplete: () => { setTimeout(onComplete, 400); } });
+    const tl = gsap.timeline({ onComplete: () => { setTimeout(onComplete, 300); } });
 
     LINES.forEach((line) => {
       const el = document.createElement('div');
@@ -89,23 +89,23 @@ function Diagnostics({ onComplete }: { onComplete: () => void }) {
       el.textContent = line.text || '\u00A0';
       container.appendChild(el);
 
-      tl.to(el, { opacity: 1, duration: 0.08 }, line.delay);
+      tl.to(el, { opacity: 1, duration: 0.06 }, line.delay);
 
       // Glitch flicker on some lines
       if (line.text.includes('Core') || line.text.includes('Neural') || line.text.includes('AI')) {
-        tl.to(el, { opacity: 0.4, x: 2, duration: 0.03 }, line.delay + 0.08);
-        tl.to(el, { opacity: 1, x: 0, duration: 0.05 }, line.delay + 0.11);
+        tl.to(el, { opacity: 0.4, x: 2, duration: 0.03 }, line.delay + 0.06);
+        tl.to(el, { opacity: 1, x: 0, duration: 0.04 }, line.delay + 0.09);
       }
     });
 
     // Progress bar
-    tl.to(progressRef.current, { scaleX: 1, duration: 3.8, ease: 'power1.inOut', transformOrigin: 'left' }, 0.2);
+    tl.to(progressRef.current, { scaleX: 1, duration: 2.5, ease: 'power1.inOut', transformOrigin: 'left' }, 0.1);
     tl.to({ v: 0 }, {
-      v: 100, duration: 3.8,
+      v: 100, duration: 2.5,
       onUpdate: function () {
         if (percentRef.current) percentRef.current.textContent = `${Math.round(this.targets()[0].v)}%`;
       },
-    }, 0.2);
+    }, 0.1);
 
     return () => { tl.kill(); };
   }, [onComplete]);
@@ -383,6 +383,22 @@ export default function BootSequence() {
   const { setBootComplete, setActiveSection, setBootPhase } = useVoidStore();
   const [phase, setPhase] = useState<'power' | 'diag' | 'glitch' | 'reveal'>('power');
   const [isReady, setIsReady] = useState(false);
+  const [showSkip, setShowSkip] = useState(false);
+  const skipUsed = useRef(false);
+
+  // Returning visitor — auto-skip to reveal phase
+  useEffect(() => {
+    const hasBooted = sessionStorage.getItem('void-os-booted');
+    if (hasBooted) {
+      // Returning visitor: skip straight to name reveal
+      setPhase('reveal');
+      setBootPhase('ready');
+      return;
+    }
+    // First visit: show skip button after 1.5s
+    const timer = setTimeout(() => setShowSkip(true), 1500);
+    return () => clearTimeout(timer);
+  }, [setBootPhase]);
 
   const handlePowerDone = useCallback(() => setPhase('diag'), []);
   const handleDiagDone = useCallback(() => setPhase('glitch'), []);
@@ -392,9 +408,20 @@ export default function BootSequence() {
   }, [setBootPhase]);
   const handleReady = useCallback(() => setIsReady(true), []);
 
+  // Skip boot
+  const handleSkip = useCallback(() => {
+    if (skipUsed.current) return;
+    skipUsed.current = true;
+    setPhase('reveal');
+    setBootPhase('ready');
+    setShowSkip(false);
+  }, [setBootPhase]);
+
   // Wormhole entry
   const handleEnter = useCallback(() => {
     if (!isReady) return;
+    // Mark as booted for returning visitor detection
+    sessionStorage.setItem('void-os-booted', '1');
 
     const wormhole = document.createElement('canvas');
     wormhole.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;';
@@ -503,6 +530,25 @@ export default function BootSequence() {
       {phase === 'diag' && <Diagnostics onComplete={handleDiagDone} />}
       {phase === 'glitch' && <GlitchBurst onComplete={handleGlitchDone} />}
       {phase === 'reveal' && <NameReveal onReady={handleReady} />}
+
+      {/* Skip boot button — appears after 1.5s, only during power/diag/glitch */}
+      {showSkip && phase !== 'reveal' && (
+        <button
+          onClick={handleSkip}
+          style={{
+            position: 'absolute', bottom: 28, right: 28, zIndex: 200,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '8px',
+            letterSpacing: '2.5px', color: 'rgba(232,232,240,0.3)',
+            background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.12)',
+            padding: '8px 18px', cursor: 'pointer', transition: 'all 0.3s',
+            backdropFilter: 'blur(8px)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.35)'; e.currentTarget.style.color = 'rgba(232,232,240,0.6)'; e.currentTarget.style.background = 'rgba(0,212,255,0.08)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.12)'; e.currentTarget.style.color = 'rgba(232,232,240,0.3)'; e.currentTarget.style.background = 'rgba(0,212,255,0.04)'; }}
+        >
+          SKIP →
+        </button>
+      )}
     </div>
   );
 }

@@ -204,8 +204,9 @@ export default function MagneticCursor() {
         width: `${dotSize}px`, height: `${dotSize}px`, borderRadius: '50%',
         background: mode === 'text' ? 'var(--blue)' : 'var(--white)',
         pointerEvents: 'none',
-        transition: 'width 0.25s ease, height 0.25s ease, background 0.25s ease, opacity 0.3s ease',
+        transition: 'width 0.25s ease, height 0.25s ease, background 0.25s ease, opacity 0.3s ease, box-shadow 0.3s ease',
         opacity: hidden ? 0 : 1,
+        boxShadow: mode === 'pointer' ? '0 0 12px rgba(0,212,255,0.6), 0 0 24px rgba(0,212,255,0.2)' : 'none',
       }} />
 
       {/* Outer ring */}
@@ -214,10 +215,19 @@ export default function MagneticCursor() {
         width: `${ringSize}px`, height: `${ringSize}px`, borderRadius: '50%',
         border: `${ringBorder} solid rgba(0,212,255,${ringOpacity})`,
         pointerEvents: 'none',
-        transition: 'width 0.35s cubic-bezier(0.16,1,0.3,1), height 0.35s cubic-bezier(0.16,1,0.3,1), border 0.3s ease, opacity 0.3s ease',
+        transition: 'width 0.35s cubic-bezier(0.16,1,0.3,1), height 0.35s cubic-bezier(0.16,1,0.3,1), border 0.3s ease, opacity 0.3s ease, background 0.3s ease',
         opacity: hidden ? 0 : 1,
         background: mode === 'pointer' ? 'rgba(0,212,255,0.06)' : 'transparent',
-      }} />
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {mode === 'pointer' && (
+          <span style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '6px',
+            letterSpacing: '1.5px', color: 'rgba(0,212,255,0.7)',
+            pointerEvents: 'none', userSelect: 'none',
+          }}>CLICK</span>
+        )}
+      </div>
     </>
   );
 }

@@ -103,8 +103,19 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
     let t = 0;
     let frame: number;
     let frameCount = 0;
+    let lastFrameTime = 0;
+    const FPS_INTERVAL = 1000 / 30; // 30fps for background — saves battery
 
-    const draw = () => {
+    const draw = (now: number = 0) => {
+      frame = requestAnimationFrame(draw);
+
+      // Pause when tab is hidden
+      if (document.hidden) return;
+
+      // 30fps limiter for background canvas
+      if (now - lastFrameTime < FPS_INTERVAL) return;
+      lastFrameTime = now;
+
       t += 0.005;
       frameCount++;
       ctx.clearRect(0, 0, W, H);
@@ -287,9 +298,9 @@ export default function SectionAmbientBG({ color = '#00D4FF', particleCount = 60
         ctx.stroke();
       }
 
-      frame = requestAnimationFrame(draw);
+      // don't need rAF here — it's at the top of draw()
     };
-    draw();
+    frame = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(frame);

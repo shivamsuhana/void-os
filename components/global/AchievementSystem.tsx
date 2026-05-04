@@ -25,6 +25,10 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'konami_master', name: 'KONAMI MASTER', desc: 'Enter the Konami code', icon: '🎮', xp: 15, color: '#FFB800' },
   { id: 'deep_diver', name: 'DEEP DIVER', desc: 'Click 3 projects in Work tunnel', icon: '🕵️', xp: 20, color: '#7B2FFF' },
   { id: 'command_line', name: 'COMMAND LINE', desc: 'Use ⌘K palette 3 times', icon: '⌨️', xp: 15, color: '#00D4FF' },
+  { id: 'speed_runner', name: 'SPEED RUNNER', desc: 'Skip the boot sequence', icon: '⚡', xp: 10, color: '#FFB800' },
+  { id: 'night_owl', name: 'NIGHT OWL', desc: 'Visit after midnight', icon: '🦉', xp: 10, color: '#7B2FFF' },
+  { id: 'glitch_hacker', name: 'GLITCH HACKER', desc: 'Trigger /glitch command', icon: '💀', xp: 15, color: '#FF3B5C' },
+  { id: 'social_butterfly', name: 'SOCIAL BUTTERFLY', desc: 'Click a social link', icon: '🦋', xp: 10, color: '#00D4FF' },
   { id: 'void_master', name: 'VOID MASTER', desc: 'Unlock all other achievements', icon: '👑', xp: 50, color: '#FFB800' },
 ];
 
@@ -108,12 +112,18 @@ export default function AchievementSystem() {
     // Contact visited
     if (activeSection === 'contact') unlock('first_contact');
     // All sections visited
-    // All sections visited
     if (SECTIONS_TO_TRACK.every(s => visitedSections.includes(s))) unlock('cartographer');
     // Konami code
     if (easterEggsFound.includes('konami')) unlock('konami_master');
+    // Glitch hacker
+    if (easterEggsFound.includes('glitch')) unlock('glitch_hacker');
     // Command palette 3 times
     if (paletteUses >= 3) unlock('command_line');
+    // Speed runner — boot was skipped
+    if (bootComplete && sessionStorage.getItem('void-os-booted')) unlock('speed_runner');
+    // Night owl — visiting between midnight and 5am
+    const hour = new Date().getHours();
+    if (hour >= 0 && hour < 5) unlock('night_owl');
     // Deep diver — track project clicks from localStorage
     try {
       const clicks = parseInt(localStorage.getItem('void_project_clicks') || '0');
@@ -123,6 +133,18 @@ export default function AchievementSystem() {
     const nonMaster = ACHIEVEMENTS.filter(a => a.id !== 'void_master').map(a => a.id);
     if (nonMaster.every(id => unlocked.includes(id))) unlock('void_master');
   }, [bootComplete, activeSection, visitedSections, easterEggsFound, paletteUses, unlocked, unlock]);
+
+  // Social butterfly — track external link clicks
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const el = (e.target as HTMLElement).closest('a');
+      if (el && el.getAttribute('target') === '_blank') {
+        unlock('social_butterfly');
+      }
+    };
+    window.addEventListener('click', handler);
+    return () => window.removeEventListener('click', handler);
+  }, [unlock]);
 
   const totalXP = unlocked.reduce((sum, id) => sum + (ACHIEVEMENTS.find(a => a.id === id)?.xp || 0), 0);
   const maxXP = ACHIEVEMENTS.reduce((sum, a) => sum + a.xp, 0);

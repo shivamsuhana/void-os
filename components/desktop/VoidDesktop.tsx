@@ -261,6 +261,73 @@ function HudReadout({ position, text, color }: { position: [number, number, numb
 }
 
 /* ============================================
+   LIVE HUD READOUT — Animated real-time values
+   ============================================ */
+const bootTime = Date.now();
+
+function LiveHudReadout({ position, type, color }: { position: [number, number, number]; type: 'sys' | 'net' | 'mem' | 'fps'; color: string }) {
+  const [text, setText] = useState('');
+  const fpsRef = useRef({ frames: 0, lastTime: performance.now(), fps: 60 });
+  const glitchRef = useRef(false);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    let glitchTimeout: ReturnType<typeof setTimeout>;
+
+    const scheduleGlitch = () => {
+      const delay = 5000 + Math.random() * 15000;
+      glitchTimeout = setTimeout(() => {
+        glitchRef.current = true;
+        setTimeout(() => { glitchRef.current = false; }, 80 + Math.random() * 120);
+        scheduleGlitch();
+      }, delay);
+    };
+    scheduleGlitch();
+
+    if (type === 'fps') {
+      const measure = () => {
+        fpsRef.current.frames++;
+        const now = performance.now();
+        if (now - fpsRef.current.lastTime >= 1000) {
+          fpsRef.current.fps = fpsRef.current.frames;
+          fpsRef.current.frames = 0;
+          fpsRef.current.lastTime = now;
+        }
+        requestAnimationFrame(measure);
+      };
+      requestAnimationFrame(measure);
+      interval = setInterval(() => {
+        const f = fpsRef.current.fps;
+        setText(glitchRef.current ? 'FPS: ██.█' : `FPS: ${f}`);
+      }, 250);
+    } else if (type === 'sys') {
+      interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - bootTime) / 1000);
+        const m = Math.floor(elapsed / 60);
+        const s = elapsed % 60;
+        const uptime = m > 0 ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
+        setText(glitchRef.current ? 'UP: ██:██' : `UP: ${uptime}`);
+      }, 1000);
+    } else if (type === 'mem') {
+      interval = setInterval(() => {
+        const base = 63.2 + Math.sin(Date.now() * 0.0003) * 0.6;
+        const jitter = (Math.random() - 0.5) * 0.15;
+        setText(glitchRef.current ? 'MEM: ██.█TB' : `MEM: ${(base + jitter).toFixed(1)}TB`);
+      }, 2000);
+    } else if (type === 'net') {
+      interval = setInterval(() => {
+        const latency = Math.floor(2 + Math.random() * 6);
+        setText(glitchRef.current ? 'NET: ██ms' : `NET: ${latency}ms`);
+      }, 3000);
+    }
+
+    return () => { clearInterval(interval); clearTimeout(glitchTimeout); };
+  }, [type]);
+
+  return <HudReadout position={position} text={text} color={color} />;
+}
+
+/* ============================================
    SCENE COMPOSITION
    ============================================ */
 function HologramScene({ onSelect, hoveredId, onHover }: {
@@ -303,11 +370,11 @@ function HologramScene({ onSelect, hoveredId, onHover }: {
           />
         ))}
 
-        {/* HUD readouts */}
-        <HudReadout position={[-3.5, 2, 0]} text="SYS: OPERATIONAL" color="#39FF14" />
-        <HudReadout position={[3.5, 2, 0]} text="NET: CONNECTED" color="#00D4FF" />
-        <HudReadout position={[-3.5, -2, 0]} text="MEM: 64TB FREE" color="#FFB800" />
-        <HudReadout position={[3.5, -2, 0]} text="CPU: QUANTUM" color="#7B2FFF" />
+        {/* Live HUD readouts */}
+        <LiveHudReadout position={[-3.5, 2, 0]} type="sys" color="#39FF14" />
+        <LiveHudReadout position={[3.5, 2, 0]} type="net" color="#00D4FF" />
+        <LiveHudReadout position={[-3.5, -2, 0]} type="mem" color="#FFB800" />
+        <LiveHudReadout position={[3.5, -2, 0]} type="fps" color="#7B2FFF" />
       </group>
 
       <DragRotation groupRef={orbitalRef} />

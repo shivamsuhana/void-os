@@ -20,7 +20,7 @@ interface PaletteItem {
 }
 
 export default function CommandPalette() {
-  const { navigateTo, addEasterEgg } = useVoidStore();
+  const { navigateTo, addEasterEgg, soundEnabled, toggleSound, setShowScreensaver } = useVoidStore();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
@@ -61,6 +61,28 @@ export default function CommandPalette() {
       action: () => { navigateTo('skills'); setOpen(false); },
     }));
 
+    // Utility commands
+    items.push({
+      id: 'cmd-resume', label: 'View Resume', sublabel: 'Open formatted ATS resume',
+      category: 'command', icon: '📄', color: '#00D4FF',
+      action: () => { window.open('/resume', '_blank'); setOpen(false); },
+    });
+    items.push({
+      id: 'cmd-sound', label: 'Toggle Sound', sublabel: soundEnabled ? 'Currently ON — click to mute' : 'Currently OFF — click to enable',
+      category: 'command', icon: soundEnabled ? '🔊' : '🔇', color: '#39FF14',
+      action: () => { toggleSound(); setOpen(false); },
+    });
+    items.push({
+      id: 'cmd-screensaver', label: 'Screensaver', sublabel: 'Launch the VOID screensaver',
+      category: 'command', icon: '🌌', color: '#7B2FFF',
+      action: () => { setShowScreensaver(true); setOpen(false); },
+    });
+    items.push({
+      id: 'cmd-source', label: 'View Source', sublabel: 'Open GitHub repository',
+      category: 'command', icon: '⬡', color: '#E8E8F0',
+      action: () => { window.open(OWNER.github, '_blank'); setOpen(false); },
+    });
+
     // Secret commands
     items.push({
       id: 'cmd-sudo', label: '/sudo', sublabel: 'Attempt root access',
@@ -73,13 +95,21 @@ export default function CommandPalette() {
       action: () => { addEasterEgg('matrix'); setOpen(false); },
     });
     items.push({
-      id: 'cmd-resume', label: '/resume', sublabel: 'View formatted resume',
-      category: 'command', icon: '📄', color: '#00D4FF',
-      action: () => { window.open('/resume', '_blank'); setOpen(false); },
+      id: 'cmd-glitch', label: '/glitch', sublabel: 'Trigger system glitch',
+      category: 'command', icon: '💀', color: '#FF3B5C',
+      action: () => {
+        addEasterEgg('glitch');
+        document.body.style.animation = 'none';
+        const style = document.createElement('style');
+        style.textContent = `@keyframes cmdGlitch{0%{filter:none}10%{filter:hue-rotate(90deg) saturate(2)}20%{filter:none;transform:translateX(3px)}30%{filter:hue-rotate(-60deg) brightness(1.5)}40%{filter:none;transform:translateX(-2px)}50%{filter:invert(0.1)}60%{filter:none}100%{filter:none;transform:none}} body{animation:cmdGlitch 0.6s ease!important}`;
+        document.head.appendChild(style);
+        setTimeout(() => style.remove(), 700);
+        setOpen(false);
+      },
     });
 
     return items;
-  }, [navigateTo, addEasterEgg]);
+  }, [navigateTo, addEasterEgg, soundEnabled, toggleSound, setShowScreensaver]);
 
   // Filtered results
   const filtered = useMemo(() => {

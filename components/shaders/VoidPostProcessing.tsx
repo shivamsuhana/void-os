@@ -55,6 +55,11 @@ export default function VoidPostProcessing({ intensity = 0.5 }: { intensity?: nu
     let lastNoiseTime = 0;
 
     const render = (time: number) => {
+      frameRef.current = requestAnimationFrame(render);
+
+      // Pause when tab is not visible
+      if (document.hidden) return;
+
       ctx.clearRect(0, 0, W, H);
 
       const t = time * 0.001;
@@ -145,7 +150,7 @@ export default function VoidPostProcessing({ intensity = 0.5 }: { intensity?: nu
       ctx.fillRect(0, H * 0.94, W, H * 0.06);
       ctx.restore();
 
-      frameRef.current = requestAnimationFrame(render);
+      // rAF is called at top of render()
     };
 
     frameRef.current = requestAnimationFrame(render);

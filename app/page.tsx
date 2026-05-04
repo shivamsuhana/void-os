@@ -23,6 +23,7 @@ const CommandPalette = dynamic(() => import('@/components/global/CommandPalette'
 const AchievementSystem = dynamic(() => import('@/components/global/AchievementSystem'), { ssr: false });
 const TimeTheme = dynamic(() => import('@/components/global/TimeTheme'), { ssr: false });
 const OSTaskbar = dynamic(() => import('@/components/global/OSTaskbar'), { ssr: false });
+const VoidContextMenu = dynamic(() => import('@/components/global/VoidContextMenu'), { ssr: false });
 
 /* ═══════════════════════════════════════════
    SECTOR LOADING — Brief terminal-style loader
@@ -157,6 +158,9 @@ export default function VoidOS() {
           <OSTaskbar />
         </>
       )}
+
+      {/* Always active — works during boot too */}
+      <VoidContextMenu />
     </main>
   );
 }
